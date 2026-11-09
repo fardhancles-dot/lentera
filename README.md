@@ -7,14 +7,14 @@ Developer Dashboard.
 Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand terpusat di
 `src/config/brand.ts` dan dapat ditimpa lewat environment variable.
 
-> **Status proyek: Tahap 1–5 selesai pada level database/API.**
+> **Status proyek: Tahap 1–4 selesai; inti Tahap 5 sudah aktif.**
 > Lesson, latihan, dan **20 dari 20 mini-game** punya mekanik bermain nyata. Dua belas tipe
 > soal dinilai di server (termasuk Listening, Speaking, Translation, Conversation, Story),
 > tujuh mode latihan berjalan di atas sesi practice dengan XP idempoten, dan **Friends Quest**
-> tersedia sebagai co-op berbasis kode undangan. Tahap 5 menambahkan **Hearts, Streak,
-> level akun, dan wallet** yang seluruhnya dihitung server. Pengujian browser end-to-end
-> (Playwright) belum ada; bukti Tahap 4 ada di
-> **[docs/STAGE4_COMPLETION.md](docs/STAGE4_COMPLETION.md)**.
+> tersedia sebagai co-op berbasis kode undangan. Inti Tahap 5 menambahkan **Hearts, Streak,
+> level akun, dan wallet** yang seluruhnya dihitung server; mastery, quest harian/mingguan,
+> achievement, shop, dan inventory belum dibuat. Pengujian browser end-to-end (Playwright)
+> belum ada; bukti Tahap 4 ada di **[docs/STAGE4_COMPLETION.md](docs/STAGE4_COMPLETION.md)**.
 
 ---
 
@@ -37,7 +37,7 @@ Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand ter
 | Practice Hub & sesi latihan | **Implemented · Tested (SQL)** | Sesi server, timer, combo, bonus kecepatan, XP idempoten, unit chooser. UI belum diuji browser dengan sesi nyata. |
 | Friends Quest | **Implemented · Tested (SQL + Supabase API)** | Co-op lewat kode undangan, target XP gabungan, kontribusi dari XP lesson/latihan server, klaim sekali per anggota. UI belum diuji browser. Graf teman penuh tetap Tahap 7. |
 | XP, Koin, Hearts, Streak & level | **Implemented · Tested (SQL + Supabase API)** | Ledger XP/Koin, Hearts dengan regenerasi/refill, Streak harian, 30 level akun, dan halaman `/wallet` dengan riwayat transaksi. Semua angka berasal dari RPC server. |
-| Quest, Achievement, Shop & Inventory | **Not implemented** | Quest harian/mingguan, achievement, shop, dan inventory belum dibuat; Friends Quest co-op sudah ada. |
+| Mastery, quest harian, achievement, shop & inventory | **Not implemented** | Sisa Tahap 5 belum dibuat; Friends Quest co-op sudah ada, tetapi mastery, quest harian/mingguan, achievement, shop, dan inventory belum. |
 | Leaderboard, Liga, Teman, Event | **Not implemented** | Tahap 7. |
 | Developer Dashboard | **Not implemented** | Tahap 8; role developer dan mode pratinjau sudah ada. |
 | PWA / offline / AI / monetisasi | **Not implemented** | Direncanakan setelah gameplay stabil. |

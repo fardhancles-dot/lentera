@@ -143,6 +143,7 @@ terkait dikerjakan — bukan folder kosong yang dibuat lebih awal.
 - [TESTING.md](docs/TESTING.md) — test yang ada, checklist manual, gap.
 - [AUDIT.md](docs/AUDIT.md) — laporan audit kondisi nyata, temuan, dan rencana lanjutan.
 - [PROJECT_HISTORY.md](docs/PROJECT_HISTORY.md) — catatan per sesi pengembangan.
+- [SESSION_2026-11-09.md](docs/SESSION_2026-11-09.md) — catatan percakapan dan status sesi lima mini-game.
 
 Dokumentasi sistem reward lanjutan dan Developer Dashboard akan dibuat bersamaan dengan
 implementasinya agar tidak berisi janji kosong.

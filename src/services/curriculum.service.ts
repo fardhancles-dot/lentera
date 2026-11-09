@@ -383,16 +383,18 @@ function buildPathNode(
   claimedRewardIds: ReadonlySet<string>,
 ): PathNode {
   const lesson = node.lesson_id ? lessonById.get(node.lesson_id) : undefined;
-  const stats = node.lesson_id ? statsByLesson.get(node.lesson_id) : undefined;    return {
-      id: node.id,
-      slug: node.slug,
-      title: node.title || lesson?.title || 'Lesson',
-      description: node.description || lesson?.description || '',
-      nodeType: node.node_type,
-      lessonId: node.lesson_id,
-      lessonSlug: lesson?.slug ?? null,
-      playable: Boolean(node.lesson_id && lesson),
-      questionCount: stats?.question_count ?? 0,
+  const stats = node.lesson_id ? statsByLesson.get(node.lesson_id) : undefined;
+
+  return {
+    id: node.id,
+    slug: node.slug,
+    title: node.title || lesson?.title || 'Lesson',
+    description: node.description || lesson?.description || '',
+    nodeType: node.node_type,
+    lessonId: node.lesson_id,
+    lessonSlug: lesson?.slug ?? null,
+    playable: Boolean(node.lesson_id && lesson),
+    questionCount: stats?.question_count ?? 0,
     topics: stats?.topics ?? [],
     questionTypes: stats?.question_types ?? [],
     estimatedMinutes: lesson?.estimated_minutes ?? 0,

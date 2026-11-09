@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { collectPageErrors, login } from './helpers';
+import { answerFirstQuestion, collectPageErrors, login } from './helpers';
 
 const ROUTES: { path: string; heading: RegExp }[] = [
   { path: '/app', heading: /Halo|Selamat|Beranda|Hari ini/i },
@@ -19,52 +19,6 @@ async function assertNoOverflow(page: Page): Promise<void> {
     return root.scrollWidth - root.clientWidth;
   });
   expect(overflow, 'horizontal overflow in px').toBeLessThanOrEqual(2);
-}
-
-async function answerFirstQuestion(page: Page): Promise<boolean> {
-  const option = page.locator('.play-option').first();
-  if (await option.count()) {
-    await option.click();
-    return true;
-  }
-
-  const picture = page.locator('.play-picture-option').first();
-  if (await picture.count()) {
-    await picture.click();
-    return true;
-  }
-
-  const bankToken = page.locator('.play-bank button').first();
-  if (await bankToken.count()) {
-    for (let index = 0; index < 12; index += 1) {
-      const token = page.locator('.play-bank button').first();
-      if (!(await token.count())) break;
-      await token.click();
-    }
-    return true;
-  }
-
-  const pair = page.locator('.play-pair').first();
-  if (await pair.count()) {
-    const pairs = page.locator('.play-pair');
-    const total = await pairs.count();
-    for (let index = 0; index < total; index += 1) {
-      const candidate = pairs.nth(index);
-      if (await candidate.isVisible().catch(() => false)) {
-        await candidate.click();
-        await page.waitForTimeout(120);
-      }
-    }
-    return true;
-  }
-
-  const input = page.locator('.play-input').first();
-  if (await input.count()) {
-    await input.fill('contoh jawaban');
-    return true;
-  }
-
-  return false;
 }
 
 test('every app route renders without page errors', async ({ page }) => {

@@ -6,8 +6,9 @@ Diperbarui: 10 November 2026.
 
 Stage 1–5 tetap utuh. Stage 6 (karakter, animasi, audio, adventure map, responsif,
 pipeline aset) sudah diimplementasikan dan lolos typecheck, 72 unit test, build, serta
-dua smoke test browser: maskot landing dan peta dengan akun QA (pemilih level keyboard,
-status live, mute, dan breakpoint ponsel 390px).
+9 test browser: rute aplikasi, alur lesson dan latihan, profil/pengaturan, Friends Quest
+dua akun, maskot landing, dan peta dengan akun QA (pemilih level keyboard, status live,
+mute, dan breakpoint ponsel 390px).
 
 ## Yang selesai
 
@@ -48,7 +49,7 @@ status live, mute, dan breakpoint ponsel 390px).
 | `npm run typecheck` | Lulus |
 | `npm test` | 72 test lulus (10 file) |
 | `npm run build` | Lulus |
-| `npm run test:e2e` | 6 lulus (9 rute, alur lesson, overflow ponsel, reduced motion, maskot landing, peta berakun + keyboard + mute + mobile) |
+| `npm run test:e2e` | 9 lulus, 1 skip (9 rute, alur lesson, latihan, reset password, profil/pengaturan, overflow ponsel, reduced motion, maskot landing, peta berakun; Friends Quest butuh akun kedua) |
 | `npm run test:sql` | 206 check lulus (termasuk akses view katalog sebagai `authenticated`) |
 | `npm run verify:supabase` | 61 check lulus (termasuk view katalog terbaca pemain) |
 
@@ -68,12 +69,33 @@ status live, mute, dan breakpoint ponsel 390px).
   layout). Ini juga menutup celah password muncul di query string.
 - Akun QA di `.env` menyelesaikan onboarding sekali saat pengujian (data aditif pada akun
   uji, bukan data pengguna lain).
+- Test Friends Quest memerlukan `E2E_EMAIL_2`/`E2E_PASSWORD_2`; alur dua akun sudah
+  diverifikasi memakai akun sementara yang dibuat lewat Admin API lalu dihapus lagi.
+  Quest uji berjudul `E2E Quest …` dibersihkan otomatis bila `SUPABASE_ACCESS_TOKEN` ada.
 - Audio belum diverifikasi dengan telinga; headless hanya memastikan tidak ada error dan
   mute berubah `aria-pressed`.
+
+## Sisa pekerjaan (audit 10 November 2026)
+
+Belum selesai, berurutan dari yang paling cepat ditutup:
+
+1. **Verifikasi manual audio** — klik, jawaban benar/salah, hadiah, mute, dan slider volume.
+2. **Pembaca layar sungguhan** untuk pemilih level peta dan form latihan.
+3. **Konfirmasi pendaftaran lewat email** — satu-satunya alur Auth yang masih butuh kotak
+   surat uji; alur lupa password sudah E2E memakai tautan resmi dari Admin API.
+4. **E2E akun kedua permanen** — isi `E2E_EMAIL_2`/`E2E_PASSWORD_2` di `.env` agar test
+   Friends Quest berjalan di setiap run, bukan skip.
+5. **E2E transaksi** — beli item toko, klaim quest/achievement, mastery/review.
+6. **Cakupan 20 mekanik mini-game** — saat ini browser baru menguji dua alur jawab.
+7. **Mapel multi-course** — katalog masih memakai `courses[0]`; perlu redesign bila mapel
+   punya lebih dari satu course.
+8. **Riwayat attempt lesson** di UI (data sudah tersimpan).
+9. **Deployment produksi** (Vercel) dan **Tahap 7** (graf teman/liga/leaderboard).
 
 ## Langkah berikutnya
 
 1. Uji audio secara manual di browser (klik, jawaban, hadiah, mute, volume).
 2. Tambahkan sprite sheet/audio final bila tersedia, daftarkan di manifest.
 3. Uji pemilih level dengan pembaca layar sungguhan.
-4. Lanjut Stage 7 (leaderboard/liga/teman) hanya setelah verifikasi manual di atas.
+4. Isi kredensial akun kedua agar test Friends Quest tidak skip.
+5. Lanjut Stage 7 (leaderboard/liga/teman) hanya setelah verifikasi manual di atas.

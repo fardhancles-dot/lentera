@@ -888,6 +888,55 @@ Satu-satunya verifikasi yang belum dilakukan adalah mendengar audio secara langs
 menguji dengan pembaca layar sungguhan; keduanya dicatat sebagai batasan, bukan klaim
 lulus.
 
+## Sesi 15 — 10 November 2026 — Audit sisa pekerjaan dan E2E dua akun
+
+### Yang dikerjakan
+
+- **E2E Friends Quest dua akun** (`tests/e2e/friends-quest.spec.ts`): akun utama membuat
+  quest lewat form, akun kedua bergabung memakai kode undangan, lalu kedua sisi memeriksa
+  2/8 anggota dan tombol klaim yang masih nonaktif. Quest uji berjudul `E2E Quest …`
+  dibersihkan sebelum/sesudah run supaya batas tiga quest aktif tidak menumpuk.
+  Diverifikasi memakai akun sementara dari Admin API yang langsung dihapus setelah run.
+  Test skip dengan alasan jelas bila `E2E_EMAIL_2`/`E2E_PASSWORD_2` tidak diisi.
+- **E2E Practice Hub** (`tests/e2e/practice.spec.ts`): memilih mapel Bahasa Inggris, memulai
+  mode latihan nyata, menjawab satu soal, lalu memeriksa feedback penilaian. Skip bila soal
+  pertama memakai mekanik yang butuh mikrofon.
+- **E2E profil & pengaturan** (`tests/e2e/account.spec.ts`): menyimpan nama tampilan dan
+  preferensi reduced motion, memastikan nilainya bertahan setelah reload, lalu
+  mengembalikan nilai awal akun QA.
+- **Helper E2E bersama**: `answerFirstQuestion` dipindah ke `helpers.ts`, ditambah penanganan
+  soal matching dua kolom (klik kolom kiri lalu kanan) dan `secondAccount()`.
+- **E2E reset password** (`tests/e2e/password-reset.spec.ts`): akun sementara dibuat lewat
+  Supabase Admin API (service role diambil dari Management API dengan token yang sudah ada),
+  tautan recovery resmi dibuat lewat `generate_link`, halaman `/reset-password` menyimpan
+  password baru, lalu login API dengan password itu diverifikasi. Akun dihapus di `finally`.
+  Ini menutup alur lupa password tanpa kotak surat; konfirmasi pendaftaran lewat email tetap
+  belum diuji.
+- **Perapian format** `buildPathNode` di `curriculum.service.ts` (temuan audit Tahap 3,
+  hanya indentasi, tanpa perubahan perilaku).
+
+### Pengujian
+
+| Perintah | Hasil |
+| --- | --- |
+| `npm run typecheck` | Lulus 0 error. |
+| `npm test` | 72 test lulus (10 file). |
+| `npm run build` | Lulus. |
+| `npm run test:e2e` | **9 lulus, 1 skip** (skip: Friends Quest tanpa kredensial akun kedua; alur dua akun sudah diverifikasi dengan akun sementara). |
+| `npm run test:sql` | 206 check lulus. |
+| `npm run verify:supabase` | 61 check lulus. |
+
+### Sisa pekerjaan yang belum bisa ditutup sekarang
+
+1. Konfirmasi pendaftaran lewat email butuh kotak surat uji.
+2. Audio belum diverifikasi dengan telinga; pembaca layar sungguhan belum dipakai.
+3. Pembelian toko, klaim quest/achievement, mastery/review, dan 20 mekanik mini-game belum
+   dijelajahi satu per satu di browser (server-nya sudah diuji).
+4. Mapel dengan lebih dari satu course belum didukung katalog (view memberi satu baris per
+   course, katalog memakai `courses[0]`); perlu redesign saat fitur itu ditambahkan.
+5. Riwayat attempt lesson belum ditampilkan ke pemain.
+6. Deployment produksi dan fitur Tahap 7 (graf teman/sosial) belum dikerjakan.
+
 ## Sesi 14 — 10 November 2026 — Uji menyeluruh di browser dan bug katalog
 
 ### Yang dikerjakan

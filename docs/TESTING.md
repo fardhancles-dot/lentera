@@ -10,7 +10,7 @@
 | Build produksi | `npm run build` | Lulus; Phaser, Friends Quest, quest, shop, dan wallet menjadi chunk terpisah. |
 | Browser smoke | Chrome headless | Landing, auth, guard route, 404 (sesi 1). |
 | Supabase nyata | `npm run verify:supabase` | **61 check lulus** (view katalog, lesson 20 soal, 4 scene, Practice Hub, Friends Quest, progression, reward/quest/achievement/toko, mastery/review/node hadiah, XP idempoten, RLS) di project `xvrnmxbrxhtzzavmrlvy`. |
-| Playwright/E2E | `npm run test:e2e` | **6 test lulus** (9 rute aplikasi, alur lesson sampai feedback, overflow 390px, reduced motion, maskot landing, peta + pemilih level + mute + resize). |
+| Playwright/E2E | `npm run test:e2e` | **9 lulus, 1 skip** (9 rute, alur lesson, latihan, reset password, profil/pengaturan, overflow 390px, reduced motion, maskot, peta; Friends Quest skip tanpa akun kedua). |
 
 PGlite membuktikan SQL dan RPC konsisten. Verifikasi Supabase nyata kini juga sudah
 dijalankan lewat Auth + PostgREST. UI browser diuji Playwright memakai akun QA di `.env`
@@ -58,7 +58,9 @@ tidak dikenal, serta penolakan tulis langsung ke `user_question_mastery` dan
 
 `playwright.config.ts` menjalankan Vite di port 4173 lalu menguji dengan Chrome terpasang
 (channel `chrome`). Test memakai `E2E_EMAIL`/`E2E_PASSWORD` dari `.env` dan skip sendiri
-bila kredensial tidak ada.
+bila kredensial tidak ada. Test dua akun memerlukan tambahan `E2E_EMAIL_2` dan
+`E2E_PASSWORD_2` (akun terkonfirmasi); tanpanya test Friends Quest skip dengan alasan
+jelas, bukan gagal. Bersih-bersih quest uji memakai `SUPABASE_ACCESS_TOKEN` bila tersedia.
 
 | Test | Cakupan |
 | --- | --- |
@@ -66,6 +68,10 @@ bila kredensial tidak ada.
 | `lesson starts, answers, shows feedback, and advances` | Klik node lesson di peta → halaman lesson → `Mulai lesson` → jawab soal → feedback benar/salah → tombol lanjut. |
 | `mobile layout has no horizontal overflow` | Viewport 390×844 pada 5 rute + frame peta; `scrollWidth - clientWidth ≤ 2px`. |
 | `reduced motion keeps the map usable` | `prefers-reduced-motion: reduce`: kanvas peta, tombol level, dan judul tetap tampil. |
+| `practice hub starts a session and grades an answer` | `/practice?subject=bahasa-inggris` → mode nyata → jawab satu soal → `Periksa jawaban` → feedback dan tombol lanjut. Skip bila mekanik soal pertama butuh mikrofon. |
+| `profile and settings save and persist after reload` | Ubah nama tampilan → toast → reload → nilai tersimpan; ubah preferensi reduced motion → reload → tetap; keduanya dikembalikan ke nilai awal. |
+| `recovery link lets a player set a new password` | Akun sementara + tautan recovery resmi dibuat lewat Admin API, halaman `/reset-password` menyimpan password baru, lalu login API dengan password itu diverifikasi. Akun dihapus setelah test. Butuh `SUPABASE_ACCESS_TOKEN`. |
+| `two accounts create and join the same Friends Quest` | Akun utama membuat quest, akun kedua (`E2E_EMAIL_2`) bergabung lewat kode, kedua sisi melihat 2/8 anggota dan tombol klaim nonaktif. Bersihkan quest berjudul `E2E Quest …` sebelum/sesudah run. Skip bila kredensial akun kedua tidak ada. |
 | `landing mascot canvas mounts and reacts to a click` | Maskot landing (kanvas/SVG fallback) dan reaksi klik. |
 | `map renders, level buttons work with the keyboard, and the canvas resizes` | Peta berakun, pemilih level via keyboard (`aria-pressed`, status live), mute, resize 390px. |
 
@@ -190,9 +196,13 @@ lolos hanya karena shell halaman berhasil dimuat.
   diuji di PGlite.
 - Gameplay dan Practice Hub belum diuji di browser dengan sesi nyata; RPC sudah diuji
   di database.
-- E2E browser mencakup rute utama, alur lesson, overflow ponsel, reduced motion, peta,
-  dan maskot. Belum ada uji dua akun Friends Quest, uji audio yang benar-benar didengar,
-  pembaca layar sungguhan, atau audit performa.
+- E2E browser mencakup rute utama, alur lesson dan latihan, simpan profil/pengaturan,
+  Friends Quest dua akun, overflow ponsel, reduced motion, peta, dan maskot. Belum ada
+  uji audio yang benar-benar didengar, pembaca layar sungguhan, atau audit performa.
+- Pembelian toko, klaim quest/achievement, mastery/review, dan 20 mekanik mini-game belum
+  dijelajahi satu per satu di browser; alur server-nya sudah diuji lewat SQL dan API.
+- Konfirmasi pendaftaran lewat email belum diuji karena butuh kotak surat uji; alur reset
+  password sudah diuji memakai tautan resmi dari Admin API, bukan email.
 - Audio memakai text-to-speech browser; belum ada pengujian suara nyata di perangkat.
 - Speaking belum diuji dengan mikrofon sungguhan; Web Speech Recognition berbeda tiap
   browser.

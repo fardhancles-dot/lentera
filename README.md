@@ -35,16 +35,16 @@ Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand ter
 | Sistem audio | **Implemented · Tested (unit + browser smoke); pemutaran belum diverifikasi telinga** | Musik dan SFX disintesis Web Audio, volume mengikuti pengaturan pemain, mute lokal di topbar, autoplay-safe. |
 | Pipeline aset | **Implemented · Tested (unit)** | `src/game/assets/manifest.ts` + loader Phaser, lisensi tercatat di `docs/ASSETS.md`. |
 | Register / login / logout | **Implemented · E2E verified** | Login API, payload lesson, grading, dan Practice Hub diuji ke project Supabase nyata. |
-| Verifikasi email & lupa password | **Implemented · Belum E2E** | Memakai Supabase Auth; tautan reset memakai redirect `/reset-password`. |
-| Onboarding profil | **Implemented · Belum E2E** | Username, avatar, nama, target harian, zona waktu. Atomik via RPC. |
-| Profil & pengaturan cloud | **Implemented · Belum E2E** | Disimpan di PostgreSQL dengan RLS + column-level grants. |
+| Verifikasi email & lupa password | **Implemented · Lupa password E2E; verifikasi email belum** | Tautan reset diuji lewat tautan resmi Supabase (dibuat Admin API, tanpa kotak surat) sampai password baru bisa dipakai login. Konfirmasi pendaftaran masih butuh kotak surat uji. |
+| Onboarding profil | **Implemented · E2E (via helper akun uji)** | Username, avatar, nama, target harian, zona waktu. Atomik via RPC. |
+| Profil & pengaturan cloud | **Implemented · E2E verified** | Simpan nama tampilan/bio dan preferensi reduced motion ± persist setelah reload diuji browser. |
 | Database & RLS | **Implemented · Tested (PGlite + Supabase API)** | 13 migration diterapkan ke project Supabase; 206 SQL smoke check + 61 verifikasi API lulus. |
 | Kurikulum & bank soal | **Implemented · Tested (SQL smoke)** | 10 mapel, 22 level, 57 lesson, 231 soal, 12 tipe soal, 7 jenis node; 7 mapel inti + Bahasa Sambas. |
 | Learning path & progres per mapel | **Implemented · Tested (SQL smoke)** | Node selesai/aktif/terkunci, unlock ditegakkan server, progres per course/node. |
 | Lesson engine & halaman hasil | **Implemented · Tested (SQL smoke)** | Kunci jawaban tidak dikirim ke browser; XP/Koin idempoten per attempt. |
-| Gameplay 20 mini-game | **20/20 implemented · Tested (SQL + Supabase API)** | 12 tipe soal punya layar; 7 mode latihan; Conversation bertahap dan Story dengan pilihan respons. UI belum diuji browser dengan sesi nyata. |
-| Practice Hub & sesi latihan | **Implemented · Tested (SQL)** | Sesi server, timer, combo, bonus kecepatan, XP idempoten, unit chooser. UI belum diuji browser dengan sesi nyata. |
-| Friends Quest | **Implemented · Tested (SQL + Supabase API)** | Co-op lewat kode undangan, target XP gabungan, kontribusi dari XP lesson/latihan server, klaim sekali per anggota. UI belum diuji browser. Graf teman penuh tetap Tahap 7. |
+| Gameplay 20 mini-game | **20/20 implemented · Tested (SQL + API + E2E alur jawab)** | 12 tipe soal punya layar; 7 mode latihan; Conversation bertahap dan Story dengan pilihan respons. E2E menjawab satu soal lesson dan satu soal latihan sampai feedback; 20 mekanik belum dijelajahi satu per satu di browser. |
+| Practice Hub & sesi latihan | **Implemented · Tested (SQL + E2E)** | Sesi server, timer, combo, bonus kecepatan, XP idempoten, unit chooser. E2E memulai sesi nyata dan memeriksa feedback penilaian. |
+| Friends Quest | **Implemented · Tested (SQL + API + E2E dua akun)** | Co-op lewat kode undangan, target XP gabungan, kontribusi dari XP lesson/latihan server, klaim sekali per anggota. E2E membuat quest, bergabung dengan akun kedua, dan memeriksa 2/8 anggota; butuh `E2E_EMAIL_2`/`E2E_PASSWORD_2`. Graf teman penuh tetap Tahap 7. |
 | XP, Koin, Hearts, Streak & level | **Implemented · Tested (SQL + Supabase API)** | Ledger XP/Koin, Hearts dengan regenerasi/refill, Streak harian, 30 level akun, dan halaman `/wallet` dengan riwayat transaksi. Semua angka berasal dari RPC server. |
 | Reward level, milestone Streak, quest & achievement | **Implemented · Tested (SQL + Supabase API)** | Hadiah level dan milestone Streak otomatis lewat trigger; 3 quest harian + 3 mingguan dan 8 achievement dihitung dari ledger XP. Halaman `/quests` dan `/wallet`; UI belum diuji browser dengan akun nyata. |
 | Toko & inventory | **Implemented · Tested (SQL + Supabase API)** | Katalog dua item consumable, pembelian atomik, tas, Ramuan Hati, dan Perisai Streak (maksimal 2). Halaman `/shop`; UI belum diuji browser. |

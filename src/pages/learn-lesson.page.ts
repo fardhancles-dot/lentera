@@ -2,8 +2,9 @@ import type { PageModule } from '../app/router';
 import { icon } from '../components/icons';
 import { renderAppLayout } from '../layouts/appLayout';
 import { curriculumService, type LessonDetail } from '../services/curriculum.service';
+import { lessonService, type LessonAttemptSummary } from '../services/lesson.service';
 import { sessionStore } from '../stores/session.store';
-import { el, formatNumber } from '../utils/dom';
+import { el, formatDate, formatNumber } from '../utils/dom';
 
 const meta = { title: 'Detail lesson' };
 
@@ -38,7 +39,7 @@ function stat(label: string, value: string): HTMLElement {
   ]);
 }
 
-function renderDetail(detail: LessonDetail): HTMLElement {
+function renderDetail(detail: LessonDetail, history: LessonAttemptSummary[]): HTMLElement {
   const { subject, level, unit, node } = detail;
   const questionCount = node.questionCount;
   const lessonSlug = node.lessonSlug ?? '';
@@ -196,6 +197,30 @@ function renderDetail(detail: LessonDetail): HTMLElement {
     }),
   ]);
 
+  const historyCard = el('section', { class: 'card card--padded attempt-history' }, [
+    el('h2', { class: 'card__title', text: 'Riwayat percobaan' }),
+    el('p', {
+      class: 'card__subtitle',
+      text: 'Lima penyelesaian terakhir untuk lesson ini, dihitung dari jawaban yang dinilai server.',
+    }),
+    history.length > 0
+      ? el(
+          'ul',
+          { class: 'attempt-list' },
+          history.map((entry) =>
+            el('li', { class: 'attempt-list__item' }, [
+              el('span', { class: 'attempt-list__when', text: formatDate(entry.completedAt) }),
+              el('span', { class: 'attempt-list__accuracy', text: `${entry.accuracy}% akurasi` }),
+              el('span', {
+                class: 'attempt-list__score',
+                text: `${entry.correctCount}/${entry.totalCount} benar · ${formatNumber(entry.score)} poin`,
+              }),
+            ]),
+          ),
+        )
+      : el('p', { class: 'small muted', text: 'Belum ada percobaan selesai di lesson ini.' }),
+  ]);
+
   const securityCard = el('div', { class: 'banner banner--info' }, [
     icon('shield', 18),
     el('div', {}, [
@@ -228,7 +253,7 @@ function renderDetail(detail: LessonDetail): HTMLElement {
         objectivesCard,
         securityCard,
       ]),
-      el('div', { class: 'lesson-layout__aside' }, [startCard]),
+      el('div', { class: 'lesson-layout__aside' }, [startCard, historyCard]),
     ]),
   ]);
 
@@ -279,8 +304,16 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
           return;
         }
 
+        const history = detail.node.lessonId
+          ? await lessonService.history(detail.node.lessonId).catch((error: unknown) => {
+              console.warn('[learn] failed to load attempt history', error);
+              return [];
+            })
+          : [];
+        if (!host.isConnected) return;
+
         host.className = '';
-        host.replaceChildren(renderDetail(detail));
+        host.replaceChildren(renderDetail(detail, history));
       } catch (error) {
         console.error('[learn] failed to load lesson', error);
         if (!host.isConnected) return;

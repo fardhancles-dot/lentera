@@ -98,6 +98,16 @@ export interface LessonSummary {
   attempts?: number;
 }
 
+export interface LessonAttemptSummary {
+  id: string;
+  completedAt: string;
+  accuracy: number;
+  score: number;
+  maxScore: number;
+  correctCount: number;
+  totalCount: number;
+}
+
 export type LessonAnswer =
   | { optionId: string }
   | { text: string }
@@ -272,6 +282,19 @@ function parseAnswer(payload: Json): AnswerResult {
   };
 }
 
+function parseAttemptSummary(payload: unknown): LessonAttemptSummary {
+  const row = asRecord(payload);
+  return {
+    id: asString(row.id),
+    completedAt: asString(row.completed_at ?? row.completedAt),
+    accuracy: Math.max(0, asNumber(row.accuracy)),
+    score: Math.max(0, asNumber(row.score)),
+    maxScore: Math.max(0, asNumber(row.max_score ?? row.maxScore)),
+    correctCount: Math.max(0, asNumber(row.correct_count ?? row.correctCount)),
+    totalCount: Math.max(0, asNumber(row.total_count ?? row.totalCount)),
+  };
+}
+
 function parseSummary(payload: Json): LessonSummary {
   const root = asRecord(payload);
   return {
@@ -321,6 +344,15 @@ export const lessonService = {
   async complete(attemptId: string): Promise<LessonSummary> {
     try {
       return parseSummary(await lessonRepository.complete(attemptId));
+    } catch (error) {
+      throw messageFor(error);
+    }
+  },
+
+  async history(lessonId: string, limit = 5): Promise<LessonAttemptSummary[]> {
+    try {
+      const rows = await lessonRepository.listAttempts(lessonId, limit);
+      return rows.map(parseAttemptSummary).filter((row) => Boolean(row.id));
     } catch (error) {
       throw messageFor(error);
     }

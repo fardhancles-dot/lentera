@@ -27,6 +27,8 @@ mute, dan breakpoint ponsel 390px).
   memvalidasi path file.
 - **UI responsif**: peta compact memakai dua kolom dan label 15px sehingga tidak hanya
   diperkecil; frame memakai rasio dari viewport aktif.
+- **Riwayat percobaan**: halaman lesson menampilkan lima penyelesaian terakhir milik pemain
+  (tanggal, akurasi, benar/total, poin) dari `lesson_attempts` dengan RLS select own.
 
 ## File utama
 
@@ -89,8 +91,7 @@ Belum selesai, berurutan dari yang paling cepat ditutup:
 6. **Cakupan 20 mekanik mini-game** — saat ini browser baru menguji dua alur jawab.
 7. **Mapel multi-course** — katalog masih memakai `courses[0]`; perlu redesign bila mapel
    punya lebih dari satu course.
-8. **Riwayat attempt lesson** di UI (data sudah tersimpan).
-9. **Deployment produksi** (Vercel) dan **Tahap 7** (graf teman/liga/leaderboard).
+8. **Deployment produksi** (Vercel) dan **Tahap 7** (graf teman/liga/leaderboard).
 
 ## Langkah berikutnya
 

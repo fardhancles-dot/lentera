@@ -65,7 +65,7 @@ jelas, bukan gagal. Bersih-bersih quest uji memakai `SUPABASE_ACCESS_TOKEN` bila
 | Test | Cakupan |
 | --- | --- |
 | `every app route renders without page errors` | Login, lalu 9 rute (`/app`, `/learn`, `/practice`, `/wallet`, `/quests`, `/shop`, `/mastery`, `/profile`, `/settings`): `main#main`, heading, judul topbar, dan nol error konsol. |
-| `lesson starts, answers, shows feedback, and advances` | Klik node lesson di peta → halaman lesson → `Mulai lesson` → jawab soal → feedback benar/salah → tombol lanjut. |
+| `lesson starts, answers, shows feedback, and advances` | Klik node lesson di peta → kartu “Riwayat percobaan” tampil → `Mulai lesson` → jawab soal → feedback benar/salah → tombol lanjut. |
 | `mobile layout has no horizontal overflow` | Viewport 390×844 pada 5 rute + frame peta; `scrollWidth - clientWidth ≤ 2px`. |
 | `reduced motion keeps the map usable` | `prefers-reduced-motion: reduce`: kanvas peta, tombol level, dan judul tetap tampil. |
 | `practice hub starts a session and grades an answer` | `/practice?subject=bahasa-inggris` → mode nyata → jawab satu soal → `Periksa jawaban` → feedback dan tombol lanjut. Skip bila mekanik soal pertama butuh mikrofon. |

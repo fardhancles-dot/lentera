@@ -912,6 +912,12 @@ lulus.
   password baru, lalu login API dengan password itu diverifikasi. Akun dihapus di `finally`.
   Ini menutup alur lupa password tanpa kotak surat; konfirmasi pendaftaran lewat email tetap
   belum diuji.
+- **Riwayat percobaan lesson** (menutup temuan audit Tahap 3): halaman lesson kini punya
+  kartu “Riwayat percobaan” berisi lima penyelesaian terakhir milik pemain — tanggal,
+  akurasi, benar/total, dan poin. Data dibaca dari `lesson_attempts` yang memang punya RLS
+  `select own`; `lessonRepository.listAttempts` + `lessonService.history` memetakannya, dan
+  kegagalan memuat riwayat hanya dicatat sebagai warning tanpa menggagalkan halaman.
+  E2E memastikan kartu itu tampil sebelum lesson dimulai.
 - **Perapian format** `buildPathNode` di `curriculum.service.ts` (temuan audit Tahap 3,
   hanya indentasi, tanpa perubahan perilaku).
 
@@ -934,8 +940,7 @@ lulus.
    dijelajahi satu per satu di browser (server-nya sudah diuji).
 4. Mapel dengan lebih dari satu course belum didukung katalog (view memberi satu baris per
    course, katalog memakai `courses[0]`); perlu redesign saat fitur itu ditambahkan.
-5. Riwayat attempt lesson belum ditampilkan ke pemain.
-6. Deployment produksi dan fitur Tahap 7 (graf teman/sosial) belum dikerjakan.
+5. Deployment produksi dan fitur Tahap 7 (graf teman/sosial) belum dikerjakan.
 
 ## Sesi 14 — 10 November 2026 — Uji menyeluruh di browser dan bug katalog
 

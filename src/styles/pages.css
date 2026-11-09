@@ -1674,6 +1674,33 @@ a.path-node:hover {
   color: var(--green-600);
 }
 
+.attempt-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.attempt-list__item {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-2, var(--green-50));
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.attempt-list__when {
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.attempt-list__score {
+  font-size: var(--text-xs);
+}
+
 .lesson-start {
   display: grid;
   gap: var(--space-3);

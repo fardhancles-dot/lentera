@@ -57,6 +57,10 @@ test('lesson starts, answers, shows feedback, and advances', async ({ page }) =>
   await lessonLink.click();
   await page.waitForURL(/\/lesson\//);
 
+  await expect(page.getByRole('heading', { name: 'Riwayat percobaan' })).toBeVisible({
+    timeout: 30_000,
+  });
+
   const start = page.getByRole('link', { name: /Mulai lesson|Main lagi/ });
   await start.click();
   await page.waitForURL(/\/play/);

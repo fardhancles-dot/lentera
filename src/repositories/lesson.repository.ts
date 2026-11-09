@@ -1,5 +1,5 @@
 import { requireSupabase } from '../services/supabase/client';
-import type { Json } from '../types/database';
+import type { Json, LessonAttemptRow } from '../types/database';
 
 function raise(error: { message: string; code?: string } | null): never {
   const wrapped = new Error(error?.message ?? 'Permintaan lesson gagal.');
@@ -34,6 +34,19 @@ export const lessonRepository = {
     const { data, error } = await requireSupabase().rpc('complete_lesson_attempt', {
       p_attempt_id: attemptId,
     });
+    if (error) raise(error);
+    return data;
+  },
+
+  /** RLS `lesson_attempts_select_own` limits this to the signed-in player. */
+  async listAttempts(lessonId: string, limit = 5): Promise<LessonAttemptRow[]> {
+    const { data, error } = await requireSupabase()
+      .from('lesson_attempts')
+      .select('*')
+      .eq('lesson_id', lessonId)
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: false })
+      .limit(limit);
     if (error) raise(error);
     return data;
   },

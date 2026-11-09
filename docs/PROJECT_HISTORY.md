@@ -609,3 +609,67 @@ Hearts penuh tanpa memotong Koin, RLS Hearts/Streak, dan penolakan update Hearts
 1. Uji `/wallet`, HUD Hearts, refill, dan hasil lesson di browser dengan akun nyata.
 2. Tambahkan reward naik level dan aturan Hearts premium bila pemilik produk memutuskan.
 3. Lanjutkan quest harian/mingguan, achievement, shop, dan inventory sebagai slice berikutnya.
+
+---
+
+## Sesi 10 — 10 November 2026 — Tahap 5: reward, misi, achievement, toko, inventory
+
+**Fokus:** menyelesaikan sisa slice reward Tahap 5 tanpa mengubah stack, tanpa mereset
+pekerjaan Tahap 1–4, dan tanpa memberi client kendali atas Koin atau progres.
+
+### Database
+
+- Migration baru `20261110130000_tahap5_rewards.sql` menjadi migration kesebelas:
+  - `player_levels.reward_coins` + `user_level_rewards`; hadiah level 2–30 diberikan sekali
+    lewat trigger XP dengan formula `25 + (level − 2) × 5`.
+  - `streak_milestones` + `user_streak_milestones` untuk hari 3/7/14/30/60/100.
+  - `quest_definitions` + `user_quest_claims`: 3 misi harian dan 3 mingguan, progres dari
+    `user_xp_ledger`, klaim unik per periode.
+  - `achievement_definitions` + `user_achievements`: 8 pencapaian otomatis tanpa hadiah Koin.
+  - `shop_items`, `user_inventory`, dan `shop_purchases`: Ramuan Hati 80 Koin dan Perisai
+    Streak 120 Koin; pembelian serta pemakaian atomik.
+  - `coin_transactions.reference_id` sebagai kunci idempotensi reward baru; `freezes` pada
+    `user_streaks`; helper `grant_level_rewards`, `grant_streak_milestones`,
+    `evaluate_achievements`, dan `sync_player_rewards`.
+  - RPC `get_my_quests`, `claim_quest_reward`, `get_my_achievements`, `get_shop_catalog`,
+    `purchase_shop_item`, `get_my_inventory`, `use_inventory_item`; `get_player_state`
+    mengembalikan jumlah freeze dan `get_my_wallet` mengembalikan katalog hadiah.
+- Migration diterapkan ke Supabase remote `xvrnmxbrxhtzzavmrlvy` dengan `db push`.
+
+### Client dan UI
+
+- Tipe, repository, service parser, dan store rewards; semua payload divalidasi dan di-clamp.
+- `/quests` menampilkan misi harian/mingguan, progres, klaim, dan delapan achievement.
+- `/shop` menampilkan saldo, dua item, tombol beli, tas, dan tombol pakai.
+- `/wallet` menampilkan hadiah level di sekitar level aktif, milestone Streak, jumlah Perisai,
+  dan tautan ke Misi/Toko; navigasi sidebar/bottom nav ditambah.
+- Item memakai ikon yang sudah ada (`bag`, `gift`, `flag`, `shield`, `heart`, `coin`), sehingga
+  tidak ada ikon wallet yang tidak valid.
+
+### Pengujian yang dijalankan
+
+| Perintah | Hasil |
+| --- | --- |
+| `npm run typecheck` | Lulus, 0 error. |
+| `npm test` | **57 test lulus (6 file)**; 8 test baru untuk parser reward/freeze/level. |
+| `npm run test:sql` | **189 smoke check lulus** di PGlite. |
+| `npm run build` | Lulus; quest/shop/wallet menjadi chunk terpisah. |
+| `npm run verify:supabase` | **54 check lulus** di project `xvrnmxbrxhtzzavmrlvy`. |
+
+Verifikasi remote mencakup reward level di `get_my_wallet`, enam quest, delapan achievement,
+dua item toko, inventory, penolakan quest/item palsu, dan RLS inventory. Migration baru juga
+lulus seluruh check lama, jadi progression, Friends Quest, practice, dan lesson tidak rusak.
+
+### Batasan yang tetap jujur
+
+- UI `/quests`, `/shop`, dan perluasan `/wallet` belum diuji lewat browser dengan akun nyata;
+  belum ada Playwright.
+- Mastery, review schedule, dan node reward kurikulum belum dibuat.
+- Perisai Streak hanya menutup satu hari yang terlewat; tidak ada pembelian freeze permanent.
+- Admin Panel, graf teman penuh, leaderboard, dan Tahap 6–8 tetap tidak dikerjakan.
+
+### Status akhir
+
+Sisa slice reward Tahap 5 selesai pada level database, API, tipe, UI, dan build. Klaim
+“selesai” di sini berarti seluruh perintah di tabel pengujian di atas sudah dijalankan dan
+lulus; pengujian klik browser tetap menjadi pekerjaan terpisah.

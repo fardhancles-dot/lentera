@@ -1,12 +1,14 @@
 import { playerRepository } from '../repositories/player.repository';
 import type { Json } from '../types/database';
 import type {
+  LevelReward,
   PlayerHearts,
   PlayerLevel,
   PlayerState,
   PlayerStreak,
   PlayerWallet,
   RefillOutcome,
+  StreakMilestone,
   WalletTransaction,
 } from '../types/player';
 
@@ -63,6 +65,7 @@ function parseStreak(value: unknown): PlayerStreak {
   return {
     current: Math.max(0, asNumber(record.current)),
     longest: Math.max(0, asNumber(record.longest)),
+    freezes: Math.min(2, Math.max(0, asNumber(record.freezes))),
     lastActivityDate: typeof lastActivityDate === 'string' ? lastActivityDate : null,
     todayDate: asString(record.todayDate),
     activityDays: asStringArray(record.activityDays),
@@ -110,6 +113,30 @@ function parseTransactions(value: unknown): WalletTransaction[] {
   return Array.isArray(value) ? value.map(parseTransaction).filter((item) => Boolean(item.id)) : [];
 }
 
+function parseLevelReward(value: unknown): LevelReward {
+  const record = asRecord(value);
+
+  return {
+    level: Math.max(1, asNumber(record.level, 1)),
+    title: asString(record.title, 'Level'),
+    xpRequired: Math.max(0, asNumber(record.xpRequired)),
+    rewardCoins: Math.max(0, asNumber(record.rewardCoins)),
+    awardedAt: typeof record.awardedAt === 'string' ? record.awardedAt : null,
+  };
+}
+
+function parseStreakMilestone(value: unknown): StreakMilestone {
+  const record = asRecord(value);
+
+  return {
+    days: Math.max(1, asNumber(record.days, 1)),
+    title: asString(record.title, 'Milestone'),
+    rewardCoins: Math.max(0, asNumber(record.rewardCoins)),
+    icon: asString(record.icon, 'flame'),
+    awardedAt: typeof record.awardedAt === 'string' ? record.awardedAt : null,
+  };
+}
+
 export function parsePlayerWallet(value: unknown): PlayerWallet {
   const record = asRecord(value);
 
@@ -117,6 +144,12 @@ export function parsePlayerWallet(value: unknown): PlayerWallet {
     ...parsePlayerState(record),
     transactions: parseTransactions(record.transactions),
     xpTransactions: parseTransactions(record.xpTransactions),
+    levelRewards: Array.isArray(record.levelRewards)
+      ? record.levelRewards.map(parseLevelReward)
+      : [],
+    streakMilestones: Array.isArray(record.streakMilestones)
+      ? record.streakMilestones.map(parseStreakMilestone)
+      : [],
   };
 }
 

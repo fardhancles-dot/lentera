@@ -8,7 +8,15 @@ import { playerStore, type PlayerStoreState } from '../stores/player.store';
 import { sessionStore } from '../stores/session.store';
 import { el, formatNumber } from '../utils/dom';
 
-export type NavKey = 'home' | 'learn' | 'practice' | 'wallet' | 'profile' | 'settings';
+export type NavKey =
+  | 'home'
+  | 'learn'
+  | 'practice'
+  | 'wallet'
+  | 'quests'
+  | 'shop'
+  | 'profile'
+  | 'settings';
 
 interface NavItem {
   key: NavKey;
@@ -23,6 +31,8 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'learn', href: '/learn', label: 'Belajar', shortLabel: 'Belajar', icon: 'map' },
   { key: 'practice', href: '/practice', label: 'Latihan', shortLabel: 'Latihan', icon: 'target' },
   { key: 'wallet', href: '/wallet', label: 'Wallet', shortLabel: 'Wallet', icon: 'bag' },
+  { key: 'quests', href: '/quests', label: 'Misi', shortLabel: 'Misi', icon: 'flag' },
+  { key: 'shop', href: '/shop', label: 'Toko', shortLabel: 'Toko', icon: 'gift' },
   { key: 'profile', href: '/profile', label: 'Profil', shortLabel: 'Profil', icon: 'user' },
   { key: 'settings', href: '/settings', label: 'Pengaturan', shortLabel: 'Atur', icon: 'settings' },
 ];

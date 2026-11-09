@@ -147,6 +147,19 @@ Batas kepercayaan:
 - Level tidak disimpan di tabel pemain. `get_player_state` menjumlahkan XP ledger lalu
   memetakan ke `player_levels`, sehingga client tidak bisa mengubah level.
 
+## Reward, misi, dan toko
+
+- `rewards.repository.ts` hanya memanggil RPC `get_my_quests`, `claim_quest_reward`,
+  `get_my_achievements`, `get_shop_catalog`, `purchase_shop_item`, `get_my_inventory`, dan
+  `use_inventory_item`.
+- `rewards.service.ts` memvalidasi payload, meng-clamp progres/quantity, dan menerjemahkan
+  kode error server ke pesan Indonesia.
+- `rewards.store.ts` menyimpan cache terpisah untuk quest, achievement, toko, dan inventory;
+  klaim/pembelian/pemakaian menyegarkan inventory serta `playerStore` agar HUD Koin/Hearts
+  langsung konsisten.
+- `/quests` dan `/shop` adalah halaman lazy-loaded; `/wallet` membaca katalog hadiah level
+  dan milestone dari payload wallet yang sama. Semua nominal hadiah berasal dari server.
+
 ## Mini-game renderer
 
 `src/game/minigames/` memisahkan mekanik dari halaman lesson:

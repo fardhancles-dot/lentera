@@ -78,6 +78,35 @@ describe('player payload parsing', () => {
     expect(wallet.transactions[0]?.amount).toBe(-10);
     expect(wallet.xpTransactions[0]?.source).toBe('lesson');
   });
+
+  it('parses Streak freezes and reward catalogs from the wallet', () => {
+    const wallet = parsePlayerWallet({
+      streak: { current: 4, longest: 7, freezes: 9 },
+      levelRewards: [
+        {
+          level: 2,
+          title: 'Penjelajah',
+          xpRequired: 100,
+          rewardCoins: 25,
+          awardedAt: '2026-11-10T12:00:00Z',
+        },
+      ],
+      streakMilestones: [
+        {
+          days: 3,
+          title: 'Tiga Hari',
+          rewardCoins: 20,
+          icon: 'flame',
+          awardedAt: null,
+        },
+      ],
+    });
+
+    expect(wallet.streak.freezes).toBe(2);
+    expect(wallet.levelRewards[0]?.rewardCoins).toBe(25);
+    expect(wallet.levelRewards[0]?.awardedAt).toBe('2026-11-10T12:00:00Z');
+    expect(wallet.streakMilestones[0]).toMatchObject({ days: 3, awardedAt: null });
+  });
 });
 
 describe('Heart refill countdown', () => {

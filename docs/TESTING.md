@@ -5,17 +5,17 @@
 | Pemeriksaan | Perintah | Hasil |
 | --- | --- | --- |
 | TypeScript strict | `npm run typecheck` | Lulus, 0 error. |
-| Unit test | `npm test` | **49 test lulus (5 file)**. |
-| Migration + RPC + RLS + practice + Friends Quest + progression | `npm run test:sql` | **167 smoke check lulus** di PGlite. |
-| Build produksi | `npm run build` | Lulus; Phaser, Friends Quest, dan wallet menjadi chunk terpisah. |
+| Unit test | `npm test` | **57 test lulus (6 file)**. |
+| Migration + RPC + RLS + practice + Friends Quest + progression + reward | `npm run test:sql` | **189 smoke check lulus** di PGlite. |
+| Build produksi | `npm run build` | Lulus; Phaser, Friends Quest, quest, shop, dan wallet menjadi chunk terpisah. |
 | Browser smoke | Chrome headless | Landing, auth, guard route, 404 (sesi 1). |
-| Supabase nyata | `npm run verify:supabase` | **43 check lulus** (lesson 20 soal, 4 scene, Practice Hub, Friends Quest, progression, XP idempoten, RLS) di project `xvrnmxbrxhtzzavmrlvy`. |
+| Supabase nyata | `npm run verify:supabase` | **54 check lulus** (lesson 20 soal, 4 scene, Practice Hub, Friends Quest, progression, reward/quest/achievement/toko, XP idempoten, RLS) di project `xvrnmxbrxhtzzavmrlvy`. |
 | Playwright/E2E | — | Belum ada. |
 
 PGlite membuktikan SQL dan RPC konsisten. Verifikasi Supabase nyata kini juga sudah
 dijalankan lewat Auth + PostgREST, tetapi belum mencakup UI browser, email, dan redirect.
-Sepuluh migration (termasuk progression/economy) dan seed 231 soal sudah diterapkan ke
-project nyata.
+Sebelas migration (termasuk progression/economy dan reward Tahap 5) dan seed 231 soal sudah
+diterapkan ke project nyata.
 
 ## Verifikasi API Supabase nyata
 
@@ -41,15 +41,18 @@ hadiah, dan memastikan klaim kedua tidak menambah hadiah. Terakhir skrip memasti
 `question_pairs`, `practice_sessions`, dan `user_hearts` tidak bisa dibaca tanpa sesi. Skrip
 juga memanggil `get_player_state`, `get_my_wallet`, membaca 30 baris `player_levels`, menguji
 refill saat Hearts penuh tanpa memotong Koin, dan memastikan pemain tidak dapat mengubah
-Hearts langsung. Ini menguji Auth + PostgREST + RPC nyata, **bukan** tampilan browser; uji
-klik tetap harus dilakukan terpisah.
+Hearts langsung. Untuk reward Tahap 5, skrip memanggil `get_my_quests`,
+`get_my_achievements`, `get_shop_catalog`, dan `get_my_inventory`; memastikan enam misi,
+delapan achievement, dua item toko, dan penolakan item/quest palsu; lalu memastikan
+`user_inventory` tidak dapat diubah langsung. Ini menguji Auth + PostgREST + RPC nyata,
+**bukan** tampilan browser; uji klik tetap harus dilakukan terpisah.
 
 ## Cakupan `npm run test:sql`
 
 `scripts/test-sql.mjs` membuat database PostgreSQL in-memory, lalu:
 
-1. Menjalankan kesepuluh migration berurutan, termasuk `question_scenes`,
-   `practice_engine`, `friends_quest`, dan `progression_economy`.
+1. Menjalankan kesebelas migration berurutan, termasuk `question_scenes`,
+   `practice_engine`, `friends_quest`, `progression_economy`, dan `tahap5_rewards`.
 2. Memeriksa 8 mapel aktif, 57 lesson, 231 soal, 12 tipe soal, 19 pasangan matching,
    3 media gambar, dan 6 jenis node.
 3. Memeriksa 7 node practice, 7 checkpoint, dan 7 legendary; semuanya punya lesson
@@ -116,6 +119,15 @@ klik tetap harus dilakukan terpisah.
 37. Wallet: refill tanpa Koin cukup ditolak, Hearts tidak berubah; refill 3 Hearts memotong
     30 Koin, menulis transaksi `heart_refill`, mengembalikan riwayat XP; refill saat penuh
     tidak memotong Koin; RLS hanya membuka Hearts/Streak sendiri dan menolak update langsung.
+38. Reward level: XP melewati ambang level memberi Koin sekali, `get_my_wallet` memuat
+    katalog hadiah level, dan transaksi `level_reward` tidak dibuat dua kali.
+39. Milestone Streak: hari ke-3/7 memberi hadiah sesuai katalog dan transaksi masing-masing;
+    penggunaan Perisai Streak menambah `freezes` lalu menghabiskan item.
+40. Quest dan achievement: 3 harian + 3 mingguan muncul, progres dihitung dari ledger XP,
+    klaim memberi Koin tepat sekali, dan achievement pertama terbuka otomatis.
+41. Toko dan inventory: katalog membaca harga server, pembelian memotong Koin dan menambah
+    quantity, item tidak dimiliki ditolak, Ramuan Hati memulihkan Hearts, dan pemain tidak
+    dapat mengubah `user_inventory` langsung.
 
 ## Unit test Vitest
 
@@ -129,6 +141,8 @@ klik tetap harus dilakukan terpisah.
   dan tiga rumpang; penggabungan jawaban berurutan; penolakan jawaban kosong.
 - `tests/player.test.ts` — parsing state/wallet dari RPC, clamp Hearts/persentase, fallback
   payload kosong, filter transaksi rusak, dan format countdown refill.
+- `tests/rewards.test.ts` — parsing quest, achievement, katalog toko, inventory, klaim,
+  pembelian, dan efek item; clamp progres/quantity serta fallback payload rusak.
 
 ## Yang belum dapat diuji
 
@@ -226,6 +240,16 @@ klik tetap harus dilakukan terpisah.
 - [ ] Streak bertambah setelah lesson/latihan di hari baru; hadiah quest tidak menambah.
 - [ ] Naik level setelah total XP melewati ambang 100 XP.
 - [ ] Countdown Heart berjalan dan menyegarkan state setelah habis.
+
+### Misi, achievement, dan toko
+
+- [ ] `/quests` menampilkan 3 misi harian + 3 mingguan dan progres dari server.
+- [ ] Klaim misi menambah Koin sekali; refresh tidak menggandakan hadiah.
+- [ ] Achievement terbuka otomatis dan tidak memberi Koin.
+- [ ] `/shop` menampilkan dua item, saldo Koin, dan quantity tas.
+- [ ] Membeli Ramuan Hati memotong 80 Koin; memakainya memulihkan Hearts.
+- [ ] Membeli Perisai Streak memotong 120 Koin; penggunaan dibatasi maksimal 2.
+- [ ] Tombol beli/pakai nonaktif saat Koin, stok, atau item tidak mencukupi.
 
 ### RLS
 

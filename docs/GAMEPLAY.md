@@ -7,8 +7,9 @@
 > respons sebelum lanjut, dan Fill in the Blank mendukung beberapa rumpang. Tujuh mode
 > latihan memakai sesi server dengan timer, combo, dan XP idempoten. **Friends Quest**
 > tersedia sebagai co-op berbasis kode undangan; graf teman penuh tetap Tahap 7.
-> **Hearts, Streak, level akun, dan wallet** sudah aktif dan dihitung di server; quest
-> harian/mingguan, achievement, dan shop belum ada.
+> **Hearts, Streak, level akun, wallet, reward level, milestone Streak, quest,
+> achievement, toko, dan inventory** sudah aktif dan dihitung di server. Mastery belum
+> dibuat.
 
 ## Yang benar-benar ada sekarang
 
@@ -173,11 +174,30 @@ diubah pemain.
   memotong Koin.
 - **Streak.** Dihitung dari hari aktivitas XP `lesson`/`practice`, memakai zona waktu akun.
   XP hadiah Friends Quest tidak memperpanjang Streak. Hari yang terlewat mereset Streak ke 1
-  saat aktivitas berikutnya; `longest_streak` tetap menyimpan rekor terbaik.
+  saat aktivitas berikutnya; `longest_streak` tetap menyimpan rekor terbaik. Perisai Streak
+  (maksimal 2) dikonsumsi otomatis untuk menutup satu hari yang terlewat.
+- **Milestone Streak.** Hari ke-3, 7, 14, 30, 60, dan 100 memberi 20, 50, 100, 200, 400,
+  dan 800 Koin secara otomatis. Hadiah hanya diberikan sekali per milestone.
 - **Level akun.** Diturunkan dari total XP lewat tabel `player_levels` (30 level). Level 2
-  dimulai pada 100 XP; tidak ada angka level yang bisa dikirim client.
-- **Koin.** Didapat dari lesson, latihan, dan hadiah quest. Refill Hearts adalah pengeluaran
-  Koin pertama yang aktif; shop/inventory belum ada.
+  dimulai pada 100 XP; tidak ada angka level yang bisa dikirim client. Setiap level 2–30
+  memberi Koin otomatis (`25 + (level − 2) × 5`), sekali per level.
+- **Koin.** Didapat dari lesson, latihan, hadiah quest, reward level, dan milestone Streak.
+  Refill Hearts serta pembelian di toko memakai Koin dengan transaksi server.
+
+## Reward, misi, achievement, dan toko
+
+- **Misi harian/mingguan.** Tiga misi harian dan tiga misi mingguan dihitung dari
+  `user_xp_ledger`, bukan dari state client. Progres, target, hadiah, dan status klaim
+  berasal dari `get_my_quests`; klaim memakai `claim_quest_reward` dan unik per periode.
+- **Achievement.** Delapan pencapaian (1/5 lesson, 1/10 sesi latihan, 500 XP, Streak 7/30
+  hari, dan level 5) terbuka otomatis dari ledger. Achievement tidak memberi Koin;
+  statusnya dapat dilihat di `/quests`.
+- **Toko.** `/shop` menjual **Ramuan Hati** (80 Koin, memulihkan hingga 3 Hearts) dan
+  **Perisai Streak** (120 Koin, maksimal 2). Harga dan saldo divalidasi server; pembelian
+  ditulis ke `shop_purchases`, `coin_transactions`, dan `user_inventory` secara atomik.
+- **Inventory.** Tas menampilkan item yang dimiliki. Ramuan Hati dan Perisai Streak dipakai
+  dari `/shop`; Perisai Streak menambah `user_streaks.freezes`. Item habis tidak ditampilkan
+  sebagai baris aktif.
 
 ## Pemetaan mini-game per mata pelajaran
 
@@ -203,8 +223,9 @@ diubah pemain.
 | reward | Belum; menunggu sistem reward Tahap 5. |
 
 Semua node practice/checkpoint/legendary memiliki `lesson_id` dan soal aktif, sehingga
-dapat dimainkan dan ikut mengunci node berikutnya. Node hadiah (reward) belum dibuat karena
-belum ada mekanisme pemberian hadiah khusus; membuatnya sekarang akan menjadi tombol mati.
+dapat dimainkan dan ikut mengunci node berikutnya. Node hadiah khusus kurikulum belum
+dibuat; reward level, misi, dan toko sudah ada, tetapi node yang memberi hadiah khusus belum
+didefinisikan.
 
 ## Aturan konten
 
@@ -218,9 +239,8 @@ belum ada mekanisme pemberian hadiah khusus; membuatnya sekarang akan menjadi to
 
 ## Yang belum ada di scoring
 
-- Reward level (level hanya ditampilkan; belum ada hadiah saat naik level).
 - Koin dari practice (practice hanya memberi XP).
-- Quest harian/mingguan, achievement, dan mastery.
+- Mastery dan review schedule.
 - Reward khusus legendary di luar XP latihan.
 - Graf teman penuh, friend request, activity feed, dan leaderboard (Tahap 7).
 

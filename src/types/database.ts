@@ -254,6 +254,7 @@ export type CoinTransactionRow = {
   amount: number;
   source: string;
   lesson_attempt_id: string | null;
+  reference_id: string | null;
   created_at: string;
 };
 
@@ -261,8 +262,103 @@ export type PlayerLevelRow = {
   level: number;
   title: string;
   xp_required: number;
+  reward_coins: number;
   created_at: string;
   updated_at: string;
+};
+
+export type UserLevelRewardRow = {
+  user_id: string;
+  level: number;
+  coins: number;
+  awarded_at: string;
+};
+
+export type StreakMilestoneRow = {
+  days: number;
+  title: string;
+  reward_coins: number;
+  icon: string;
+  sort_order: number;
+};
+
+export type UserStreakMilestoneRow = {
+  user_id: string;
+  days: number;
+  coins: number;
+  awarded_at: string;
+};
+
+export type QuestDefinitionRow = {
+  id: string;
+  code: string;
+  cadence: 'daily' | 'weekly';
+  metric: 'xp' | 'lesson' | 'practice';
+  target: number;
+  reward_coins: number;
+  title: string;
+  description: string;
+  icon: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+};
+
+export type UserQuestClaimRow = {
+  id: string;
+  user_id: string;
+  quest_id: string;
+  period_start: string;
+  coins: number;
+  claimed_at: string;
+};
+
+export type AchievementDefinitionRow = {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  metric: 'xp' | 'lesson' | 'practice' | 'streak' | 'level';
+  target: number;
+  icon: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+};
+
+export type UserAchievementRow = {
+  user_id: string;
+  achievement_id: string;
+  awarded_at: string;
+};
+
+export type ShopItemRow = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  kind: 'heart_potion' | 'streak_freeze';
+  price_coins: number;
+  max_stack: number;
+  icon: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+};
+
+export type UserInventoryRow = {
+  user_id: string;
+  item_id: string;
+  quantity: number;
+  updated_at: string;
+};
+
+export type ShopPurchaseRow = {
+  id: string;
+  user_id: string;
+  item_id: string;
+  price_coins: number;
+  created_at: string;
 };
 
 export type UserHeartsRow = {
@@ -277,6 +373,7 @@ export type UserStreakRow = {
   user_id: string;
   current_streak: number;
   longest_streak: number;
+  freezes: number;
   last_activity_date: string | null;
   last_activity_at: string | null;
   updated_at: string;
@@ -467,6 +564,66 @@ export type Database = {
         Update: Record<string, unknown>;
         Relationships: [];
       };
+      user_level_rewards: {
+        Row: UserLevelRewardRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      streak_milestones: {
+        Row: StreakMilestoneRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      user_streak_milestones: {
+        Row: UserStreakMilestoneRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      quest_definitions: {
+        Row: QuestDefinitionRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      user_quest_claims: {
+        Row: UserQuestClaimRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      achievement_definitions: {
+        Row: AchievementDefinitionRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      user_achievements: {
+        Row: UserAchievementRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      shop_items: {
+        Row: ShopItemRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      user_inventory: {
+        Row: UserInventoryRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      shop_purchases: {
+        Row: ShopPurchaseRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
     };
     Views: {
       lesson_question_stats: {
@@ -553,6 +710,34 @@ export type Database = {
       };
       refill_hearts: {
         Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      get_my_quests: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      claim_quest_reward: {
+        Args: { p_quest_id: string };
+        Returns: Json;
+      };
+      get_my_achievements: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      get_shop_catalog: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      purchase_shop_item: {
+        Args: { p_item_id: string };
+        Returns: Json;
+      };
+      get_my_inventory: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      use_inventory_item: {
+        Args: { p_item_id: string };
         Returns: Json;
       };
     };

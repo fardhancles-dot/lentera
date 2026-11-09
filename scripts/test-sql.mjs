@@ -61,6 +61,7 @@ try {
   await run('supabase/migrations/20261109100000_practice_engine.sql');
   await run('supabase/migrations/20261110100000_friends_quest.sql');
   await run('supabase/migrations/20261110120000_progression_economy.sql');
+  await run('supabase/migrations/20261110130000_tahap5_rewards.sql');
 
   const content = await db.query(`
     select
@@ -1163,6 +1164,185 @@ try {
     storyQuestion?.scene?.screens?.length === 3,
     'story payload includes all three screens',
   );
+
+  // -------------------------------------------------------------------------
+  // Stage 5 remainder: level rewards, milestones, quests, achievements,
+  // shop, and inventory. User three already has lesson/practice XP.
+  // -------------------------------------------------------------------------
+  await db.exec('reset role');
+  await asUser(user3);
+
+  const levelRewardRows = await db.query(
+    `select count(*)::int as count, coalesce(max(coins), 0)::int as coins
+     from public.user_level_rewards where user_id = $1`,
+    [user3],
+  );
+  check(
+    levelRewardRows.rows[0].count === 1 && levelRewardRows.rows[0].coins === 25,
+    'level 2 reward is granted once with the configured coins',
+    JSON.stringify(levelRewardRows.rows[0]),
+  );
+  const levelRewardTx = await db.query(
+    `select count(*)::int as count from public.coin_transactions
+     where user_id = $1 and source = 'level_reward' and amount = 25`,
+    [user3],
+  );
+  check(levelRewardTx.rows[0].count === 1, 'level reward writes one coin transaction');
+
+  await db.exec('set role authenticated');
+  const questPayload = await db.query('select public.get_my_quests() as payload');
+  const questState = questPayload.rows[0].payload;
+  check(
+    questState.quests.length === 6 &&
+      questState.quests.filter((quest) => quest.cadence === 'daily').length === 3 &&
+      questState.quests.filter((quest) => quest.cadence === 'weekly').length === 3,
+    'quest RPC returns three daily and three weekly quests',
+    JSON.stringify(questState.quests?.map((quest) => quest.code)),
+  );
+  const dailyXpQuest = questState.quests.find((quest) => quest.code === 'daily-xp-50');
+  check(dailyXpQuest?.progress === 110, 'daily XP quest reads server-written XP only', String(dailyXpQuest?.progress));
+  check(dailyXpQuest?.canClaim === true, 'completed daily quest can be claimed');
+
+  const questClaim = await db.query('select public.claim_quest_reward($1) as payload', [dailyXpQuest.id]);
+  check(
+    questClaim.rows[0].payload.alreadyClaimed === false &&
+      questClaim.rows[0].payload.coinsAwarded === 20,
+    'quest claim awards its server-configured coins',
+  );
+  const questClaimRepeat = await db.query(
+    'select public.claim_quest_reward($1) as payload',
+    [dailyXpQuest.id],
+  );
+  check(
+    questClaimRepeat.rows[0].payload.alreadyClaimed === true &&
+      questClaimRepeat.rows[0].payload.coinsAwarded === 0,
+    'quest claim is idempotent for the same period',
+  );
+  const questRewardTx = await db.query(
+    `select count(*)::int as count from public.coin_transactions
+     where user_id = $1 and source = 'quest_reward' and amount = 20`,
+    [user3],
+  );
+  check(questRewardTx.rows[0].count === 1, 'quest claim writes one coin transaction');
+
+  const achievementPayload = await db.query('select public.get_my_achievements() as payload');
+  const achievementState = achievementPayload.rows[0].payload;
+  check(
+    achievementState.total === 8 && achievementState.unlockedCount >= 2,
+    'achievement RPC returns the catalog and unlocked badges',
+    JSON.stringify({ total: achievementState.total, unlocked: achievementState.unlockedCount }),
+  );
+  check(
+    achievementState.achievements.find((achievement) => achievement.code === 'first-lesson')?.unlockedAt,
+    'first lesson achievement unlocks automatically',
+  );
+
+  await db.exec('reset role');
+  await db.query(
+    `update public.user_streaks
+     set current_streak = 6, longest_streak = 6,
+         last_activity_date = (now() at time zone 'Asia/Jakarta')::date - 1,
+         updated_at = now()
+     where user_id = $1`,
+    [user3],
+  );
+  await db.query(
+    "insert into public.user_xp_ledger (user_id, amount, source) values ($1, 1, 'lesson')",
+    [user3],
+  );
+  const streakAfterMilestone = await db.query(
+    'select public.get_player_state() as payload',
+  );
+  check(
+    streakAfterMilestone.rows[0].payload.streak.current === 7,
+    'streak advances from six to seven through the ledger trigger',
+  );
+  const milestoneRows = await db.query(
+    `select count(*)::int as count, coalesce(sum(coins), 0)::int as coins
+     from public.user_streak_milestones where user_id = $1`,
+    [user3],
+  );
+  check(
+    milestoneRows.rows[0].count === 2 && milestoneRows.rows[0].coins === 70,
+    'crossing seven days grants the 3-day and 7-day milestones once',
+    JSON.stringify(milestoneRows.rows[0]),
+  );
+  const milestoneTx = await db.query(
+    `select count(*)::int as count from public.coin_transactions
+     where user_id = $1 and source = 'streak_milestone'`,
+    [user3],
+  );
+  check(milestoneTx.rows[0].count === 2, 'streak milestones write their coin transactions');
+
+  await db.query('update public.user_wallets set coins = 500 where user_id = $1', [user3]);
+  await db.exec('set role authenticated');
+  await asUser(user3);
+  const shopPayload = await db.query('select public.get_shop_catalog() as payload');
+  const shopState = shopPayload.rows[0].payload;
+  check(shopState.items.length === 2 && shopState.coins === 500, 'shop returns two items and the server balance');
+  const potion = shopState.items.find((item) => item.slug === 'heart-potion');
+  const freeze = shopState.items.find((item) => item.slug === 'streak-freeze');
+  check(
+    potion?.priceCoins === 80 && freeze?.priceCoins === 120,
+    'shop prices come from the catalog',
+  );
+
+  const potionPurchase = await db.query('select public.purchase_shop_item($1) as payload', [potion.id]);
+  check(
+    potionPurchase.rows[0].payload.coinBalance === 420 &&
+      potionPurchase.rows[0].payload.quantity === 1,
+    'purchase deducts the configured price and adds inventory',
+  );
+  const freezePurchase = await db.query('select public.purchase_shop_item($1) as payload', [freeze.id]);
+  check(
+    freezePurchase.rows[0].payload.coinBalance === 300 &&
+      freezePurchase.rows[0].payload.quantity === 1,
+    'second purchase updates the wallet and inventory atomically',
+  );
+
+  await db.exec('reset role');
+  await db.query(
+    'update public.user_hearts set current_hearts = 1, last_refill_at = now() where user_id = $1',
+    [user3],
+  );
+  await db.exec('set role authenticated');
+  await asUser(user3);
+  const potionUse = await db.query('select public.use_inventory_item($1) as payload', [potion.id]);
+  check(
+    potionUse.rows[0].payload.effect === 'hearts' &&
+      potionUse.rows[0].payload.restored === 3 &&
+      potionUse.rows[0].payload.hearts.current === 4 &&
+      potionUse.rows[0].payload.quantity === 0,
+    'heart potion restores three Hearts and consumes the item',
+  );
+  const freezeUse = await db.query('select public.use_inventory_item($1) as payload', [freeze.id]);
+  check(
+    freezeUse.rows[0].payload.effect === 'freeze' &&
+      freezeUse.rows[0].payload.freezes === 1 &&
+      freezeUse.rows[0].payload.quantity === 0,
+    'streak shield activates and consumes the item',
+  );
+
+  await db.exec('reset role');
+  await db.query('update public.user_wallets set coins = 0 where user_id = $1', [user3]);
+  await db.exec('set role authenticated');
+  await asUser(user3);
+  await expectError(
+    'purchase rejects a wallet without enough coins',
+    'select public.purchase_shop_item($1)',
+    [potion.id],
+    'not_enough_coins',
+  );
+  await asUser(user2);
+  const ownInventory = await db.query('select count(*)::int as count from public.user_inventory');
+  check(ownInventory.rows[0].count === 0, 'RLS hides another player’s inventory');
+  await expectError(
+    'players cannot edit inventory directly',
+    'update public.user_inventory set quantity = 9 where user_id = $1',
+    [user3],
+    'permission denied',
+  );
+  await db.exec('reset role');
 
   if (failures.length > 0) {
     console.error(`\n${failures.length} SQL smoke check(s) failed.`);

@@ -15,6 +15,10 @@ const SOURCE_LABELS: Record<string, string> = {
   practice: 'Sesi latihan',
   friend_quest_reward: 'Hadiah Friends Quest',
   heart_refill: 'Isi Hearts',
+  level_reward: 'Hadiah level',
+  streak_milestone: 'Milestone Streak',
+  quest_reward: 'Hadiah misi',
+  shop_purchase: 'Pembelian toko',
   quest: 'Hadiah quest',
   daily: 'Hadiah harian',
 };
@@ -120,6 +124,65 @@ function heartPips(state: PlayerState): HTMLElement {
           attrs: { 'aria-hidden': 'true' },
         },
         [icon('heart', 22)],
+      ),
+    ),
+  );
+}
+
+function levelRewardList(state: PlayerWallet): HTMLElement {
+  const first = Math.max(2, state.level.level - 2);
+  const last = Math.min(30, state.level.level + 3);
+  const rewards = state.levelRewards.filter(
+    (reward) => reward.level >= first && reward.level <= last,
+  );
+
+  return el(
+    'ul',
+    { class: 'level-reward-list' },
+    rewards.map((reward) =>
+      el(
+        'li',
+        { class: `level-reward${reward.awardedAt ? ' level-reward--awarded' : ''}` },
+        [
+          el('span', { class: 'level-reward__badge', text: `Lv ${reward.level}` }),
+          el('span', { class: 'level-reward__meta' }, [
+            el('span', { class: 'level-reward__title', text: reward.title }),
+            el('span', {
+              class: 'level-reward__xp',
+              text: `${formatNumber(reward.xpRequired)} XP`,
+            }),
+          ]),
+          el('span', {
+            class: `level-reward__coins${reward.awardedAt ? ' level-reward__coins--claimed' : ''}`,
+            text: reward.awardedAt
+              ? `+${formatNumber(reward.rewardCoins)} diterima`
+              : `${formatNumber(reward.rewardCoins)} Koin`,
+          }),
+        ],
+      ),
+    ),
+  );
+}
+
+function streakMilestoneList(state: PlayerWallet): HTMLElement {
+  return el(
+    'ul',
+    { class: 'streak-milestones' },
+    state.streakMilestones.map((milestone) =>
+      el(
+        'li',
+        {
+          class: `streak-milestone${milestone.awardedAt ? ' streak-milestone--awarded' : ''}`,
+          attrs: { title: `${milestone.title} · ${milestone.rewardCoins} Koin` },
+        },
+        [
+          icon(milestone.awardedAt ? 'check' : 'flame', 14),
+          el('span', { class: 'streak-milestone__days', text: `${milestone.days}h` }),
+          el('span', {
+            class: 'streak-milestone__coins',
+            text: `+${formatNumber(milestone.rewardCoins)}`,
+          }),
+        ],
       ),
     ),
   );
@@ -254,10 +317,46 @@ function buildWallet(state: PlayerWallet): HTMLElement {
           ]),
         ]),
         streakStrip(state),
+        el('div', { class: 'streak-shield-line' }, [
+          icon('shield', 16),
+          el('span', {
+            text: `${streak.freezes}/2 perisai tersedia`,
+          }),
+          el('a', { attrs: { href: '/shop' }, text: 'Isi perisai' }),
+        ]),
+        el('div', { class: 'streak-milestone-head' }, [
+          el('span', { text: 'Milestone' }),
+          el('span', { class: 'wallet-panel__note', text: 'Hadiah otomatis' }),
+        ]),
+        streakMilestoneList(state),
         el('p', {
           class: 'wallet-panel__note',
-          text: 'Streak dihitung dari aktivitas belajar di zona waktu akunmu. XP hadiah quest tidak memperpanjang Streak.',
+          text: 'Streak dihitung dari aktivitas belajar di zona waktu akunmu. Perisai melindungi satu hari yang terlewat. XP hadiah quest tidak memperpanjang Streak.',
         }),
+      ]),
+    ]),
+
+    el('section', { class: 'card card--padded wallet-level-rewards' }, [
+      el('div', { class: 'wallet-panel__head' }, [
+        el('div', {}, [
+          el('h2', { class: 'card__title', text: 'Hadiah Level' }),
+          el('p', {
+            class: 'card__subtitle',
+            text: 'Diberikan otomatis saat total XP melewati ambang level.',
+          }),
+        ]),
+        el('span', { class: 'badge' }, [icon('gift', 12), 'Otomatis']),
+      ]),
+      levelRewardList(state),
+      el('div', { class: 'wallet-quick-links' }, [
+        el('a', { class: 'btn btn--secondary btn--sm', attrs: { href: '/quests' } }, [
+          icon('flag', 16),
+          'Lihat misi',
+        ]),
+        el('a', { class: 'btn btn--ghost btn--sm', attrs: { href: '/shop' } }, [
+          icon('gift', 16),
+          'Buka toko',
+        ]),
       ]),
     ]),
 

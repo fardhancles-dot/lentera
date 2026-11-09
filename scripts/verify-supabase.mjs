@@ -577,27 +577,195 @@ try {
   } else if (
     Array.isArray(walletRpc?.transactions) &&
     Array.isArray(walletRpc?.xpTransactions) &&
-    typeof walletRpc?.coins === 'number'
+    typeof walletRpc?.coins === 'number' &&
+    Array.isArray(walletRpc?.levelRewards) &&
+    walletRpc.levelRewards.length === 30 &&
+    Array.isArray(walletRpc?.streakMilestones) &&
+    walletRpc.streakMilestones.length === 6
   ) {
-    ok('get_my_wallet mengembalikan saldo dan riwayat Koin/XP');
+    ok('get_my_wallet mengembalikan saldo, riwayat, hadiah level, dan milestone');
   } else {
-    fail('get_my_wallet mengembalikan saldo dan riwayat Koin/XP', JSON.stringify(walletRpc));
+    fail(
+      'get_my_wallet mengembalikan saldo, riwayat, hadiah level, dan milestone',
+      JSON.stringify(walletRpc),
+    );
   }
 
   const { data: levelTable, error: levelTableError } = await supabase
     .from('player_levels')
-    .select('level, xp_required')
+    .select('level, xp_required, reward_coins')
     .order('level');
   if (levelTableError || levelTable?.length !== 30) {
     fail(
       'tabel player_levels berisi 30 level',
       levelTableError?.message ?? String(levelTable?.length),
     );
-  } else if (levelTable[0]?.xp_required === 0 && levelTable[29]?.xp_required === 9400) {
-    ok('tabel player_levels berisi 30 level dengan ambang XP');
+  } else if (
+    levelTable[0]?.xp_required === 0 &&
+    levelTable[29]?.xp_required === 9400 &&
+    levelTable.every((level) => typeof level.reward_coins === 'number')
+  ) {
+    ok('tabel player_levels berisi 30 level dengan ambang XP dan hadiah');
   } else {
-    fail('tabel player_levels berisi 30 level dengan ambang XP');
+    fail('tabel player_levels berisi 30 level dengan ambang XP dan hadiah');
   }
+
+  const { data: questRpc, error: questRpcError } = await supabase.rpc('get_my_quests');
+  if (questRpcError) {
+    fail('get_my_quests', questRpcError.message);
+  } else if (
+    Array.isArray(questRpc?.quests) &&
+    questRpc.quests.length === 6 &&
+    questRpc.quests.every(
+      (quest) =>
+        typeof quest.progress === 'number' &&
+        typeof quest.target === 'number' &&
+        typeof quest.canClaim === 'boolean',
+    )
+  ) {
+    ok('get_my_quests mengembalikan 3 misi harian dan 3 mingguan');
+  } else {
+    fail('get_my_quests mengembalikan 3 misi harian dan 3 mingguan', JSON.stringify(questRpc));
+  }
+
+  const { data: invalidQuest, error: invalidQuestError } = await supabase.rpc(
+    'claim_quest_reward',
+    { p_quest_id: '00000000-0000-4000-8000-000000000000' },
+  );
+  if (invalidQuestError?.message.includes('quest_not_found') || !invalidQuest) {
+    ok('claim_quest_reward menolak misi yang tidak ada');
+  } else {
+    fail('claim_quest_reward menolak misi yang tidak ada', JSON.stringify(invalidQuest));
+  }
+
+  const { data: achievementRpc, error: achievementRpcError } = await supabase.rpc(
+    'get_my_achievements',
+  );
+  if (achievementRpcError) {
+    fail('get_my_achievements', achievementRpcError.message);
+  } else if (
+    achievementRpc?.total === 8 &&
+    Array.isArray(achievementRpc?.achievements) &&
+    achievementRpc.achievements.every(
+      (achievement) =>
+        typeof achievement.progress === 'number' &&
+        (achievement.unlockedAt === null || typeof achievement.unlockedAt === 'string'),
+    )
+  ) {
+    ok('get_my_achievements mengembalikan 8 pencapaian dan progres');
+  } else {
+    fail('get_my_achievements mengembalikan 8 pencapaian dan progres', JSON.stringify(achievementRpc));
+  }
+
+  const { data: shopRpc, error: shopRpcError } = await supabase.rpc('get_shop_catalog');
+  if (shopRpcError) {
+    fail('get_shop_catalog', shopRpcError.message);
+  } else if (
+    typeof shopRpc?.coins === 'number' &&
+    Array.isArray(shopRpc?.items) &&
+    shopRpc.items.length === 2 &&
+    shopRpc.items.every(
+      (item) => typeof item.priceCoins === 'number' && typeof item.canBuy === 'boolean',
+    )
+  ) {
+    ok('get_shop_catalog mengembalikan dua item dengan harga server');
+  } else {
+    fail('get_shop_catalog mengembalikan dua item dengan harga server', JSON.stringify(shopRpc));
+  }
+
+  const { data: invalidPurchase, error: invalidPurchaseError } = await supabase.rpc(
+    'purchase_shop_item',
+    { p_item_id: '00000000-0000-4000-8000-000000000000' },
+  );
+  if (invalidPurchaseError?.message.includes('shop_item_not_found') || !invalidPurchase) {
+    ok('purchase_shop_item menolak item yang tidak ada');
+  } else {
+    fail('purchase_shop_item menolak item yang tidak ada', JSON.stringify(invalidPurchase));
+  }
+
+  const { data: inventoryRpc, error: inventoryRpcError } = await supabase.rpc(
+    'get_my_inventory',
+  );
+  if (inventoryRpcError) {
+    fail('get_my_inventory', inventoryRpcError.message);
+  } else if (
+    typeof inventoryRpc?.coins === 'number' &&
+    typeof inventoryRpc?.streakFreezes === 'number' &&
+    Array.isArray(inventoryRpc?.items)
+  ) {
+    ok('get_my_inventory mengembalikan tas dan jumlah perisai');
+  } else {
+    fail('get_my_inventory mengembalikan tas dan jumlah perisai', JSON.stringify(inventoryRpc));
+  }
+
+  const { data: invalidUse, error: invalidUseError } = await supabase.rpc(
+    'use_inventory_item',
+    { p_item_id: '00000000-0000-4000-8000-000000000000' },
+  );
+  if (invalidUseError?.message.includes('inventory_item_not_owned') || !invalidUse) {
+    ok('use_inventory_item menolak item yang tidak dimiliki');
+  } else {
+    fail('use_inventory_item menolak item yang tidak dimiliki', JSON.stringify(invalidUse));
+  }
+
+  const { data: questDefinitions, error: questDefinitionsError } = await supabase
+    .from('quest_definitions')
+    .select('code, cadence, target')
+    .eq('is_active', true);
+  if (!questDefinitionsError && questDefinitions?.length === 6) {
+    ok('tabel quest_definitions berisi enam misi aktif');
+  } else {
+    fail(
+      'tabel quest_definitions berisi enam misi aktif',
+      questDefinitionsError?.message ?? String(questDefinitions?.length),
+    );
+  }
+
+  const { data: streakMilestones, error: streakMilestonesError } = await supabase
+    .from('streak_milestones')
+    .select('days, reward_coins')
+    .order('days');
+  if (!streakMilestonesError && streakMilestones?.length === 6) {
+    ok('tabel streak_milestones berisi enam milestone');
+  } else {
+    fail(
+      'tabel streak_milestones berisi enam milestone',
+      streakMilestonesError?.message ?? String(streakMilestones?.length),
+    );
+  }
+
+  const { data: achievementDefinitions, error: achievementDefinitionsError } = await supabase
+    .from('achievement_definitions')
+    .select('code, target')
+    .eq('is_active', true);
+  if (!achievementDefinitionsError && achievementDefinitions?.length === 8) {
+    ok('tabel achievement_definitions berisi delapan pencapaian');
+  } else {
+    fail(
+      'tabel achievement_definitions berisi delapan pencapaian',
+      achievementDefinitionsError?.message ?? String(achievementDefinitions?.length),
+    );
+  }
+
+  const { data: shopItems, error: shopItemsError } = await supabase
+    .from('shop_items')
+    .select('slug, price_coins, max_stack')
+    .eq('is_active', true);
+  if (!shopItemsError && shopItems?.length === 2) {
+    ok('tabel shop_items berisi dua item aktif');
+  } else {
+    fail(
+      'tabel shop_items berisi dua item aktif',
+      shopItemsError?.message ?? String(shopItems?.length),
+    );
+  }
+
+  const { error: inventoryWriteError } = await supabase
+    .from('user_inventory')
+    .update({ quantity: 99 })
+    .eq('user_id', auth.user.id);
+  if (inventoryWriteError) ok('pemain tidak bisa mengubah inventory langsung');
+  else fail('pemain tidak bisa mengubah inventory langsung');
 
   const { data: ownHearts, error: ownHeartsError } = await supabase
     .from('user_hearts')

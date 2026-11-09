@@ -9,6 +9,7 @@ export interface PlayerHearts {
 export interface PlayerStreak {
   current: number;
   longest: number;
+  freezes: number;
   lastActivityDate: string | null;
   todayDate: string;
   activityDays: string[];
@@ -39,9 +40,27 @@ export interface WalletTransaction {
   createdAt: string;
 }
 
+export interface LevelReward {
+  level: number;
+  title: string;
+  xpRequired: number;
+  rewardCoins: number;
+  awardedAt: string | null;
+}
+
+export interface StreakMilestone {
+  days: number;
+  title: string;
+  rewardCoins: number;
+  icon: string;
+  awardedAt: string | null;
+}
+
 export interface PlayerWallet extends PlayerState {
   transactions: WalletTransaction[];
   xpTransactions: WalletTransaction[];
+  levelRewards: LevelReward[];
+  streakMilestones: StreakMilestone[];
 }
 
 export interface RefillOutcome {

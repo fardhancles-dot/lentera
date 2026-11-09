@@ -2,11 +2,11 @@
 
 Database: PostgreSQL di Supabase. Migration ada di `supabase/migrations/`.
 
-> **Status:** kesepuluh migration sudah diterapkan ke project Supabase nyata
+> **Status:** kesebelas migration sudah diterapkan ke project Supabase nyata
 > (`xvrnmxbrxhtzzavmrlvy`, region Singapura) dan `supabase migration list` menunjukkan
-> local = remote. Smoke test PGlite (167 check) dan verifikasi API Supabase (43 check)
-> lulus, termasuk Friends Quest serta progression/economy. Pengujian UI di browser masih
-> terpisah.
+> local = remote. Smoke test PGlite (189 check) dan verifikasi API Supabase (54 check)
+> lulus, termasuk Friends Quest, progression/economy, serta reward/quest/achievement/toko.
+> Pengujian UI di browser masih terpisah.
 
 ## Daftar migration
 
@@ -22,6 +22,7 @@ Database: PostgreSQL di Supabase. Migration ada di `supabase/migrations/`.
 | `20261109100000_practice_engine.sql` | Sesi latihan, jawaban latihan, 7 mode, combo/timer scoring, XP latihan idempoten. |
 | `20261110100000_friends_quest.sql` | Friends Quest co-op: quest, anggota, klaim, trigger kontribusi XP, RPC create/join/list/claim, RLS. |
 | `20261110120000_progression_economy.sql` | Level akun, Hearts, Streak, wallet RPC, trigger Hearts/Streak, backfill, dan RLS. |
+| `20261110130000_tahap5_rewards.sql` | Reward level, milestone Streak + freeze, quest, achievement, katalog toko, inventory, RPC klaim/pembelian/pakai, RLS. |
 
 Seed dihasilkan dari `scripts/content/**/*.ts` dengan `npm run seed:build`. Jangan mengedit
 file seed secara manual; ubah sumber TypeScript lalu regenerasi. UUID bersifat deterministik
@@ -84,19 +85,35 @@ activity feed, dan leaderboard tetap Tahap 7.
 
 - `user_xp_ledger` — setiap pemberian XP, unik per `lesson_attempt_id`, unik per
   `practice_session_id`, dan unik per `(friend_quest_id, user_id)` untuk hadiah quest.
-- `coin_transactions` — mutasi Koin, unik per `lesson_attempt_id`, dan unik per
-  `(friend_quest_id, user_id)` untuk hadiah quest. Refill Hearts menulis transaksi negatif
-  dengan `source = 'heart_refill'`.
+- `coin_transactions` — mutasi Koin, unik per `lesson_attempt_id`, unik per
+  `(friend_quest_id, user_id)` untuk hadiah quest, dan `reference_id` unik untuk reward
+  baru. Refill Hearts menulis transaksi negatif dengan `source = 'heart_refill'`.
 - `user_wallets` — saldo Koin, check `coins >= 0`.
-- `player_levels` — 30 ambang level dan judul; level 1 = 0 XP, level 2 = 100 XP, level 7+
-  memakai kurva `1000 + (level - 6) × 350`. Tabel ini data katalog, bukan state pemain.
+- `player_levels` — 30 ambang level, judul, dan `reward_coins`; level 1 = 0 XP, level 2 = 100
+  XP, level 7+ memakai kurva `1000 + (level - 6) × 350`. Tabel ini data katalog, bukan state
+  pemain.
 - `user_hearts` — `current_hearts`/`max_hearts` (default 5/5), `last_refill_at`. Satu Heart
   pulih per 30 menit; refill manual biaya 10 Koin per Heart yang hilang.
-- `user_streaks` — `current_streak`, `longest_streak`, `last_activity_date`, dan
-  `last_activity_at`; hari aktivitas dihitung dari XP `lesson`/`practice` yang ditulis
-  server, memakai `user_settings.timezone`.
+- `user_streaks` — `current_streak`, `longest_streak`, `last_activity_date`,
+  `last_activity_at`, dan `freezes` (0–2); hari aktivitas dihitung dari XP
+  `lesson`/`practice` yang ditulis server, memakai `user_settings.timezone`.
+- `user_level_rewards` — penanda level yang hadiah Koin-nya sudah diberikan; unik per
+  `(user_id, level)`.
 
-Mastery, quest harian/mingguan, achievement, shop, dan inventory **belum dibuat**.
+### Reward, misi, achievement, dan toko
+
+- `streak_milestones` — katalog hari 3/7/14/30/60/100 dan hadiah Koin.
+- `user_streak_milestones` — penanda milestone yang sudah diklaim; unik per
+  `(user_id, milestone_id)`.
+- `quest_definitions` — 3 misi harian + 3 mingguan (cadence, metric, target, hadiah).
+- `user_quest_claims` — klaim unik per `(user_id, quest_id, period_start)`.
+- `achievement_definitions` — 8 pencapaian (lesson, practice, XP, Streak, level).
+- `user_achievements` — pencapaian yang terbuka; PK `(user_id, achievement_id)`.
+- `shop_items` — katalog consumable, harga, dan `max_stack`.
+- `user_inventory` — jumlah item per pemain; unik per `(user_id, item_id)`.
+- `shop_purchases` — catatan pembelian dengan `price_coins` dan `quantity`.
+
+Mastery dan review schedule **belum dibuat**.
 
 ## View
 
@@ -138,7 +155,18 @@ Keduanya `security_invoker` dan hanya diberi grant ke `authenticated`.
 | `refresh_hearts(user)` | Menerapkan regenerasi 30 menit dan mengembalikan snapshot Hearts; internal. |
 | `player_level_for_xp(xp)` | Menghitung level, judul, ambang berikutnya, dan persentase dari total XP. |
 | `get_player_state()` | RPC baca pemain: total XP, XP hari ini, Koin, Hearts, Streak, dan level. |
-| `get_my_wallet()` | RPC wallet: state pemain + 30 transaksi Koin + 30 transaksi XP terakhir. |
+| `get_my_wallet()` | RPC wallet: state pemain + 30 transaksi Koin + 30 transaksi XP terakhir + katalog hadiah level/milestone. |
+| `get_my_quests()` | Misi aktif dengan progres dari `user_xp_ledger` dan status klaim. |
+| `claim_quest_reward(quest)` | Klaim sekali per periode; menulis Koin/wallet secara atomik. |
+| `get_my_achievements()` | Delapan pencapaian + progres + waktu terbuka. |
+| `get_shop_catalog()` | Katalog item, jumlah dimiliki, dan `canBuy` dari server. |
+| `purchase_shop_item(item)` | Membeli item, memotong Koin, dan menambah inventory secara atomik. |
+| `get_my_inventory()` | Tas pemain dan jumlah Perisai Streak. |
+| `use_inventory_item(item)` | Memakai Ramuan Hati/Perisai Streak dan mengembalikan state terbaru. |
+| `grant_level_rewards(user)` | Memberi hadiah Koin tiap level baru sekali; internal. |
+| `grant_streak_milestones(user)` | Memberi hadiah milestone Streak sekali; internal. |
+| `evaluate_achievements(user)` | Membuka achievement yang targetnya tercapai; internal. |
+| `sync_player_rewards()` | Trigger `user_xp_ledger`: memanggil reward level, milestone, dan achievement. |
 | `refill_hearts()` | Mengisi Hearts yang hilang, memotong Koin, dan menulis transaksi secara atomik. |
 | `spend_heart_for_wrong_answer()` | Trigger `AFTER INSERT answer_attempts`: kurangi Heart hanya untuk jawaban salah yang benar-benar tersimpan. |
 | `enforce_hearts_before_lesson()` | Trigger `BEFORE INSERT lesson_attempts`: tolak attempt lesson baru bila Hearts 0. |
@@ -174,12 +202,26 @@ dari `public`/`anon` dan hanya dapat dieksekusi `authenticated`.
    yang ditolak `ON CONFLICT DO NOTHING` tidak mengurangi Heart lagi. Practice tidak memakai
    Hearts.
 3. Setiap XP `lesson`/`practice` memicu `track_user_streak`. Hari dihitung memakai zona waktu
-   pemain; XP `friend_quest_reward` tidak memperpanjang Streak. Hari yang terlewat membuat
-   Streak kembali 1 saat aktivitas berikutnya.
+   pemain; XP `friend_quest_reward` tidak memperpanjang Streak. Bila satu hari terlewat dan
+   `freezes > 0`, satu Perisai Streak dikonsumsi; jika tidak, Streak kembali 1.
 4. Level tidak disimpan sebagai angka yang bisa dikirim client. `get_player_state` menjumlahkan
    `user_xp_ledger` lalu menghitung level dari `player_levels`.
 5. `refill_hearts` menghitung biaya di server (10 Koin × Heart yang hilang), mengunci wallet,
    memotong saldo, menulis `coin_transactions`, dan mengisi Hearts dalam satu transaksi.
+6. Trigger `AFTER INSERT user_xp_ledger` (`sync_player_rewards`) memberi hadiah level baru dan
+   milestone Streak sekali, lalu membuka achievement yang targetnya tercapai.
+
+## Alur reward, misi, dan toko
+
+1. Progres quest dihitung dari `user_xp_ledger` pada periode harian/mingguan (zona waktu
+   pemain). XP `friend_quest_reward` tidak dihitung. `claim_quest_reward` mengunci baris
+   klaim, memvalidasi target, menulis `user_quest_claims`, `coin_transactions`, dan wallet.
+2. `purchase_shop_item` mengunci wallet, memvalidasi harga/stok, menulis `shop_purchases`,
+   `coin_transactions`, dan menambah `user_inventory` dalam satu transaksi.
+3. `use_inventory_item` mengurangi quantity, memulihkan Hearts (maksimal `max_hearts`) atau
+   menambah `user_streaks.freezes` (maksimal 2). Item yang tidak dimiliki ditolak.
+4. Achievement dan reward level/milestone tidak memberi hadiah yang bisa dikirim client;
+   semuanya dipicu dari ledger XP dan idempoten dengan kunci unik.
 
 ## Alur latihan (practice)
 
@@ -225,8 +267,9 @@ dari `public`/`anon` dan hanya dapat dieksekusi `authenticated`.
 | Progres & attempt | baris sendiri | tidak ada; hanya RPC. |
 | `practice_sessions` / `practice_answers` | baris sendiri | tidak ada; hanya RPC. |
 | `practice_session_questions` | **tidak ada** grant | server-side RPC saja. |
-| Wallet, ledger, Hearts & Streak | baris sendiri | tidak ada; hanya RPC/trigger. |
-| `player_levels` | semua authenticated | tidak ada; hanya migration/service. |
+| Wallet, ledger, Hearts, Streak & reward | baris sendiri | tidak ada; hanya RPC/trigger. |
+| `player_levels`, `streak_milestones`, `quest_definitions`, `achievement_definitions`, `shop_items` | semua authenticated | tidak ada; katalog baca-saja. |
+| `user_quest_claims`, `user_achievements`, `user_inventory`, `shop_purchases` | baris sendiri | tidak ada; hanya RPC. |
 | `friend_quests`, `friend_quest_members` | hanya anggota quest | tidak ada; hanya RPC. |
 | `friend_quest_claims` | hanya klaim sendiri | tidak ada; hanya RPC. |
 
@@ -249,10 +292,11 @@ Jalankan berurutan sesuai nama file di `supabase/migrations/`:
 8. `20261109100000_practice_engine.sql`
 9. `20261110100000_friends_quest.sql`
 10. `20261110120000_progression_economy.sql`
+11. `20261110130000_tahap5_rewards.sql`
 
 Pastikan tidak ada error, lalu cek Table Editor: `subjects`, `lessons`, `questions`,
 `lesson_attempts`, `user_wallets`, `user_hearts`, `user_streaks`, `player_levels`,
-`practice_sessions`, `friend_quests`.
+`practice_sessions`, `friend_quests`, `quest_definitions`, `shop_items`, `user_inventory`.
 
 ### Opsi B — Supabase CLI
 
@@ -288,7 +332,6 @@ Jangan memberi role lewat form frontend atau menyimpan password developer di kod
 ## Rencana skema berikutnya
 
 - Mastery, review schedule, mistake history.
-- Quest harian/mingguan, achievement, shop, inventory, reward grant/claim.
 - Graf pertemanan penuh (friend request, friendships, friend streak), activity feed,
   leaderboard, liga, event, notifikasi, inbox.
 - Reward Center developer + audit log.

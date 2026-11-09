@@ -7,14 +7,15 @@ Developer Dashboard.
 Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand terpusat di
 `src/config/brand.ts` dan dapat ditimpa lewat environment variable.
 
-> **Status proyek: Tahap 1–4 selesai; inti Tahap 5 sudah aktif.**
+> **Status proyek: Tahap 1–4 selesai; Tahap 5 selesai untuk slice reward.**
 > Lesson, latihan, dan **20 dari 20 mini-game** punya mekanik bermain nyata. Dua belas tipe
 > soal dinilai di server (termasuk Listening, Speaking, Translation, Conversation, Story),
 > tujuh mode latihan berjalan di atas sesi practice dengan XP idempoten, dan **Friends Quest**
-> tersedia sebagai co-op berbasis kode undangan. Inti Tahap 5 menambahkan **Hearts, Streak,
-> level akun, dan wallet** yang seluruhnya dihitung server; mastery, quest harian/mingguan,
-> achievement, shop, dan inventory belum dibuat. Pengujian browser end-to-end (Playwright)
-> belum ada; bukti Tahap 4 ada di **[docs/STAGE4_COMPLETION.md](docs/STAGE4_COMPLETION.md)**.
+> tersedia sebagai co-op berbasis kode undangan. Tahap 5 menambahkan **Hearts, Streak, level,
+> wallet, reward level, milestone Streak, quest harian/mingguan, achievement, toko, dan
+> inventory** yang seluruhnya dihitung server. Mastery dan node reward kurikulum belum
+> dibuat. Pengujian browser end-to-end (Playwright) belum ada; bukti Tahap 4 ada di
+> **[docs/STAGE4_COMPLETION.md](docs/STAGE4_COMPLETION.md)**.
 
 ---
 
@@ -29,7 +30,7 @@ Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand ter
 | Verifikasi email & lupa password | **Implemented · Belum E2E** | Memakai Supabase Auth; tautan reset memakai redirect `/reset-password`. |
 | Onboarding profil | **Implemented · Belum E2E** | Username, avatar, nama, target harian, zona waktu. Atomik via RPC. |
 | Profil & pengaturan cloud | **Implemented · Belum E2E** | Disimpan di PostgreSQL dengan RLS + column-level grants. |
-| Database & RLS | **Implemented · Tested (PGlite + Supabase API)** | 10 migration diterapkan ke project Supabase; 167 SQL smoke check + 43 verifikasi API lulus. |
+| Database & RLS | **Implemented · Tested (PGlite + Supabase API)** | 11 migration diterapkan ke project Supabase; 189 SQL smoke check + 54 verifikasi API lulus. |
 | Kurikulum & bank soal | **Implemented · Tested (SQL smoke)** | 10 mapel, 22 level, 57 lesson, 231 soal, 12 tipe soal, 6 jenis node; 7 mapel inti + Bahasa Sambas. |
 | Learning path & progres per mapel | **Implemented · Tested (SQL smoke)** | Node selesai/aktif/terkunci, unlock ditegakkan server, progres per course/node. |
 | Lesson engine & halaman hasil | **Implemented · Tested (SQL smoke)** | Kunci jawaban tidak dikirim ke browser; XP/Koin idempoten per attempt. |
@@ -37,7 +38,9 @@ Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand ter
 | Practice Hub & sesi latihan | **Implemented · Tested (SQL)** | Sesi server, timer, combo, bonus kecepatan, XP idempoten, unit chooser. UI belum diuji browser dengan sesi nyata. |
 | Friends Quest | **Implemented · Tested (SQL + Supabase API)** | Co-op lewat kode undangan, target XP gabungan, kontribusi dari XP lesson/latihan server, klaim sekali per anggota. UI belum diuji browser. Graf teman penuh tetap Tahap 7. |
 | XP, Koin, Hearts, Streak & level | **Implemented · Tested (SQL + Supabase API)** | Ledger XP/Koin, Hearts dengan regenerasi/refill, Streak harian, 30 level akun, dan halaman `/wallet` dengan riwayat transaksi. Semua angka berasal dari RPC server. |
-| Mastery, quest harian, achievement, shop & inventory | **Not implemented** | Sisa Tahap 5 belum dibuat; Friends Quest co-op sudah ada, tetapi mastery, quest harian/mingguan, achievement, shop, dan inventory belum. |
+| Reward level, milestone Streak, quest & achievement | **Implemented · Tested (SQL + Supabase API)** | Hadiah level dan milestone Streak otomatis lewat trigger; 3 quest harian + 3 mingguan dan 8 achievement dihitung dari ledger XP. Halaman `/quests` dan `/wallet`; UI belum diuji browser dengan akun nyata. |
+| Toko & inventory | **Implemented · Tested (SQL + Supabase API)** | Katalog dua item consumable, pembelian atomik, tas, Ramuan Hati, dan Perisai Streak (maksimal 2). Halaman `/shop`; UI belum diuji browser. |
+| Mastery | **Not implemented** | Mastery dan review schedule belum dibuat; bukan bagian slice reward Tahap 5 ini. |
 | Leaderboard, Liga, Teman, Event | **Not implemented** | Tahap 7. |
 | Developer Dashboard | **Not implemented** | Tahap 8; role developer dan mode pratinjau sudah ada. |
 | PWA / offline / AI / monetisasi | **Not implemented** | Direncanakan setelah gameplay stabil. |
@@ -111,7 +114,7 @@ Panduan lengkap Supabase, migrasi, dan deployment: **[docs/SETUP.md](docs/SETUP.
 │   ├── pages/                   # auth, onboarding, beranda, belajar, lesson, latihan, profil
 │   ├── repositories/            # akses data Supabase
 │   ├── services/                # aturan bisnis, lesson engine client, pemetaan error
-│   ├── stores/                  # session store observable
+│   ├── stores/                  # session, player, dan rewards store observable
 │   ├── styles/                  # tokens, base, components, layout, pages, practice
 │   ├── types/                   # tipe database & sesi
 │   ├── utils/                   # DOM, validasi
@@ -126,7 +129,9 @@ Panduan lengkap Supabase, migrasi, dan deployment: **[docs/SETUP.md](docs/SETUP.
 │       ├── 20261108110000_curriculum_seed.sql
 │       ├── 20261108120000_lesson_engine.sql
 │       ├── 20261109100000_practice_engine.sql
-│       └── 20261110100000_friends_quest.sql
+│       ├── 20261110100000_friends_quest.sql
+│       ├── 20261110120000_progression_economy.sql
+│       └── 20261110130000_tahap5_rewards.sql
 ├── scripts/                     # generator + validasi seed kurikulum, SQL smoke test
 ├── tests/                       # unit test Vitest
 ├── docs/                        # dokumentasi teknis + laporan audit

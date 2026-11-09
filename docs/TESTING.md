@@ -5,8 +5,8 @@
 | Pemeriksaan | Perintah | Hasil |
 | --- | --- | --- |
 | TypeScript strict | `npm run typecheck` | Lulus, 0 error. |
-| Unit test | `npm test` | 30 test lulus (2 file). |
-| Migration + RPC + RLS | `npm run test:sql` | 68 smoke check lulus di PGlite. |
+| Unit test | `npm test` | 34 test lulus (3 file). |
+| Migration + RPC + RLS + practice | `npm run test:sql` | 106 smoke check lulus di PGlite. |
 | Build produksi | `npm run build` | Lulus; Phaser menjadi chunk terpisah. |
 | Browser smoke | Chrome headless | Landing, auth, guard route, 404 (sesi 1). |
 | Supabase nyata | `npm run verify:supabase` | **Belum dijalankan**; `.env` dan akun uji belum tersedia. |
@@ -31,7 +31,8 @@ npm run verify:supabase
 ```
 
 Skrip `scripts/verify-supabase.mjs` login dengan akun uji, memeriksa role, mencari lesson
-`greetings-vocabulary`, memulai attempt, memeriksa payload (12 soal, tanpa kunci/relasi),
+`greetings-vocabulary`, memulai attempt, memeriksa payload (20 soal, tanpa kunci/relasi
+atau scene yang membocorkan jawaban),
 menjawab seluruh soal dengan kunci uji, menyelesaikan lesson, dan memastikan
 `question_pairs` tidak bisa dibaca tanpa sesi. Ini menguji Auth + PostgREST + RPC nyata,
 **bukan** tampilan browser; uji klik tetap harus dilakukan terpisah.
@@ -40,8 +41,9 @@ menjawab seluruh soal dengan kunci uji, menyelesaikan lesson, dan memastikan
 
 `scripts/test-sql.mjs` membuat database PostgreSQL in-memory, lalu:
 
-1. Menjalankan keenam migration berurutan, termasuk `question_pairs`.
-2. Memeriksa 8 mapel aktif, 57 lesson, 217 soal, 7 tipe soal, 4 pasangan matching,
+1. Menjalankan kedelapan migration berurutan, termasuk `question_scenes` dan
+   `practice_engine`.
+2. Memeriksa 8 mapel aktif, 57 lesson, 225 soal, 12 tipe soal, 15 pasangan matching,
    3 media gambar, dan 6 jenis node.
 3. Memeriksa 7 node practice, 7 checkpoint, dan 7 legendary; semuanya punya lesson
    dengan minimal 3 soal aktif.
@@ -68,9 +70,23 @@ menjawab seluruh soal dengan kunci uji, menyelesaikan lesson, dan memastikan
     set tidak lengkap, dan id duplikat ditolak; fill blank peka kapitalisasi/spasi;
     word bank dan sentence builder menolak urutan salah; picture identification menolak
     opsi palsu.
-23. Memeriksa payload mini-game lewat pratinjau staff: 12 soal, tanpa `is_correct`,
+23. Memeriksa payload mini-game lewat pratinjau staff: 20 soal, tanpa `is_correct`,
     tanpa tabel jawaban, tanpa baris pasangan, dua kolom matching terpisah, media gambar,
-    dan penanda `__` pada fill blank.
+    penanda `__` pada fill blank, transkrip listening, NPC conversation, dan tiga layar
+    story.
+24. Menguji grading tipe baru: listening/conversation/story memilih opsi benar dan
+    menolak opsi salah; speaking menerima ucapan yang dikenali dan menolak kalimat lain;
+    translation menerima kalimat benar dan menolak yang salah.
+25. Memulai sesi `timed`: 10 soal, batas 120 detik, payload tanpa kunci. Semua soal
+    dijawab benar, lalu penyelesaian memberi skor di atas poin dasar (bonus kecepatan dan
+    combo), akurasi 100, dan XP 20.
+26. Memastikan penyelesaian latihan kedua kali tidak menambah XP dan ledger practice
+    hanya satu baris.
+27. Memastikan `match_madness` hanya memakai soal matching (3 ronde, 90 detik),
+    `unit_review` menolak tanpa unit dan mengembalikan soal unit yang dipilih, serta
+    `mistakes` menemukan jawaban salah sebelumnya.
+28. Memastikan RLS menyembunyikan sesi latihan pemain lain dan pemain tidak dapat
+    menulis `practice_sessions` langsung.
 
 ## Unit test Vitest
 
@@ -78,15 +94,22 @@ menjawab seluruh soal dengan kunci uji, menyelesaikan lesson, dan memastikan
   nama tampilan, bio, target harian, zona waktu, volume, saran username.
 - `tests/authErrors.test.ts` — pemetaan error Supabase ke pesan Indonesia dan pencegahan
   kebocoran pesan backend mentah.
+- `tests/practice.test.ts` — format countdown latihan, batas bawah nol, dan multiplier
+  combo untuk tampilan. Skor sebenarnya tetap dihitung server.
 
 ## Yang belum dapat diuji
 
 - Registrasi, login, verifikasi email, reset password, onboarding, simpan profil, dan
   simpan pengaturan **belum E2E** karena project Supabase belum aktif.
 - Migration belum diterapkan ke Supabase nyata; RLS belum diuji lewat PostgREST.
-- Gameplay belum diuji di browser dengan sesi nyata; RPC sudah diuji di database.
+- Gameplay dan Practice Hub belum diuji di browser dengan sesi nyata; RPC sudah diuji
+  di database.
 - Belum ada Playwright, uji responsif otomatis, atau audit performa.
-- Belum ada pengujian audio, mikrofon, atau PWA karena fiturnya belum ada.
+- Audio memakai text-to-speech browser; belum ada pengujian suara nyata di perangkat.
+- Speaking belum diuji dengan mikrofon sungguhan; Web Speech Recognition berbeda tiap
+  browser.
+- Friends Quest belum ada sehingga tidak dapat diuji.
+- Belum ada PWA.
 
 ## Checklist manual setelah Supabase aktif
 
@@ -128,6 +151,22 @@ menjawab seluruh soal dengan kunci uji, menyelesaikan lesson, dan memastikan
 - [ ] Replay lesson selesai tidak menambah XP/Koin.
 - [ ] Gagal (<60%) tidak memberi hadiah tetapi progres attempt tercatat.
 - [ ] Refresh di tengah lesson tidak menggandakan reward.
+
+### Latihan (Practice Hub)
+
+- [ ] `/practice` menampilkan tujuh mode dan selector mata pelajaran.
+- [ ] Timed Challenge: countdown 120 detik berjalan, waktu habis langsung menilai.
+- [ ] Ramp Up: soal makin sulit, timer 20 detik per soal berjalan.
+- [ ] Match Madness: 90 detik, hanya soal matching, combo tampil.
+- [ ] Mistakes Review menampilkan pesan jelas bila belum ada jawaban salah.
+- [ ] Personalized Practice memakai soal dari topik yang pernah salah.
+- [ ] Unit Review menampilkan pilihan unit sebelum mulai.
+- [ ] Legendary Challenge memberi XP lebih besar (maksimal 30).
+- [ ] Menyelesaikan mode yang sama dua kali tidak menambah XP kedua kali.
+- [ ] Timer berhenti saat feedback dan lanjut saat menekan Lanjut.
+- [ ] Listening: putar, ulangi, versi lambat, dan volume bekerja (media atau TTS).
+- [ ] Speaking: izin mikrofon, transkrip muncul, alternatif menulis saat tidak didukung.
+- [ ] Conversation/Story: bubble dan audio tampil, pilihan respons dinilai.
 
 ### RLS
 

@@ -7,7 +7,7 @@ import { brand } from '../config/brand';
 import { sessionStore } from '../stores/session.store';
 import { el } from '../utils/dom';
 
-export type NavKey = 'home' | 'learn' | 'profile' | 'settings';
+export type NavKey = 'home' | 'learn' | 'practice' | 'profile' | 'settings';
 
 interface NavItem {
   key: NavKey;
@@ -20,6 +20,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { key: 'home', href: '/app', label: 'Beranda', shortLabel: 'Beranda', icon: 'home' },
   { key: 'learn', href: '/learn', label: 'Belajar', shortLabel: 'Belajar', icon: 'map' },
+  { key: 'practice', href: '/practice', label: 'Latihan', shortLabel: 'Latihan', icon: 'target' },
   { key: 'profile', href: '/profile', label: 'Profil', shortLabel: 'Profil', icon: 'user' },
   { key: 'settings', href: '/settings', label: 'Pengaturan', shortLabel: 'Atur', icon: 'settings' },
 ];

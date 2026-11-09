@@ -1,7 +1,7 @@
 -- Lentera · Curriculum seed (generated)
 -- Jangan mengedit file ini secara manual. Sumber: scripts/content/**/*.ts
 -- Jalankan ulang: npm run seed:build
--- Ringkasan: 10 mata pelajaran, 22 level, 22 unit, 57 lesson, 217 soal.
+-- Ringkasan: 10 mata pelajaran, 22 level, 22 unit, 57 lesson, 225 soal.
 
 begin;
 
@@ -86,8 +86,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: pemrograman-web/html-dasar/html-heading
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('e1cd5413-b7bc-4540-8d42-f69a7b48b402', 'c5703dd2-91c7-4432-88ff-7c5573989dce', 'html-heading', 'multiple_choice'::public.question_type, 'HTML', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tag HTML mana yang digunakan untuk judul utama halaman?', '<h1> adalah heading tingkat pertama yang menandai judul utama. <title> dipakai untuk judul tab browser, bukan isi halaman.', 'Heading memiliki tingkat h1 sampai h6.', 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('e1cd5413-b7bc-4540-8d42-f69a7b48b402', 'c5703dd2-91c7-4432-88ff-7c5573989dce', 'html-heading', 'multiple_choice'::public.question_type, 'HTML', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tag HTML mana yang digunakan untuk judul utama halaman?', '<h1> adalah heading tingkat pertama yang menandai judul utama. <title> dipakai untuk judul tab browser, bukan isi halaman.', 'Heading memiliki tingkat h1 sampai h6.', 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -99,6 +99,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -139,8 +140,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pemrograman-web/html-dasar/html-paragraph
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('cf927459-bee2-4aac-895b-b84948236f74', 'c5703dd2-91c7-4432-88ff-7c5573989dce', 'html-paragraph', 'multiple_choice'::public.question_type, 'HTML', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Apa fungsi tag <p>?', '<p> membungkus satu paragraf teks. Tautan memakai <a>, gambar memakai <img>, dan tabel memakai <table>.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('cf927459-bee2-4aac-895b-b84948236f74', 'c5703dd2-91c7-4432-88ff-7c5573989dce', 'html-paragraph', 'multiple_choice'::public.question_type, 'HTML', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Apa fungsi tag <p>?', '<p> membungkus satu paragraf teks. Tautan memakai <a>, gambar memakai <img>, dan tabel memakai <table>.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -152,6 +153,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -192,8 +194,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pemrograman-web/html-dasar/html-link
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('314ef259-bfd8-464f-88cc-73b11cb2c679', 'c5703dd2-91c7-4432-88ff-7c5573989dce', 'html-link', 'multiple_choice'::public.question_type, 'HTML', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Atribut apa yang menentukan tujuan sebuah tautan pada tag <a>?', 'Atribut href berisi alamat tujuan tautan. Atribut src dipakai gambar, sedangkan alt menyediakan teks alternatif.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('314ef259-bfd8-464f-88cc-73b11cb2c679', 'c5703dd2-91c7-4432-88ff-7c5573989dce', 'html-link', 'multiple_choice'::public.question_type, 'HTML', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Atribut apa yang menentukan tujuan sebuah tautan pada tag <a>?', 'Atribut href berisi alamat tujuan tautan. Atribut src dipakai gambar, sedangkan alt menyediakan teks alternatif.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -205,6 +207,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -245,8 +248,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pemrograman-web/html-dasar/html-image-tag
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('71bc6bbe-7662-474f-8494-07179e8b6c5c', 'c5703dd2-91c7-4432-88ff-7c5573989dce', 'html-image-tag', 'fill_blank'::public.question_type, 'HTML', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi tag berikut agar menampilkan gambar: <__ src="logo.png" alt="Logo">', 'Tag <img> menampilkan gambar melalui atribut src. Alt wajib diisi agar gambar tetap bermakna bagi pembaca layar.', 'Namanya singkatan dari image.', 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('71bc6bbe-7662-474f-8494-07179e8b6c5c', 'c5703dd2-91c7-4432-88ff-7c5573989dce', 'html-image-tag', 'fill_blank'::public.question_type, 'HTML', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi tag berikut agar menampilkan gambar: <__ src="logo.png" alt="Logo">', 'Tag <img> menampilkan gambar melalui atribut src. Alt wajib diisi agar gambar tetap bermakna bagi pembaca layar.', 'Namanya singkatan dari image.', 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -258,6 +261,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -270,8 +274,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: pemrograman-web/html-dasar/html-nav
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('e561754e-0c3f-45ec-82cc-5d2fbf1cccc0', 'c5703dd2-91c7-4432-88ff-7c5573989dce', 'html-nav', 'multiple_choice'::public.question_type, 'HTML Semantik', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tag semantik yang paling tepat untuk membungkus menu navigasi adalah…', '<nav> menandai area navigasi utama. <main> adalah konten utama halaman, bukan daftar menu.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('e561754e-0c3f-45ec-82cc-5d2fbf1cccc0', 'c5703dd2-91c7-4432-88ff-7c5573989dce', 'html-nav', 'multiple_choice'::public.question_type, 'HTML Semantik', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tag semantik yang paling tepat untuk membungkus menu navigasi adalah…', '<nav> menandai area navigasi utama. <main> adalah konten utama halaman, bukan daftar menu.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -283,6 +287,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -351,8 +356,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: pemrograman-web/html-review/review-html-main
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('a5a5dc49-ddb8-4de5-89f0-8637128ce1c5', '64982b19-8f37-440b-89bf-fd5be9912e29', 'review-html-main', 'multiple_choice'::public.question_type, 'HTML Semantik', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tag yang menandai konten utama halaman adalah…', '<main> membungkus konten utama yang unik untuk halaman tersebut. <nav> khusus navigasi.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('a5a5dc49-ddb8-4de5-89f0-8637128ce1c5', '64982b19-8f37-440b-89bf-fd5be9912e29', 'review-html-main', 'multiple_choice'::public.question_type, 'HTML Semantik', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tag yang menandai konten utama halaman adalah…', '<main> membungkus konten utama yang unik untuk halaman tersebut. <nav> khusus navigasi.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -364,6 +369,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -404,8 +410,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pemrograman-web/html-review/review-html-alt
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('3bc5c6e2-b5dc-4083-8399-847c9db9e69b', '64982b19-8f37-440b-89bf-fd5be9912e29', 'review-html-alt', 'multiple_choice'::public.question_type, 'Aksesibilitas', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Apa fungsi atribut alt pada elemen gambar?', 'Alt adalah teks alternatif yang menjelaskan gambar ketika gambar tidak tampil atau dibaca oleh pembaca layar.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('3bc5c6e2-b5dc-4083-8399-847c9db9e69b', '64982b19-8f37-440b-89bf-fd5be9912e29', 'review-html-alt', 'multiple_choice'::public.question_type, 'Aksesibilitas', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Apa fungsi atribut alt pada elemen gambar?', 'Alt adalah teks alternatif yang menjelaskan gambar ketika gambar tidak tampil atau dibaca oleh pembaca layar.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -417,6 +423,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -457,8 +464,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pemrograman-web/html-review/review-html-ol
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('d409e921-26cf-4a99-80ab-b477dafd96df', '64982b19-8f37-440b-89bf-fd5be9912e29', 'review-html-ol', 'typing'::public.question_type, 'HTML', 'beginner'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Tulis tag pembuka HTML untuk membuat daftar berurutan.', '<ol> membuat ordered list atau daftar bernomor. <ul> dipakai untuk daftar tanpa urutan.', null, 15, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('d409e921-26cf-4a99-80ab-b477dafd96df', '64982b19-8f37-440b-89bf-fd5be9912e29', 'review-html-ol', 'typing'::public.question_type, 'HTML', 'beginner'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Tulis tag pembuka HTML untuk membuat daftar berurutan.', '<ol> membuat ordered list atau daftar bernomor. <ul> dipakai untuk daftar tanpa urutan.', null, 15, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -470,6 +477,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -518,8 +526,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: pemrograman-web/html-challenge/challenge-html-article
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('1166f759-f0c0-41f3-8128-b408968c6aeb', 'a8a99079-b024-482b-848c-6ea63d3d18f1', 'challenge-html-article', 'multiple_choice'::public.question_type, 'HTML Semantik', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Elemen paling tepat untuk membungkus tulisan mandiri seperti artikel blog adalah…', '<article> menandai konten mandiri yang masih bermakna jika dipisahkan dari halaman.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('1166f759-f0c0-41f3-8128-b408968c6aeb', 'a8a99079-b024-482b-848c-6ea63d3d18f1', 'challenge-html-article', 'multiple_choice'::public.question_type, 'HTML Semantik', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Elemen paling tepat untuk membungkus tulisan mandiri seperti artikel blog adalah…', '<article> menandai konten mandiri yang masih bermakna jika dipisahkan dari halaman.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -531,6 +539,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -571,8 +580,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pemrograman-web/html-challenge/challenge-html-target
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('37a574c9-5a2a-4a94-8dcc-f49d5d02b970', 'a8a99079-b024-482b-848c-6ea63d3d18f1', 'challenge-html-target', 'fill_blank'::public.question_type, 'HTML', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Agar tautan terbuka di tab baru, isi atribut target dengan "___".', 'target="_blank" membuka tautan di tab atau jendela baru. Sertakan rel="noopener" untuk keamanan.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('37a574c9-5a2a-4a94-8dcc-f49d5d02b970', 'a8a99079-b024-482b-848c-6ea63d3d18f1', 'challenge-html-target', 'fill_blank'::public.question_type, 'HTML', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Agar tautan terbuka di tab baru, isi atribut target dengan "___".', 'target="_blank" membuka tautan di tab atau jendela baru. Sertakan rel="noopener" untuk keamanan.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -584,6 +593,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -596,8 +606,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: pemrograman-web/html-challenge/challenge-html-aside
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('5e3ad3a7-4d2b-4406-8c44-a58e41163ebe', 'a8a99079-b024-482b-848c-6ea63d3d18f1', 'challenge-html-aside', 'multiple_choice'::public.question_type, 'HTML Semantik', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Konten pelengkap di samping artikel utama paling tepat dibungkus dengan…', '<aside> dipakai untuk konten yang berkaitan tetapi bukan bagian utama, misalnya catatan atau tautan terkait.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('5e3ad3a7-4d2b-4406-8c44-a58e41163ebe', 'a8a99079-b024-482b-848c-6ea63d3d18f1', 'challenge-html-aside', 'multiple_choice'::public.question_type, 'HTML Semantik', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Konten pelengkap di samping artikel utama paling tepat dibungkus dengan…', '<aside> dipakai untuk konten yang berkaitan tetapi bukan bagian utama, misalnya catatan atau tautan terkait.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -609,6 +619,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -701,8 +712,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: pemrograman-web/css-dasar/css-class-selector
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('b14bebb4-206b-49fc-8f3c-ea96c43e3d7e', 'facf6810-52c3-493f-85c3-fbe64ac2d10a', 'css-class-selector', 'multiple_choice'::public.question_type, 'CSS', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Selector CSS untuk semua elemen dengan class card adalah…', 'Titik (.) menandai class, sedangkan tanda pagar (#) menandai id. Tanpa simbol berarti selector tag.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('b14bebb4-206b-49fc-8f3c-ea96c43e3d7e', 'facf6810-52c3-493f-85c3-fbe64ac2d10a', 'css-class-selector', 'multiple_choice'::public.question_type, 'CSS', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Selector CSS untuk semua elemen dengan class card adalah…', 'Titik (.) menandai class, sedangkan tanda pagar (#) menandai id. Tanpa simbol berarti selector tag.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -714,6 +725,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -754,8 +766,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pemrograman-web/css-dasar/css-text-color
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('51398e79-401a-4d97-897c-d23a35310c7e', 'facf6810-52c3-493f-85c3-fbe64ac2d10a', 'css-text-color', 'multiple_choice'::public.question_type, 'CSS', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Properti apa yang mengubah warna teks?', 'color mengatur warna teks. background-color mengatur warna latar, bukan warna huruf.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('51398e79-401a-4d97-897c-d23a35310c7e', 'facf6810-52c3-493f-85c3-fbe64ac2d10a', 'css-text-color', 'multiple_choice'::public.question_type, 'CSS', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Properti apa yang mengubah warna teks?', 'color mengatur warna teks. background-color mengatur warna latar, bukan warna huruf.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -767,6 +779,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -807,8 +820,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pemrograman-web/css-dasar/css-flex-row
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('a1e975d1-4f19-4c0a-8a94-0b7918dc7bb6', 'facf6810-52c3-493f-85c3-fbe64ac2d10a', 'css-flex-row', 'multiple_choice'::public.question_type, 'Layout', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Agar anak elemen tersusun horizontal dengan Flexbox, properti pada container adalah…', 'display: flex mengaktifkan Flexbox dan secara default menata anak elemen dalam satu baris horizontal.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('a1e975d1-4f19-4c0a-8a94-0b7918dc7bb6', 'facf6810-52c3-493f-85c3-fbe64ac2d10a', 'css-flex-row', 'multiple_choice'::public.question_type, 'Layout', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Agar anak elemen tersusun horizontal dengan Flexbox, properti pada container adalah…', 'display: flex mengaktifkan Flexbox dan secara default menata anak elemen dalam satu baris horizontal.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -820,6 +833,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -860,8 +874,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pemrograman-web/css-dasar/css-padding
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('8b9e1051-0200-4b7f-8def-6a768add3e6f', 'facf6810-52c3-493f-85c3-fbe64ac2d10a', 'css-padding', 'fill_blank'::public.question_type, 'Box Model', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Properti CSS untuk jarak antara konten dan border di dalam elemen adalah ___', 'Padding adalah ruang di dalam elemen. Margin adalah ruang di luar elemen.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('8b9e1051-0200-4b7f-8def-6a768add3e6f', 'facf6810-52c3-493f-85c3-fbe64ac2d10a', 'css-padding', 'fill_blank'::public.question_type, 'Box Model', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Properti CSS untuk jarak antara konten dan border di dalam elemen adalah ___', 'Padding adalah ruang di dalam elemen. Margin adalah ruang di luar elemen.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -873,6 +887,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -885,8 +900,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: pemrograman-web/css-dasar/css-media-query
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('ce22deec-c730-44b2-8ab0-9c108055ccb3', 'facf6810-52c3-493f-85c3-fbe64ac2d10a', 'css-media-query', 'multiple_choice'::public.question_type, 'Responsive Design', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Media query untuk layar dengan lebar maksimal 768px adalah…', 'max-width berarti aturan berlaku pada layar yang lebarnya tidak lebih dari 768px.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('ce22deec-c730-44b2-8ab0-9c108055ccb3', 'facf6810-52c3-493f-85c3-fbe64ac2d10a', 'css-media-query', 'multiple_choice'::public.question_type, 'Responsive Design', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Media query untuk layar dengan lebar maksimal 768px adalah…', 'max-width berarti aturan berlaku pada layar yang lebarnya tidak lebih dari 768px.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -898,6 +913,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -966,8 +982,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: pemrograman-web/latihan-css-layout/practice-web-padding
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('7b2185f7-30de-47aa-8873-30a268df67e8', 'e4997619-632e-4e9b-84c5-4cabab6c455c', 'practice-web-padding', 'multiple_choice'::public.question_type, 'CSS Box Model', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Properti CSS yang mengatur jarak di dalam batas elemen adalah…', 'Padding memberi ruang antara konten dan border. Margin memberi jarak di luar border.', 'Bayangkan bantalan di dalam kotak.', 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('7b2185f7-30de-47aa-8873-30a268df67e8', 'e4997619-632e-4e9b-84c5-4cabab6c455c', 'practice-web-padding', 'multiple_choice'::public.question_type, 'CSS Box Model', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Properti CSS yang mengatur jarak di dalam batas elemen adalah…', 'Padding memberi ruang antara konten dan border. Margin memberi jarak di luar border.', 'Bayangkan bantalan di dalam kotak.', 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -979,6 +995,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1019,8 +1036,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pemrograman-web/latihan-css-layout/practice-web-flex-row
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('fb5cd592-42e8-4d8f-8330-9c8882708c82', 'e4997619-632e-4e9b-84c5-4cabab6c455c', 'practice-web-flex-row', 'multiple_choice'::public.question_type, 'Flexbox', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Pada container dengan display: flex, arah susunan default anak-anaknya adalah…', 'Flexbox memakai flex-direction: row secara default, sehingga anak tersusun horizontal.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('fb5cd592-42e8-4d8f-8330-9c8882708c82', 'e4997619-632e-4e9b-84c5-4cabab6c455c', 'practice-web-flex-row', 'multiple_choice'::public.question_type, 'Flexbox', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Pada container dengan display: flex, arah susunan default anak-anaknya adalah…', 'Flexbox memakai flex-direction: row secara default, sehingga anak tersusun horizontal.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1032,6 +1049,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1072,8 +1090,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pemrograman-web/latihan-css-layout/practice-web-selector-p
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('fe00a96f-18ec-44a8-8b53-cfd0a83c5483', 'e4997619-632e-4e9b-84c5-4cabab6c455c', 'practice-web-selector-p', 'typing'::public.question_type, 'Selector CSS', 'elementary'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Tulis selector CSS untuk memilih semua elemen <p>.', 'Selector p memilih seluruh elemen paragraf tanpa tanda titik atau pagar.', null, 15, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('fe00a96f-18ec-44a8-8b53-cfd0a83c5483', 'e4997619-632e-4e9b-84c5-4cabab6c455c', 'practice-web-selector-p', 'typing'::public.question_type, 'Selector CSS', 'elementary'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Tulis selector CSS untuk memilih semua elemen <p>.', 'Selector p memilih seluruh elemen paragraf tanpa tanda titik atau pagar.', null, 15, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1085,6 +1103,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1125,8 +1144,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: pemrograman-web/checkpoint-html-css/checkpoint-web-main
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('00246c34-fcdc-48b1-8bca-644d4fc5c2db', '7e09aa11-0971-4c47-81b1-9eab0b9621b8', 'checkpoint-web-main', 'multiple_choice'::public.question_type, 'HTML Semantik', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tag yang menandai konten utama halaman adalah…', '<main> membungkus konten utama yang unik. <nav> untuk navigasi, <aside> untuk konten samping, <footer> untuk penutup.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('00246c34-fcdc-48b1-8bca-644d4fc5c2db', '7e09aa11-0971-4c47-81b1-9eab0b9621b8', 'checkpoint-web-main', 'multiple_choice'::public.question_type, 'HTML Semantik', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tag yang menandai konten utama halaman adalah…', '<main> membungkus konten utama yang unik. <nav> untuk navigasi, <aside> untuk konten samping, <footer> untuk penutup.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1138,6 +1157,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1178,8 +1198,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pemrograman-web/checkpoint-html-css/checkpoint-web-em
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('fedee882-d95a-42aa-82bf-3816c8113b6c', '7e09aa11-0971-4c47-81b1-9eab0b9621b8', 'checkpoint-web-em', 'multiple_choice'::public.question_type, 'Satuan CSS', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Satuan CSS yang relatif terhadap ukuran font elemen induk adalah…', 'em dihitung dari font-size induk. rem dihitung dari font-size root, px bersifat tetap, dan vh relatif terhadap tinggi viewport.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('fedee882-d95a-42aa-82bf-3816c8113b6c', '7e09aa11-0971-4c47-81b1-9eab0b9621b8', 'checkpoint-web-em', 'multiple_choice'::public.question_type, 'Satuan CSS', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Satuan CSS yang relatif terhadap ukuran font elemen induk adalah…', 'em dihitung dari font-size induk. rem dihitung dari font-size root, px bersifat tetap, dan vh relatif terhadap tinggi viewport.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1191,6 +1211,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1231,8 +1252,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pemrograman-web/checkpoint-html-css/checkpoint-web-grid
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('63835c7a-2c18-4bf8-8380-4a46c397ed6e', '7e09aa11-0971-4c47-81b1-9eab0b9621b8', 'checkpoint-web-grid', 'fill_blank'::public.question_type, 'CSS Grid', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi: .galeri { display: __; grid-template-columns: repeat(3, 1fr); }', 'display: grid mengaktifkan tata letak dua dimensi; grid-template-columns menentukan jumlah kolom.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('63835c7a-2c18-4bf8-8380-4a46c397ed6e', '7e09aa11-0971-4c47-81b1-9eab0b9621b8', 'checkpoint-web-grid', 'fill_blank'::public.question_type, 'CSS Grid', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi: .galeri { display: __; grid-template-columns: repeat(3, 1fr); }', 'display: grid mengaktifkan tata letak dua dimensi; grid-template-columns menentukan jumlah kolom.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1244,6 +1265,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1308,8 +1330,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: pemrograman-web/javascript-dom/js-const
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('31e6d89e-c4ca-4313-8bb4-074a9ebd921e', '70e47e94-b396-4455-83f5-8092ad3f8a4a', 'js-const', 'multiple_choice'::public.question_type, 'JavaScript', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kata kunci untuk mendeklarasikan nilai yang tidak akan diganti adalah…', 'const dipakai untuk konstanta. let dipakai bila nilainya perlu berubah, sedangkan var memiliki aturan scope lama.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('31e6d89e-c4ca-4313-8bb4-074a9ebd921e', '70e47e94-b396-4455-83f5-8092ad3f8a4a', 'js-const', 'multiple_choice'::public.question_type, 'JavaScript', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kata kunci untuk mendeklarasikan nilai yang tidak akan diganti adalah…', 'const dipakai untuk konstanta. let dipakai bila nilainya perlu berubah, sedangkan var memiliki aturan scope lama.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1321,6 +1343,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1361,8 +1384,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pemrograman-web/javascript-dom/js-get-element-by-id
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('9dc95223-1838-46ee-8bf6-a6706849bf76', '70e47e94-b396-4455-83f5-8092ad3f8a4a', 'js-get-element-by-id', 'multiple_choice'::public.question_type, 'DOM', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Cara memilih elemen dengan id judul adalah…', 'getElementById menerima nama id tanpa tanda pagar. querySelector(''.judul'') memilih class.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('9dc95223-1838-46ee-8bf6-a6706849bf76', '70e47e94-b396-4455-83f5-8092ad3f8a4a', 'js-get-element-by-id', 'multiple_choice'::public.question_type, 'DOM', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Cara memilih elemen dengan id judul adalah…', 'getElementById menerima nama id tanpa tanda pagar. querySelector(''.judul'') memilih class.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1374,6 +1397,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1414,8 +1438,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pemrograman-web/javascript-dom/js-click-event
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('4ca6bf4d-b42e-4534-8e22-6c0631396ec8', '70e47e94-b396-4455-83f5-8092ad3f8a4a', 'js-click-event', 'multiple_choice'::public.question_type, 'Event', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Event apa yang terjadi ketika sebuah tombol ditekan?', 'click terjadi saat elemen diklik. submit khusus form, dan load terjadi saat sumber selesai dimuat.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('4ca6bf4d-b42e-4534-8e22-6c0631396ec8', '70e47e94-b396-4455-83f5-8092ad3f8a4a', 'js-click-event', 'multiple_choice'::public.question_type, 'Event', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Event apa yang terjadi ketika sebuah tombol ditekan?', 'click terjadi saat elemen diklik. submit khusus form, dan load terjadi saat sumber selesai dimuat.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1427,6 +1451,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1467,8 +1492,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pemrograman-web/javascript-dom/js-strict-equality
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('64fd6978-333b-415c-879c-b10e411b4fa0', '70e47e94-b396-4455-83f5-8092ad3f8a4a', 'js-strict-equality', 'fill_blank'::public.question_type, 'Operator', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Operator yang membandingkan nilai sekaligus tipe data adalah ___', '=== membandingkan nilai dan tipe. == hanya membandingkan nilai setelah konversi tipe.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('64fd6978-333b-415c-879c-b10e411b4fa0', '70e47e94-b396-4455-83f5-8092ad3f8a4a', 'js-strict-equality', 'fill_blank'::public.question_type, 'Operator', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Operator yang membandingkan nilai sekaligus tipe data adalah ___', '=== membandingkan nilai dan tipe. == hanya membandingkan nilai setelah konversi tipe.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1480,6 +1505,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1492,8 +1518,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: pemrograman-web/javascript-dom/js-prevent-default
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('905c6931-0e8d-41fa-82b4-0595fe0f8544', '70e47e94-b396-4455-83f5-8092ad3f8a4a', 'js-prevent-default', 'multiple_choice'::public.question_type, 'Form', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Agar form tidak memuat ulang halaman saat dikirim, panggil…', 'preventDefault membatalkan perilaku bawaan form, yaitu memuat ulang halaman.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('905c6931-0e8d-41fa-82b4-0595fe0f8544', '70e47e94-b396-4455-83f5-8092ad3f8a4a', 'js-prevent-default', 'multiple_choice'::public.question_type, 'Form', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Agar form tidak memuat ulang halaman saat dikirim, panggil…', 'preventDefault membatalkan perilaku bawaan form, yaitu memuat ulang halaman.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1505,6 +1531,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1573,8 +1600,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: pemrograman-web/legendary-web-dom/legendary-web-queryall
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('ca7def82-6723-4538-8399-63d0d7b82e20', '73e64202-ab73-484d-8ee4-865a66ec7b82', 'legendary-web-queryall', 'multiple_choice'::public.question_type, 'DOM', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'document.querySelectorAll(".item") mengembalikan…', 'querySelectorAll mengembalikan NodeList statis. Perubahan DOM setelah pemanggilan tidak otomatis memperbarui daftar tersebut.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('ca7def82-6723-4538-8399-63d0d7b82e20', '73e64202-ab73-484d-8ee4-865a66ec7b82', 'legendary-web-queryall', 'multiple_choice'::public.question_type, 'DOM', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'document.querySelectorAll(".item") mengembalikan…', 'querySelectorAll mengembalikan NodeList statis. Perubahan DOM setelah pemanggilan tidak otomatis memperbarui daftar tersebut.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1586,6 +1613,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1626,8 +1654,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pemrograman-web/legendary-web-dom/legendary-web-listener
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('192f91f1-75ef-4fc2-8f33-3f50a9d095bf', '73e64202-ab73-484d-8ee4-865a66ec7b82', 'legendary-web-listener', 'fill_blank'::public.question_type, 'Event', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi: tombol.__( "click", () => simpan() );', 'addEventListener memasang handler tanpa menimpa handler lain pada elemen yang sama.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('192f91f1-75ef-4fc2-8f33-3f50a9d095bf', '73e64202-ab73-484d-8ee4-865a66ec7b82', 'legendary-web-listener', 'fill_blank'::public.question_type, 'Event', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi: tombol.__( "click", () => simpan() );', 'addEventListener memasang handler tanpa menimpa handler lain pada elemen yang sama.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1639,6 +1667,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1651,8 +1680,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: pemrograman-web/legendary-web-dom/legendary-web-prevent
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('8ab05108-6319-441b-8d3d-818a8a88857c', '73e64202-ab73-484d-8ee4-865a66ec7b82', 'legendary-web-prevent', 'multiple_choice'::public.question_type, 'Event', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Apa efek event.preventDefault() pada handler submit form?', 'preventDefault membatalkan aksi bawaan browser. stopPropagation berbeda: ia menghentikan perambatan event.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('8ab05108-6319-441b-8d3d-818a8a88857c', '73e64202-ab73-484d-8ee4-865a66ec7b82', 'legendary-web-prevent', 'multiple_choice'::public.question_type, 'Event', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Apa efek event.preventDefault() pada handler submit form?', 'preventDefault membatalkan aksi bawaan browser. stopPropagation berbeda: ia menghentikan perambatan event.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1664,6 +1693,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1784,8 +1814,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: basis-data/konsep-database/db-primary-key-function
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('99f22e9c-c0da-41d0-852a-5a530e6cf0bf', '39a4a1b6-f899-4f46-867b-e06c9a1c7c1e', 'db-primary-key-function', 'multiple_choice'::public.question_type, 'Primary Key', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Apa fungsi utama primary key pada sebuah tabel?', 'Primary key memastikan setiap baris dapat dibedakan dan tidak boleh berisi nilai yang sama.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('99f22e9c-c0da-41d0-852a-5a530e6cf0bf', '39a4a1b6-f899-4f46-867b-e06c9a1c7c1e', 'db-primary-key-function', 'multiple_choice'::public.question_type, 'Primary Key', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Apa fungsi utama primary key pada sebuah tabel?', 'Primary key memastikan setiap baris dapat dibedakan dan tidak boleh berisi nilai yang sama.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1797,6 +1827,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1837,8 +1868,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/konsep-database/db-table-shape
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('83d36f2b-4626-4f27-8a65-84d2a8656ee2', '39a4a1b6-f899-4f46-867b-e06c9a1c7c1e', 'db-table-shape', 'multiple_choice'::public.question_type, 'Tabel', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Sebuah tabel basis data terdiri dari…', 'Tabel menyimpan data dalam baris (record) dan kolom (field).', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('83d36f2b-4626-4f27-8a65-84d2a8656ee2', '39a4a1b6-f899-4f46-867b-e06c9a1c7c1e', 'db-table-shape', 'multiple_choice'::public.question_type, 'Tabel', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Sebuah tabel basis data terdiri dari…', 'Tabel menyimpan data dalam baris (record) dan kolom (field).', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1850,6 +1881,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1890,8 +1922,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/konsep-database/db-foreign-key
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('37331a0c-0e01-44d9-8de7-280227076907', '39a4a1b6-f899-4f46-867b-e06c9a1c7c1e', 'db-foreign-key', 'multiple_choice'::public.question_type, 'Foreign Key', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Foreign key digunakan untuk…', 'Foreign key merujuk ke primary key tabel lain sehingga hubungan antar tabel terjaga.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('37331a0c-0e01-44d9-8de7-280227076907', '39a4a1b6-f899-4f46-867b-e06c9a1c7c1e', 'db-foreign-key', 'multiple_choice'::public.question_type, 'Foreign Key', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Foreign key digunakan untuk…', 'Foreign key merujuk ke primary key tabel lain sehingga hubungan antar tabel terjaga.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1903,6 +1935,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1943,8 +1976,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/konsep-database/db-primary-key-term
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('6d4e1308-b604-4b0e-8a2b-42d6b56a1167', '39a4a1b6-f899-4f46-867b-e06c9a1c7c1e', 'db-primary-key-term', 'fill_blank'::public.question_type, 'Primary Key', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Kolom yang menjadi identitas unik baris disebut ___ key.', 'Primary key bersifat unik dan biasanya tidak boleh kosong.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('6d4e1308-b604-4b0e-8a2b-42d6b56a1167', '39a4a1b6-f899-4f46-867b-e06c9a1c7c1e', 'db-primary-key-term', 'fill_blank'::public.question_type, 'Primary Key', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Kolom yang menjadi identitas unik baris disebut ___ key.', 'Primary key bersifat unik dan biasanya tidak boleh kosong.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1956,6 +1989,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -1968,8 +2002,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: basis-data/konsep-database/db-field
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('220e4538-3cd3-461d-8af2-0e27f82f5ba2', '39a4a1b6-f899-4f46-867b-e06c9a1c7c1e', 'db-field', 'multiple_choice'::public.question_type, 'Field', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Dalam basis data relasional, field setara dengan…', 'Field adalah kolom yang menyimpan satu jenis informasi, misalnya nama atau email.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('220e4538-3cd3-461d-8af2-0e27f82f5ba2', '39a4a1b6-f899-4f46-867b-e06c9a1c7c1e', 'db-field', 'multiple_choice'::public.question_type, 'Field', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Dalam basis data relasional, field setara dengan…', 'Field adalah kolom yang menyimpan satu jenis informasi, misalnya nama atau email.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -1981,6 +2015,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2049,8 +2084,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: basis-data/database-review/review-db-primary-key
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('300e39b6-20a7-472f-89ca-d961831a5911', 'a6199001-3a50-4354-8a2a-c511c45e5a67', 'review-db-primary-key', 'multiple_choice'::public.question_type, 'Primary Key', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Nilai pada kolom primary key harus…', 'Primary key mengidentifikasi setiap baris secara unik, sehingga tidak boleh duplikat atau kosong.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('300e39b6-20a7-472f-89ca-d961831a5911', 'a6199001-3a50-4354-8a2a-c511c45e5a67', 'review-db-primary-key', 'multiple_choice'::public.question_type, 'Primary Key', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Nilai pada kolom primary key harus…', 'Primary key mengidentifikasi setiap baris secara unik, sehingga tidak boleh duplikat atau kosong.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -2062,6 +2097,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2102,8 +2138,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/database-review/review-db-select
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('c2831f23-4191-4e47-800c-82d6592c72ea', 'a6199001-3a50-4354-8a2a-c511c45e5a67', 'review-db-select', 'multiple_choice'::public.question_type, 'SQL', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Perintah SQL untuk mengambil data dari tabel adalah…', 'SELECT membaca data. INSERT menambah, UPDATE mengubah, dan DELETE menghapus.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('c2831f23-4191-4e47-800c-82d6592c72ea', 'a6199001-3a50-4354-8a2a-c511c45e5a67', 'review-db-select', 'multiple_choice'::public.question_type, 'SQL', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Perintah SQL untuk mengambil data dari tabel adalah…', 'SELECT membaca data. INSERT menambah, UPDATE mengubah, dan DELETE menghapus.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -2115,6 +2151,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2155,8 +2192,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/database-review/review-db-where
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('a332498a-21a1-4352-86b3-ab6d29550bab', 'a6199001-3a50-4354-8a2a-c511c45e5a67', 'review-db-where', 'typing'::public.question_type, 'SQL', 'beginner'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Tulis klausa SQL yang digunakan untuk menyaring baris berdasarkan kondisi.', 'Klausa WHERE ditempatkan setelah FROM untuk membatasi baris yang dikembalikan.', null, 15, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('a332498a-21a1-4352-86b3-ab6d29550bab', 'a6199001-3a50-4354-8a2a-c511c45e5a67', 'review-db-where', 'typing'::public.question_type, 'SQL', 'beginner'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Tulis klausa SQL yang digunakan untuk menyaring baris berdasarkan kondisi.', 'Klausa WHERE ditempatkan setelah FROM untuk membatasi baris yang dikembalikan.', null, 15, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -2168,6 +2205,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2208,8 +2246,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: basis-data/database-challenge/challenge-db-foreign-key
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('ecf94b62-3e7c-4a70-861d-73f1bbc346d8', 'efce6efe-0e9e-4af3-89d7-0626505f79a9', 'challenge-db-foreign-key', 'multiple_choice'::public.question_type, 'Foreign Key', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Apa fungsi foreign key?', 'Foreign key menjaga relasi antar tabel dengan merujuk primary key pada tabel lain.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('ecf94b62-3e7c-4a70-861d-73f1bbc346d8', 'efce6efe-0e9e-4af3-89d7-0626505f79a9', 'challenge-db-foreign-key', 'multiple_choice'::public.question_type, 'Foreign Key', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Apa fungsi foreign key?', 'Foreign key menjaga relasi antar tabel dengan merujuk primary key pada tabel lain.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -2221,6 +2259,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2261,8 +2300,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/database-challenge/challenge-db-join
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('b35db766-e736-4019-835e-3bcf59fbe298', 'efce6efe-0e9e-4af3-89d7-0626505f79a9', 'challenge-db-join', 'multiple_choice'::public.question_type, 'JOIN', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'JOIN digunakan untuk…', 'JOIN mencocokkan baris antar tabel memakai kolom relasi yang ditentukan pada kondisi ON.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('b35db766-e736-4019-835e-3bcf59fbe298', 'efce6efe-0e9e-4af3-89d7-0626505f79a9', 'challenge-db-join', 'multiple_choice'::public.question_type, 'JOIN', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'JOIN digunakan untuk…', 'JOIN mencocokkan baris antar tabel memakai kolom relasi yang ditentukan pada kondisi ON.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -2274,6 +2313,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2314,8 +2354,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/database-challenge/challenge-db-update
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('778d469e-4a7d-40f3-8047-620471fad62e', 'efce6efe-0e9e-4af3-89d7-0626505f79a9', 'challenge-db-update', 'fill_blank'::public.question_type, 'SQL', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Perintah SQL untuk mengubah data yang sudah ada adalah ___', 'UPDATE mengubah nilai kolom pada baris yang memenuhi klausa WHERE.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('778d469e-4a7d-40f3-8047-620471fad62e', 'efce6efe-0e9e-4af3-89d7-0626505f79a9', 'challenge-db-update', 'fill_blank'::public.question_type, 'SQL', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Perintah SQL untuk mengubah data yang sudah ada adalah ___', 'UPDATE mengubah nilai kolom pada baris yang memenuhi klausa WHERE.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -2327,6 +2367,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2391,8 +2432,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: basis-data/sql-dasar/sql-select
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('3826d15e-8d81-4493-8d01-25e78e741dd3', 'd9dd6a23-62aa-4403-82b7-7cfaaeecc69a', 'sql-select', 'multiple_choice'::public.question_type, 'SELECT', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Perintah SQL untuk mengambil data dari tabel adalah…', 'SELECT membaca data. INSERT menambah, UPDATE mengubah, dan DELETE menghapus.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('3826d15e-8d81-4493-8d01-25e78e741dd3', 'd9dd6a23-62aa-4403-82b7-7cfaaeecc69a', 'sql-select', 'multiple_choice'::public.question_type, 'SELECT', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Perintah SQL untuk mengambil data dari tabel adalah…', 'SELECT membaca data. INSERT menambah, UPDATE mengubah, dan DELETE menghapus.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -2404,6 +2445,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2444,8 +2486,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/sql-dasar/sql-where
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('e943cbdb-46e9-4928-8440-f0818ed00347', 'd9dd6a23-62aa-4403-82b7-7cfaaeecc69a', 'sql-where', 'multiple_choice'::public.question_type, 'WHERE', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Klausa apa yang dipakai untuk menyaring baris berdasarkan kondisi?', 'WHERE menentukan kondisi yang harus dipenuhi sebuah baris agar ikut dikembalikan.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('e943cbdb-46e9-4928-8440-f0818ed00347', 'd9dd6a23-62aa-4403-82b7-7cfaaeecc69a', 'sql-where', 'multiple_choice'::public.question_type, 'WHERE', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Klausa apa yang dipakai untuk menyaring baris berdasarkan kondisi?', 'WHERE menentukan kondisi yang harus dipenuhi sebuah baris agar ikut dikembalikan.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -2457,6 +2499,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2497,8 +2540,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/sql-dasar/sql-from
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('63545850-4f19-4685-8516-3ad6ed183a3d', 'd9dd6a23-62aa-4403-82b7-7cfaaeecc69a', 'sql-from', 'fill_blank'::public.question_type, 'FROM', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi query berikut: SELECT * ___ siswa;', 'FROM menunjukkan tabel sumber data yang dibaca.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('63545850-4f19-4685-8516-3ad6ed183a3d', 'd9dd6a23-62aa-4403-82b7-7cfaaeecc69a', 'sql-from', 'fill_blank'::public.question_type, 'FROM', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi query berikut: SELECT * ___ siswa;', 'FROM menunjukkan tabel sumber data yang dibaca.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -2510,6 +2553,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2522,8 +2566,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: basis-data/sql-dasar/sql-insert
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('bbce8794-8906-4218-8bd9-b388092691a2', 'd9dd6a23-62aa-4403-82b7-7cfaaeecc69a', 'sql-insert', 'multiple_choice'::public.question_type, 'INSERT', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Perintah untuk menambah baris baru adalah…', 'INSERT INTO nama_tabel (kolom) VALUES (nilai) menambahkan baris baru.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('bbce8794-8906-4218-8bd9-b388092691a2', 'd9dd6a23-62aa-4403-82b7-7cfaaeecc69a', 'sql-insert', 'multiple_choice'::public.question_type, 'INSERT', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Perintah untuk menambah baris baru adalah…', 'INSERT INTO nama_tabel (kolom) VALUES (nilai) menambahkan baris baru.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -2535,6 +2579,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2575,8 +2620,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/sql-dasar/sql-update
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('58614244-5db9-441f-84df-f83074a9422d', 'd9dd6a23-62aa-4403-82b7-7cfaaeecc69a', 'sql-update', 'multiple_choice'::public.question_type, 'UPDATE', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Perintah untuk mengubah data yang sudah ada adalah…', 'UPDATE mengubah nilai kolom pada baris yang memenuhi kondisi WHERE.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('58614244-5db9-441f-84df-f83074a9422d', 'd9dd6a23-62aa-4403-82b7-7cfaaeecc69a', 'sql-update', 'multiple_choice'::public.question_type, 'UPDATE', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Perintah untuk mengubah data yang sudah ada adalah…', 'UPDATE mengubah nilai kolom pada baris yang memenuhi kondisi WHERE.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -2588,6 +2633,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2656,8 +2702,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: basis-data/latihan-sql-dasar/practice-db-select
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('c7396f97-68fc-41d2-8595-58110f0bdcd8', '1b98c814-937c-4b80-811a-1e70d5a40195', 'practice-db-select', 'multiple_choice'::public.question_type, 'SQL', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Perintah SQL untuk mengambil data dari tabel adalah…', 'SELECT membaca data. INSERT menambah, UPDATE mengubah, dan DELETE menghapus.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('c7396f97-68fc-41d2-8595-58110f0bdcd8', '1b98c814-937c-4b80-811a-1e70d5a40195', 'practice-db-select', 'multiple_choice'::public.question_type, 'SQL', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Perintah SQL untuk mengambil data dari tabel adalah…', 'SELECT membaca data. INSERT menambah, UPDATE mengubah, dan DELETE menghapus.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -2669,6 +2715,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2709,8 +2756,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/latihan-sql-dasar/practice-db-where
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('e1f76ca7-69ad-46bf-8e5b-774879429151', '1b98c814-937c-4b80-811a-1e70d5a40195', 'practice-db-where', 'multiple_choice'::public.question_type, 'SQL', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Klausa yang memfilter baris berdasarkan kondisi adalah…', 'WHERE menentukan baris yang lolos. ORDER BY mengurutkan, GROUP BY mengelompokkan, dan LIMIT membatasi jumlah hasil.', 'Klausa ini muncul sebelum ORDER BY.', 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('e1f76ca7-69ad-46bf-8e5b-774879429151', '1b98c814-937c-4b80-811a-1e70d5a40195', 'practice-db-where', 'multiple_choice'::public.question_type, 'SQL', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Klausa yang memfilter baris berdasarkan kondisi adalah…', 'WHERE menentukan baris yang lolos. ORDER BY mengurutkan, GROUP BY mengelompokkan, dan LIMIT membatasi jumlah hasil.', 'Klausa ini muncul sebelum ORDER BY.', 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -2722,6 +2769,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2762,8 +2810,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/latihan-sql-dasar/practice-db-filter
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('a073350a-4518-4d9f-85db-a4d8e757b84f', '1b98c814-937c-4b80-811a-1e70d5a40195', 'practice-db-filter', 'fill_blank'::public.question_type, 'SQL', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi: SELECT nama FROM siswa __ nilai > 80;', 'WHERE memfilter baris sehingga hanya siswa dengan nilai di atas 80 yang dikembalikan.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('a073350a-4518-4d9f-85db-a4d8e757b84f', '1b98c814-937c-4b80-811a-1e70d5a40195', 'practice-db-filter', 'fill_blank'::public.question_type, 'SQL', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi: SELECT nama FROM siswa __ nilai > 80;', 'WHERE memfilter baris sehingga hanya siswa dengan nilai di atas 80 yang dikembalikan.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -2775,6 +2823,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2815,8 +2864,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: basis-data/checkpoint-kunci-dan-query/checkpoint-db-pk
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('9dad8928-73bf-41fe-8e19-c743a954d8cd', 'ac7e06b8-def9-4b80-839d-0659be398470', 'checkpoint-db-pk', 'multiple_choice'::public.question_type, 'Primary Key', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Fungsi utama primary key adalah…', 'Primary key menjamin setiap baris dapat dibedakan dan tidak boleh duplikat atau null.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('9dad8928-73bf-41fe-8e19-c743a954d8cd', 'ac7e06b8-def9-4b80-839d-0659be398470', 'checkpoint-db-pk', 'multiple_choice'::public.question_type, 'Primary Key', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Fungsi utama primary key adalah…', 'Primary key menjamin setiap baris dapat dibedakan dan tidak boleh duplikat atau null.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -2828,6 +2877,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2868,8 +2918,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/checkpoint-kunci-dan-query/checkpoint-db-fk
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('7981bdf1-3749-4d21-8e1a-8538a06dfd9d', 'ac7e06b8-def9-4b80-839d-0659be398470', 'checkpoint-db-fk', 'multiple_choice'::public.question_type, 'Foreign Key', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Foreign key berfungsi untuk…', 'Foreign key menjaga integritas relasi: nilainya harus merujuk ke baris yang ada di tabel tujuan.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('7981bdf1-3749-4d21-8e1a-8538a06dfd9d', 'ac7e06b8-def9-4b80-839d-0659be398470', 'checkpoint-db-fk', 'multiple_choice'::public.question_type, 'Foreign Key', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Foreign key berfungsi untuk…', 'Foreign key menjaga integritas relasi: nilainya harus merujuk ke baris yang ada di tabel tujuan.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -2881,6 +2931,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2921,8 +2972,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/checkpoint-kunci-dan-query/checkpoint-db-order
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('1d74ffe6-2055-42f9-81b4-f586abe3bbbd', 'ac7e06b8-def9-4b80-839d-0659be398470', 'checkpoint-db-order', 'fill_blank'::public.question_type, 'SQL', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi: SELECT * FROM siswa __ nama; agar hasil terurut menaik berdasarkan nama.', 'ORDER BY nama mengurutkan menaik secara default; tambahkan DESC untuk menurun.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('1d74ffe6-2055-42f9-81b4-f586abe3bbbd', 'ac7e06b8-def9-4b80-839d-0659be398470', 'checkpoint-db-order', 'fill_blank'::public.question_type, 'SQL', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi: SELECT * FROM siswa __ nama; agar hasil terurut menaik berdasarkan nama.', 'ORDER BY nama mengurutkan menaik secara default; tambahkan DESC untuk menurun.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -2934,6 +2985,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -2998,8 +3050,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: basis-data/relasi-join/db-inner-join
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('5f5e6f25-139c-48bf-8e03-357e6d2bc2b7', '63a16477-adb9-4c55-813e-9746c4839e8f', 'db-inner-join', 'multiple_choice'::public.question_type, 'JOIN', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'JOIN yang mengembalikan baris ketika ada kecocokan di kedua tabel disebut…', 'INNER JOIN hanya mengembalikan pasangan baris yang cocok di kedua tabel.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('5f5e6f25-139c-48bf-8e03-357e6d2bc2b7', '63a16477-adb9-4c55-813e-9746c4839e8f', 'db-inner-join', 'multiple_choice'::public.question_type, 'JOIN', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'JOIN yang mengembalikan baris ketika ada kecocokan di kedua tabel disebut…', 'INNER JOIN hanya mengembalikan pasangan baris yang cocok di kedua tabel.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3011,6 +3063,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -3051,8 +3104,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/relasi-join/db-normalization-goal
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('eaa0d6d4-9127-4715-8fc5-a0aed493ed71', '63a16477-adb9-4c55-813e-9746c4839e8f', 'db-normalization-goal', 'multiple_choice'::public.question_type, 'Normalisasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tujuan utama normalisasi basis data adalah…', 'Normalisasi memecah data berulang agar konsisten dan menghindari anomali saat insert, update, atau delete.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('eaa0d6d4-9127-4715-8fc5-a0aed493ed71', '63a16477-adb9-4c55-813e-9746c4839e8f', 'db-normalization-goal', 'multiple_choice'::public.question_type, 'Normalisasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tujuan utama normalisasi basis data adalah…', 'Normalisasi memecah data berulang agar konsisten dan menghindari anomali saat insert, update, atau delete.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3064,6 +3117,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -3104,8 +3158,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/relasi-join/db-first-normal-form
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('618767ea-5d7a-4fc4-8c4f-551346478869', '63a16477-adb9-4c55-813e-9746c4839e8f', 'db-first-normal-form', 'multiple_choice'::public.question_type, 'Normalisasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Syarat utama bentuk normal pertama (1NF) adalah…', '1NF menuntut nilai tunggal per sel, tanpa daftar nilai dalam satu kolom.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('618767ea-5d7a-4fc4-8c4f-551346478869', '63a16477-adb9-4c55-813e-9746c4839e8f', 'db-first-normal-form', 'multiple_choice'::public.question_type, 'Normalisasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Syarat utama bentuk normal pertama (1NF) adalah…', '1NF menuntut nilai tunggal per sel, tanpa daftar nilai dalam satu kolom.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3117,6 +3171,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -3157,8 +3212,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/relasi-join/db-order-by
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('88f4f300-927e-4ecc-828b-c53b5453def4', '63a16477-adb9-4c55-813e-9746c4839e8f', 'db-order-by', 'fill_blank'::public.question_type, 'ORDER BY', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Klausa untuk mengurutkan hasil query adalah ___ BY.', 'ORDER BY menentukan kolom dan arah pengurutan, misalnya ORDER BY nama ASC.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('88f4f300-927e-4ecc-828b-c53b5453def4', '63a16477-adb9-4c55-813e-9746c4839e8f', 'db-order-by', 'fill_blank'::public.question_type, 'ORDER BY', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Klausa untuk mengurutkan hasil query adalah ___ BY.', 'ORDER BY menentukan kolom dan arah pengurutan, misalnya ORDER BY nama ASC.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3170,6 +3225,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -3182,8 +3238,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: basis-data/relasi-join/db-foreign-key-purpose
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('14394d05-a665-42d9-859b-a3bc615c5af1', '63a16477-adb9-4c55-813e-9746c4839e8f', 'db-foreign-key-purpose', 'multiple_choice'::public.question_type, 'Integritas Data', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Foreign key membantu mencegah…', 'Foreign key menjaga integritas referensial sehingga data anak tidak menunjuk induk yang tidak ada.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('14394d05-a665-42d9-859b-a3bc615c5af1', '63a16477-adb9-4c55-813e-9746c4839e8f', 'db-foreign-key-purpose', 'multiple_choice'::public.question_type, 'Integritas Data', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Foreign key membantu mencegah…', 'Foreign key menjaga integritas referensial sehingga data anak tidak menunjuk induk yang tidak ada.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3195,6 +3251,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -3263,8 +3320,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: basis-data/legendary-relasi-sql/legendary-db-inner
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('0e2ab240-0f88-450d-8445-3ba0b5690c00', '21703e08-c854-4a42-8ef1-eb432ead6b3c', 'legendary-db-inner', 'multiple_choice'::public.question_type, 'JOIN', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'INNER JOIN mengembalikan…', 'INNER JOIN hanya mempertahankan baris yang cocok di kedua sisi. LEFT JOIN mempertahankan seluruh tabel kiri.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('0e2ab240-0f88-450d-8445-3ba0b5690c00', '21703e08-c854-4a42-8ef1-eb432ead6b3c', 'legendary-db-inner', 'multiple_choice'::public.question_type, 'JOIN', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'INNER JOIN mengembalikan…', 'INNER JOIN hanya mempertahankan baris yang cocok di kedua sisi. LEFT JOIN mempertahankan seluruh tabel kiri.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3276,6 +3333,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -3316,8 +3374,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/legendary-relasi-sql/legendary-db-2nf
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('250f294b-682a-4f9e-8534-01ca089535e2', '21703e08-c854-4a42-8ef1-eb432ead6b3c', 'legendary-db-2nf', 'multiple_choice'::public.question_type, 'Normalisasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk normal kedua (2NF) terutama menghilangkan…', '2NF mensyaratkan 1NF terpenuhi dan setiap atribut non-kunci bergantung penuh pada seluruh kunci komposit.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('250f294b-682a-4f9e-8534-01ca089535e2', '21703e08-c854-4a42-8ef1-eb432ead6b3c', 'legendary-db-2nf', 'multiple_choice'::public.question_type, 'Normalisasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk normal kedua (2NF) terutama menghilangkan…', '2NF mensyaratkan 1NF terpenuhi dan setiap atribut non-kunci bergantung penuh pada seluruh kunci komposit.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3329,6 +3387,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -3369,8 +3428,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: basis-data/legendary-relasi-sql/legendary-db-join
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('dc33a54a-3abb-4022-8dd3-5edc74c22c3f', '21703e08-c854-4a42-8ef1-eb432ead6b3c', 'legendary-db-join', 'fill_blank'::public.question_type, 'SQL', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi: SELECT * FROM siswa __ kelas ON siswa.kelas_id = kelas.id;', 'JOIN menggabungkan tabel berdasarkan kondisi relasi pada klausa ON.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('dc33a54a-3abb-4022-8dd3-5edc74c22c3f', '21703e08-c854-4a42-8ef1-eb432ead6b3c', 'legendary-db-join', 'fill_blank'::public.question_type, 'SQL', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi: SELECT * FROM siswa __ kelas ON siswa.kelas_id = kelas.id;', 'JOIN menggabungkan tabel berdasarkan kondisi relasi pada klausa ON.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3382,6 +3441,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -3474,8 +3534,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: ppb-flutter-dart/dart-dasar/dart-const
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('54194040-b16f-4542-88fb-e63806fbba3d', '2526b18f-5665-4d3c-8eef-9d1516100946', 'dart-const', 'multiple_choice'::public.question_type, 'Dart', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kata kunci Dart untuk nilai yang sudah diketahui saat kompilasi adalah…', 'const menandai nilai konstan saat kompilasi. final juga tidak berubah, tetapi nilainya boleh ditentukan saat runtime.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('54194040-b16f-4542-88fb-e63806fbba3d', '2526b18f-5665-4d3c-8eef-9d1516100946', 'dart-const', 'multiple_choice'::public.question_type, 'Dart', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kata kunci Dart untuk nilai yang sudah diketahui saat kompilasi adalah…', 'const menandai nilai konstan saat kompilasi. final juga tidak berubah, tetapi nilainya boleh ditentukan saat runtime.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3487,6 +3547,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -3527,8 +3588,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/dart-dasar/dart-string
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('02df48d4-c44a-4fd5-8db2-ef413d3381f1', '2526b18f-5665-4d3c-8eef-9d1516100946', 'dart-string', 'multiple_choice'::public.question_type, 'Tipe Data', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tipe data Dart untuk teks adalah…', 'String menyimpan rangkaian karakter. Teks diapit tanda kutip tunggal atau ganda.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('02df48d4-c44a-4fd5-8db2-ef413d3381f1', '2526b18f-5665-4d3c-8eef-9d1516100946', 'dart-string', 'multiple_choice'::public.question_type, 'Tipe Data', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tipe data Dart untuk teks adalah…', 'String menyimpan rangkaian karakter. Teks diapit tanda kutip tunggal atau ganda.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3540,6 +3601,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -3580,8 +3642,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/dart-dasar/dart-list
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('9f5fb768-a8df-44d2-853b-16903dc67739', '2526b18f-5665-4d3c-8eef-9d1516100946', 'dart-list', 'multiple_choice'::public.question_type, 'Tipe Data', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tipe data Dart untuk kumpulan nilai berurutan adalah…', 'List menyimpan elemen berurutan dan dapat diakses dengan indeks. Map menyimpan pasangan kunci-nilai.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('9f5fb768-a8df-44d2-853b-16903dc67739', '2526b18f-5665-4d3c-8eef-9d1516100946', 'dart-list', 'multiple_choice'::public.question_type, 'Tipe Data', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tipe data Dart untuk kumpulan nilai berurutan adalah…', 'List menyimpan elemen berurutan dan dapat diakses dengan indeks. Map menyimpan pasangan kunci-nilai.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3593,6 +3655,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -3633,8 +3696,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/dart-dasar/dart-print
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('e1750dd9-3bf9-4d72-83bb-ca9ef4f8e58c', '2526b18f-5665-4d3c-8eef-9d1516100946', 'dart-print', 'fill_blank'::public.question_type, 'Dart', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Fungsi untuk mencetak teks ke konsol adalah ___(''Halo'');', 'print mengirim teks ke konsol dan sering dipakai saat debugging.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('e1750dd9-3bf9-4d72-83bb-ca9ef4f8e58c', '2526b18f-5665-4d3c-8eef-9d1516100946', 'dart-print', 'fill_blank'::public.question_type, 'Dart', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Fungsi untuk mencetak teks ke konsol adalah ___(''Halo'');', 'print mengirim teks ke konsol dan sering dipakai saat debugging.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3646,6 +3709,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -3658,8 +3722,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: ppb-flutter-dart/dart-dasar/dart-null-safety
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('ce870516-6d54-41c8-82fd-1fad980b3d0f', '2526b18f-5665-4d3c-8eef-9d1516100946', 'dart-null-safety', 'multiple_choice'::public.question_type, 'Null Safety', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tanda ? pada tipe seperti String? berarti variabel tersebut…', 'String? menandakan tipe nullable, sehingga nilainya boleh null dan harus diperiksa sebelum dipakai.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('ce870516-6d54-41c8-82fd-1fad980b3d0f', '2526b18f-5665-4d3c-8eef-9d1516100946', 'dart-null-safety', 'multiple_choice'::public.question_type, 'Null Safety', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tanda ? pada tipe seperti String? berarti variabel tersebut…', 'String? menandakan tipe nullable, sehingga nilainya boleh null dan harus diperiksa sebelum dipakai.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3671,6 +3735,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -3739,8 +3804,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: ppb-flutter-dart/flutter-review/review-dart-main
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('908e5a0f-effd-454a-89dc-fcab98f48f76', '79a0840f-87a6-4e18-83a6-f7db56379821', 'review-dart-main', 'multiple_choice'::public.question_type, 'Dart', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Fungsi yang menjadi titik masuk program Dart adalah…', 'Program Dart dimulai dari fungsi main(). Flutter memanggil runApp() di dalamnya.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('908e5a0f-effd-454a-89dc-fcab98f48f76', '79a0840f-87a6-4e18-83a6-f7db56379821', 'review-dart-main', 'multiple_choice'::public.question_type, 'Dart', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Fungsi yang menjadi titik masuk program Dart adalah…', 'Program Dart dimulai dari fungsi main(). Flutter memanggil runApp() di dalamnya.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3752,6 +3817,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -3792,8 +3858,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/flutter-review/review-flutter-stateless
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('c17f2dbe-e771-4075-8ada-6d448a5d50f7', '79a0840f-87a6-4e18-83a6-f7db56379821', 'review-flutter-stateless', 'multiple_choice'::public.question_type, 'Widget', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'StatelessWidget cocok untuk widget yang…', 'StatelessWidget tidak memiliki state yang berubah. Jika tampilan perlu berubah, gunakan StatefulWidget.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('c17f2dbe-e771-4075-8ada-6d448a5d50f7', '79a0840f-87a6-4e18-83a6-f7db56379821', 'review-flutter-stateless', 'multiple_choice'::public.question_type, 'Widget', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'StatelessWidget cocok untuk widget yang…', 'StatelessWidget tidak memiliki state yang berubah. Jika tampilan perlu berubah, gunakan StatefulWidget.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3805,6 +3871,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -3845,8 +3912,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/flutter-review/review-flutter-pubspec
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('a5a2f612-dbe0-4c9f-8dda-76e3759d73f1', '79a0840f-87a6-4e18-83a6-f7db56379821', 'review-flutter-pubspec', 'typing'::public.question_type, 'Flutter', 'beginner'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Tulis nama file konfigurasi dependensi dan metadata proyek Flutter.', 'pubspec.yaml menyimpan nama proyek, versi, aset, dan daftar dependency Flutter.', null, 15, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('a5a2f612-dbe0-4c9f-8dda-76e3759d73f1', '79a0840f-87a6-4e18-83a6-f7db56379821', 'review-flutter-pubspec', 'typing'::public.question_type, 'Flutter', 'beginner'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Tulis nama file konfigurasi dependensi dan metadata proyek Flutter.', 'pubspec.yaml menyimpan nama proyek, versi, aset, dan daftar dependency Flutter.', null, 15, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3858,6 +3925,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -3898,8 +3966,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: ppb-flutter-dart/flutter-challenge/challenge-flutter-setstate
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('862187ae-0826-4191-8262-944be2dd2cd5', '2a3bd110-196d-49ce-89b7-a9d9da603082', 'challenge-flutter-setstate', 'multiple_choice'::public.question_type, 'State', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Apa fungsi setState() pada StatefulWidget?', 'setState menandai widget kotor sehingga Flutter menjadwalkan pembangunan ulang UI dengan nilai terbaru.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('862187ae-0826-4191-8262-944be2dd2cd5', '2a3bd110-196d-49ce-89b7-a9d9da603082', 'challenge-flutter-setstate', 'multiple_choice'::public.question_type, 'State', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Apa fungsi setState() pada StatefulWidget?', 'setState menandai widget kotor sehingga Flutter menjadwalkan pembangunan ulang UI dengan nilai terbaru.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3911,6 +3979,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -3951,8 +4020,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/flutter-challenge/challenge-dart-final
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('4ccd2ed8-fa5f-48fa-8765-f61e8575209e', '2a3bd110-196d-49ce-89b7-a9d9da603082', 'challenge-dart-final', 'multiple_choice'::public.question_type, 'Dart', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kata kunci final pada variabel berarti…', 'final menetapkan nilai sekali. const lebih ketat karena nilainya harus diketahui saat kompilasi.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('4ccd2ed8-fa5f-48fa-8765-f61e8575209e', '2a3bd110-196d-49ce-89b7-a9d9da603082', 'challenge-dart-final', 'multiple_choice'::public.question_type, 'Dart', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kata kunci final pada variabel berarti…', 'final menetapkan nilai sekali. const lebih ketat karena nilainya harus diketahui saat kompilasi.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -3964,6 +4033,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4004,8 +4074,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/flutter-challenge/challenge-flutter-text
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('368a72c7-b1ac-4b59-8763-d7ad20783bb0', '2a3bd110-196d-49ce-89b7-a9d9da603082', 'challenge-flutter-text', 'fill_blank'::public.question_type, 'Widget', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Widget Flutter untuk menampilkan teks adalah ___', 'Widget Text menampilkan string. Atribut style mengatur ukuran, warna, dan bobot huruf.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('368a72c7-b1ac-4b59-8763-d7ad20783bb0', '2a3bd110-196d-49ce-89b7-a9d9da603082', 'challenge-flutter-text', 'fill_blank'::public.question_type, 'Widget', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Widget Flutter untuk menampilkan teks adalah ___', 'Widget Text menampilkan string. Atribut style mengatur ukuran, warna, dan bobot huruf.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -4017,6 +4087,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4089,8 +4160,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: ppb-flutter-dart/widget-flutter/flutter-stateless
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('ff108e8c-7dcc-4663-89db-d43fdccae594', 'cf6a6019-87f4-473c-8739-f50bc5b09437', 'flutter-stateless', 'multiple_choice'::public.question_type, 'Widget', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget yang tidak memiliki state yang berubah disebut…', 'StatelessWidget menggambarkan tampilan yang tidak berubah karena state internal.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('ff108e8c-7dcc-4663-89db-d43fdccae594', 'cf6a6019-87f4-473c-8739-f50bc5b09437', 'flutter-stateless', 'multiple_choice'::public.question_type, 'Widget', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget yang tidak memiliki state yang berubah disebut…', 'StatelessWidget menggambarkan tampilan yang tidak berubah karena state internal.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -4102,6 +4173,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4142,8 +4214,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/widget-flutter/flutter-materialapp
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('9a52dc77-50e0-406c-825c-644ab42094f6', 'cf6a6019-87f4-473c-8739-f50bc5b09437', 'flutter-materialapp', 'multiple_choice'::public.question_type, 'Widget', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget akar yang menyiapkan tema dan navigasi Material adalah…', 'MaterialApp membungkus aplikasi dengan tema, rute, dan konfigurasi Material.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('9a52dc77-50e0-406c-825c-644ab42094f6', 'cf6a6019-87f4-473c-8739-f50bc5b09437', 'flutter-materialapp', 'multiple_choice'::public.question_type, 'Widget', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget akar yang menyiapkan tema dan navigasi Material adalah…', 'MaterialApp membungkus aplikasi dengan tema, rute, dan konfigurasi Material.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -4155,6 +4227,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4195,8 +4268,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/widget-flutter/flutter-column
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('eb9f5004-0c4e-419a-81ed-856ba7913231', 'cf6a6019-87f4-473c-8739-f50bc5b09437', 'flutter-column', 'multiple_choice'::public.question_type, 'Layout', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget untuk menyusun anak elemen secara vertikal adalah…', 'Column menata anak dari atas ke bawah. Row menata dari kiri ke kanan.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('eb9f5004-0c4e-419a-81ed-856ba7913231', 'cf6a6019-87f4-473c-8739-f50bc5b09437', 'flutter-column', 'multiple_choice'::public.question_type, 'Layout', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget untuk menyusun anak elemen secara vertikal adalah…', 'Column menata anak dari atas ke bawah. Row menata dari kiri ke kanan.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -4208,6 +4281,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4248,8 +4322,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/widget-flutter/flutter-padding
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('514ee17d-ac4e-4179-851a-eb6e1efc5401', 'cf6a6019-87f4-473c-8739-f50bc5b09437', 'flutter-padding', 'multiple_choice'::public.question_type, 'Layout', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget untuk memberi jarak di sekeliling anak elemen adalah…', 'Padding membungkus anak dengan ruang kosong. SizedBox juga dapat memberi jarak, tetapi Padding lebih eksplisit untuk tujuan itu.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('514ee17d-ac4e-4179-851a-eb6e1efc5401', 'cf6a6019-87f4-473c-8739-f50bc5b09437', 'flutter-padding', 'multiple_choice'::public.question_type, 'Layout', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget untuk memberi jarak di sekeliling anak elemen adalah…', 'Padding membungkus anak dengan ruang kosong. SizedBox juga dapat memberi jarak, tetapi Padding lebih eksplisit untuk tujuan itu.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -4261,6 +4335,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4301,8 +4376,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/widget-flutter/flutter-text
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('534b4216-94b6-43f5-8ffa-be56a53b5ab9', 'cf6a6019-87f4-473c-8739-f50bc5b09437', 'flutter-text', 'fill_blank'::public.question_type, 'Widget', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Widget untuk menampilkan teks adalah ___(''Halo'').', 'Text menampilkan rangkaian karakter. Gaya teks diatur lewat properti style.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('534b4216-94b6-43f5-8ffa-be56a53b5ab9', 'cf6a6019-87f4-473c-8739-f50bc5b09437', 'flutter-text', 'fill_blank'::public.question_type, 'Widget', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Widget untuk menampilkan teks adalah ___(''Halo'').', 'Text menampilkan rangkaian karakter. Gaya teks diatur lewat properti style.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -4314,6 +4389,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4354,8 +4430,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: ppb-flutter-dart/latihan-widget-dasar/practice-ppb-text
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('bd0b1a06-bdf6-4048-8baf-d9bf7f76deaa', 'a3f749bd-47db-4168-8a1a-86a234494bc6', 'practice-ppb-text', 'multiple_choice'::public.question_type, 'Widget', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget Flutter untuk menampilkan teks adalah…', 'Text menampilkan rangkaian karakter. Gaya diatur lewat parameter style.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('bd0b1a06-bdf6-4048-8baf-d9bf7f76deaa', 'a3f749bd-47db-4168-8a1a-86a234494bc6', 'practice-ppb-text', 'multiple_choice'::public.question_type, 'Widget', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget Flutter untuk menampilkan teks adalah…', 'Text menampilkan rangkaian karakter. Gaya diatur lewat parameter style.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -4367,6 +4443,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4407,8 +4484,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/latihan-widget-dasar/practice-ppb-column
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('c77da13b-3835-4483-897e-7f1f530e8aa8', 'a3f749bd-47db-4168-8a1a-86a234494bc6', 'practice-ppb-column', 'multiple_choice'::public.question_type, 'Layout', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget yang menyusun anak secara vertikal adalah…', 'Column menyusun anak dari atas ke bawah. Row menyusun dari kiri ke kanan.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('c77da13b-3835-4483-897e-7f1f530e8aa8', 'a3f749bd-47db-4168-8a1a-86a234494bc6', 'practice-ppb-column', 'multiple_choice'::public.question_type, 'Layout', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget yang menyusun anak secara vertikal adalah…', 'Column menyusun anak dari atas ke bawah. Row menyusun dari kiri ke kanan.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -4420,6 +4497,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4460,8 +4538,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/latihan-widget-dasar/practice-ppb-padding
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('70a5942c-f9c2-4166-879f-3e09e3f731fa', 'a3f749bd-47db-4168-8a1a-86a234494bc6', 'practice-ppb-padding', 'fill_blank'::public.question_type, 'Layout', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi: __( padding: EdgeInsets.all(16), child: Text("Halo") )', 'Padding membungkus anak dan menambahkan ruang di sekelilingnya.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('70a5942c-f9c2-4166-879f-3e09e3f731fa', 'a3f749bd-47db-4168-8a1a-86a234494bc6', 'practice-ppb-padding', 'fill_blank'::public.question_type, 'Layout', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi: __( padding: EdgeInsets.all(16), child: Text("Halo") )', 'Padding membungkus anak dan menambahkan ruang di sekelilingnya.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -4473,6 +4551,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4513,8 +4592,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: ppb-flutter-dart/checkpoint-widget-flutter/checkpoint-ppb-stateful
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('2378852d-27b5-4cbb-8c22-f5ed9e1ccaae', '3346378b-b4ac-4b60-8317-35c7e5af6ae8', 'checkpoint-ppb-stateful', 'multiple_choice'::public.question_type, 'State', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget yang memiliki state dan dapat berubah saat runtime adalah…', 'StatefulWidget memiliki objek State yang dapat memicu rebuild lewat setState.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('2378852d-27b5-4cbb-8c22-f5ed9e1ccaae', '3346378b-b4ac-4b60-8317-35c7e5af6ae8', 'checkpoint-ppb-stateful', 'multiple_choice'::public.question_type, 'State', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget yang memiliki state dan dapat berubah saat runtime adalah…', 'StatefulWidget memiliki objek State yang dapat memicu rebuild lewat setState.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -4526,6 +4605,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4566,8 +4646,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/checkpoint-widget-flutter/checkpoint-ppb-build
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('3230c28b-d499-4598-88ef-ed69d99155f7', '3346378b-b4ac-4b60-8317-35c7e5af6ae8', 'checkpoint-ppb-build', 'multiple_choice'::public.question_type, 'State', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Method yang wajib diimplementasikan pada kelas State adalah…', 'build mengembalikan widget yang akan dirender. Method lain opsional sesuai kebutuhan siklus hidup.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('3230c28b-d499-4598-88ef-ed69d99155f7', '3346378b-b4ac-4b60-8317-35c7e5af6ae8', 'checkpoint-ppb-build', 'multiple_choice'::public.question_type, 'State', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Method yang wajib diimplementasikan pada kelas State adalah…', 'build mengembalikan widget yang akan dirender. Method lain opsional sesuai kebutuhan siklus hidup.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -4579,6 +4659,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4619,8 +4700,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/checkpoint-widget-flutter/checkpoint-ppb-image
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('12e21fb2-abca-437b-86a7-2c424a13eb5a', '3346378b-b4ac-4b60-8317-35c7e5af6ae8', 'checkpoint-ppb-image', 'multiple_choice'::public.question_type, 'Widget', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Constructor Image untuk menampilkan gambar dari aset aplikasi adalah…', 'Image.asset membaca gambar yang didaftarkan di pubspec.yaml. Image.network mengambil gambar dari URL.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('12e21fb2-abca-437b-86a7-2c424a13eb5a', '3346378b-b4ac-4b60-8317-35c7e5af6ae8', 'checkpoint-ppb-image', 'multiple_choice'::public.question_type, 'Widget', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Constructor Image untuk menampilkan gambar dari aset aplikasi adalah…', 'Image.asset membaca gambar yang didaftarkan di pubspec.yaml. Image.network mengambil gambar dari URL.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -4632,6 +4713,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4724,8 +4806,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: ppb-flutter-dart/state-navigasi/flutter-stateful
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('46229677-2643-4d6b-8f58-b5166ded964b', '6b450bba-82c9-47d0-8abc-cf641638785e', 'flutter-stateful', 'multiple_choice'::public.question_type, 'State', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget yang dapat berubah tampilannya karena state disebut…', 'StatefulWidget memiliki objek State yang dapat memicu pembangunan ulang tampilan.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('46229677-2643-4d6b-8f58-b5166ded964b', '6b450bba-82c9-47d0-8abc-cf641638785e', 'flutter-stateful', 'multiple_choice'::public.question_type, 'State', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget yang dapat berubah tampilannya karena state disebut…', 'StatefulWidget memiliki objek State yang dapat memicu pembangunan ulang tampilan.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -4737,6 +4819,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4777,8 +4860,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/state-navigasi/flutter-setstate
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('2c68f5ab-6ab7-47da-8b55-9be006d957cb', '6b450bba-82c9-47d0-8abc-cf641638785e', 'flutter-setstate', 'multiple_choice'::public.question_type, 'State', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Method yang memberi tahu Flutter bahwa state berubah adalah…', 'setState membungkus perubahan state dan menjadwalkan pembangunan ulang widget.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('2c68f5ab-6ab7-47da-8b55-9be006d957cb', '6b450bba-82c9-47d0-8abc-cf641638785e', 'flutter-setstate', 'multiple_choice'::public.question_type, 'State', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Method yang memberi tahu Flutter bahwa state berubah adalah…', 'setState membungkus perubahan state dan menjadwalkan pembangunan ulang widget.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -4790,6 +4873,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4830,8 +4914,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/state-navigasi/flutter-navigator
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('7815a4a0-9d07-4e37-849d-dde59e164a1d', '6b450bba-82c9-47d0-8abc-cf641638785e', 'flutter-navigator', 'multiple_choice'::public.question_type, 'Navigasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Cara umum membuka halaman baru di Flutter adalah…', 'Navigator.push menambahkan rute baru ke tumpukan navigasi.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('7815a4a0-9d07-4e37-849d-dde59e164a1d', '6b450bba-82c9-47d0-8abc-cf641638785e', 'flutter-navigator', 'multiple_choice'::public.question_type, 'Navigasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Cara umum membuka halaman baru di Flutter adalah…', 'Navigator.push menambahkan rute baru ke tumpukan navigasi.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -4843,6 +4927,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4883,8 +4968,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/state-navigasi/flutter-button
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('f641c6e9-94bd-4023-8bef-af4295b8c9d5', '6b450bba-82c9-47d0-8abc-cf641638785e', 'flutter-button', 'multiple_choice'::public.question_type, 'Widget', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget tombol Material yang umum dipakai untuk aksi utama adalah…', 'ElevatedButton tampil sebagai tombol dengan latar dan elevasi. TextButton lebih ringan secara visual.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('f641c6e9-94bd-4023-8bef-af4295b8c9d5', '6b450bba-82c9-47d0-8abc-cf641638785e', 'flutter-button', 'multiple_choice'::public.question_type, 'Widget', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Widget tombol Material yang umum dipakai untuk aksi utama adalah…', 'ElevatedButton tampil sebagai tombol dengan latar dan elevasi. TextButton lebih ringan secara visual.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -4896,6 +4981,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4936,8 +5022,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/state-navigasi/flutter-build-return
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('08574e4d-f881-4890-8bf1-83d62d67b2af', '6b450bba-82c9-47d0-8abc-cf641638785e', 'flutter-build-return', 'fill_blank'::public.question_type, 'Widget', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Method build pada widget mengembalikan objek bertipe ___.', 'build mendeskripsikan tampilan dan mengembalikan Widget yang akan dirender.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('08574e4d-f881-4890-8bf1-83d62d67b2af', '6b450bba-82c9-47d0-8abc-cf641638785e', 'flutter-build-return', 'fill_blank'::public.question_type, 'Widget', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Method build pada widget mengembalikan objek bertipe ___.', 'build mendeskripsikan tampilan dan mengembalikan Widget yang akan dirender.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -4949,6 +5035,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -4989,8 +5076,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: ppb-flutter-dart/legendary-state-navigasi/legendary-ppb-setstate
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('60649e7b-0985-4f86-8314-6d096a8c6ff3', 'cadb837a-318e-44b1-8305-567ad3fd86b7', 'legendary-ppb-setstate', 'multiple_choice'::public.question_type, 'State', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Memanggil setState di dalam State akan…', 'setState memberi tahu framework bahwa state berubah sehingga build dijalankan ulang.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('60649e7b-0985-4f86-8314-6d096a8c6ff3', 'cadb837a-318e-44b1-8305-567ad3fd86b7', 'legendary-ppb-setstate', 'multiple_choice'::public.question_type, 'State', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Memanggil setState di dalam State akan…', 'setState memberi tahu framework bahwa state berubah sehingga build dijalankan ulang.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -5002,6 +5089,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -5042,8 +5130,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/legendary-state-navigasi/legendary-ppb-navigator
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('21129db9-ad17-4d67-83c5-705ba6ef4c2e', 'cadb837a-318e-44b1-8305-567ad3fd86b7', 'legendary-ppb-navigator', 'multiple_choice'::public.question_type, 'Navigasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Cara membuka halaman baru di Flutter adalah…', 'Navigator.push menambahkan route baru ke tumpukan. Navigator.pop kembali ke route sebelumnya.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('21129db9-ad17-4d67-83c5-705ba6ef4c2e', 'cadb837a-318e-44b1-8305-567ad3fd86b7', 'legendary-ppb-navigator', 'multiple_choice'::public.question_type, 'Navigasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Cara membuka halaman baru di Flutter adalah…', 'Navigator.push menambahkan route baru ke tumpukan. Navigator.pop kembali ke route sebelumnya.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -5055,6 +5143,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -5095,8 +5184,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: ppb-flutter-dart/legendary-state-navigasi/legendary-ppb-push
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('d08165c5-697d-4323-8549-c2301db2e761', 'cadb837a-318e-44b1-8305-567ad3fd86b7', 'legendary-ppb-push', 'fill_blank'::public.question_type, 'Navigasi', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi: Navigator.__(context, MaterialPageRoute(builder: (_) => HalamanBaru()));', 'push menempatkan halaman baru di atas halaman saat ini.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('d08165c5-697d-4323-8549-c2301db2e761', 'cadb837a-318e-44b1-8305-567ad3fd86b7', 'legendary-ppb-push', 'fill_blank'::public.question_type, 'Navigasi', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi: Navigator.__(context, MaterialPageRoute(builder: (_) => HalamanBaru()));', 'push menempatkan halaman baru di atas halaman saat ini.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -5108,6 +5197,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -5200,8 +5290,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: bahasa-inggris/greetings-vocabulary/en-good-morning
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('dd045d68-5c4c-45ef-861a-1bec6e4a806e', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-good-morning', 'multiple_choice'::public.question_type, 'Greetings', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Ucapan yang tepat pada pagi hari adalah…', 'Good morning dipakai dari pagi hingga siang. Good night dipakai saat berpisah untuk tidur.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('dd045d68-5c4c-45ef-861a-1bec6e4a806e', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-good-morning', 'multiple_choice'::public.question_type, 'Greetings', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Ucapan yang tepat pada pagi hari adalah…', 'Good morning dipakai dari pagi hingga siang. Good night dipakai saat berpisah untuk tidur.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -5213,6 +5303,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -5253,8 +5344,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/greetings-vocabulary/en-apple-meaning
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('978610d6-fb6e-4a01-8e65-d68004d84cbf', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-apple-meaning', 'multiple_choice'::public.question_type, 'Vocabulary', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kata "apple" dalam bahasa Indonesia berarti…', 'Apple berarti apel. Jeruk adalah orange, mangga adalah mango, dan pisang adalah banana.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('978610d6-fb6e-4a01-8e65-d68004d84cbf', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-apple-meaning', 'multiple_choice'::public.question_type, 'Vocabulary', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kata "apple" dalam bahasa Indonesia berarti…', 'Apple berarti apel. Jeruk adalah orange, mangga adalah mango, dan pisang adalah banana.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -5266,6 +5357,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -5306,8 +5398,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/greetings-vocabulary/en-introduce-name
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('d08b02a2-3b25-432a-889f-fe404b48d4da', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-introduce-name', 'multiple_choice'::public.question_type, 'Introduction', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kalimat yang tepat untuk memperkenalkan nama adalah…', 'Pola baku perkenalan adalah "My name is …" dengan to be is untuk subjek tunggal.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('d08b02a2-3b25-432a-889f-fe404b48d4da', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-introduce-name', 'multiple_choice'::public.question_type, 'Introduction', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kalimat yang tepat untuk memperkenalkan nama adalah…', 'Pola baku perkenalan adalah "My name is …" dengan to be is untuk subjek tunggal.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -5319,6 +5411,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -5359,8 +5452,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/greetings-vocabulary/en-spell-name
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('ee896b6b-66bf-4665-8b19-1433009b0753', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-spell-name', 'fill_blank'::public.question_type, 'Speaking', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi pertanyaan berikut: How do you ___ your name?', 'How do you spell your name? berarti "Bagaimana ejaan namamu?".', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('ee896b6b-66bf-4665-8b19-1433009b0753', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-spell-name', 'fill_blank'::public.question_type, 'Speaking', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi pertanyaan berikut: How do you ___ your name?', 'How do you spell your name? berarti "Bagaimana ejaan namamu?".', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -5372,6 +5465,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -5384,8 +5478,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: bahasa-inggris/greetings-vocabulary/en-plural-book
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('88358320-4c32-4c16-8034-9ddacf25bd88', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-plural-book', 'multiple_choice'::public.question_type, 'Grammar', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk jamak dari "book" adalah…', 'Kata benda countable umumnya ditambah -s untuk bentuk jamak: book menjadi books.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('88358320-4c32-4c16-8034-9ddacf25bd88', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-plural-book', 'multiple_choice'::public.question_type, 'Grammar', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk jamak dari "book" adalah…', 'Kata benda countable umumnya ditambah -s untuk bentuk jamak: book menjadi books.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -5397,6 +5491,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -5437,8 +5532,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/greetings-vocabulary/en-wordbank-daily-routine
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('92f73554-d3ad-4376-8830-464ce3e7e90d', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-wordbank-daily-routine', 'word_bank'::public.question_type, 'Word Bank', 'beginner'::public.difficulty_band, 'Susun jawaban dengan mengetuk kata yang tersedia.', 'Susun kalimat: "Dia pergi ke sekolah setiap hari."', 'Kalimat simple present untuk she memakai goes. Kata "go" adalah pengecoh yang tidak diperlukan.', 'Pola: subjek + kata kerja + tempat + keterangan waktu.', 15, 5, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('92f73554-d3ad-4376-8830-464ce3e7e90d', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-wordbank-daily-routine', 'word_bank'::public.question_type, 'Word Bank', 'beginner'::public.difficulty_band, 'Susun jawaban dengan mengetuk kata yang tersedia.', 'Susun kalimat: "Dia pergi ke sekolah setiap hari."', 'Kalimat simple present untuk she memakai goes. Kata "go" adalah pengecoh yang tidak diperlukan.', 'Pola: subjek + kata kerja + tempat + keterangan waktu.', 15, '{}'::jsonb, 5, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -5450,6 +5545,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -5525,8 +5621,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: bahasa-inggris/greetings-vocabulary/en-builder-daily-routine
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('6dafef3c-0916-4290-88e3-d261aabb925c', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-builder-daily-routine', 'sentence_builder'::public.question_type, 'Sentence Builder', 'beginner'::public.difficulty_band, 'Susun kata acak menjadi kalimat yang benar.', 'Susun kata acak menjadi kalimat yang benar.', 'Urutan baku kalimat adalah subjek + kata kerja + tempat + keterangan waktu.', 'Mulai dari subjek "She".', 15, 6, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('6dafef3c-0916-4290-88e3-d261aabb925c', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-builder-daily-routine', 'sentence_builder'::public.question_type, 'Sentence Builder', 'beginner'::public.difficulty_band, 'Susun kata acak menjadi kalimat yang benar.', 'Susun kata acak menjadi kalimat yang benar.', 'Urutan baku kalimat adalah subjek + kata kerja + tempat + keterangan waktu.', 'Mulai dari subjek "She".', 15, '{}'::jsonb, 6, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -5538,6 +5634,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -5604,8 +5701,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: bahasa-inggris/greetings-vocabulary/en-fill-daily-routine
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('2899750f-6675-4107-8c71-3403689987f0', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-fill-daily-routine', 'fill_blank'::public.question_type, 'Grammar', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'She __ to school every day.', 'Subjek "She" memakai bentuk goes pada simple present.', 'Perhatikan akhiran kata kerja untuk subjek orang ketiga tunggal.', 10, 7, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('2899750f-6675-4107-8c71-3403689987f0', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-fill-daily-routine', 'fill_blank'::public.question_type, 'Grammar', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'She __ to school every day.', 'Subjek "She" memakai bentuk goes pada simple present.', 'Perhatikan akhiran kata kerja untuk subjek orang ketiga tunggal.', 10, '{}'::jsonb, 7, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -5617,6 +5714,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -5629,8 +5727,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: bahasa-inggris/greetings-vocabulary/en-matching-vocabulary
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('3805fd09-0b60-496b-8f9e-2c6edd1d5a2c', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-matching-vocabulary', 'matching_pairs'::public.question_type, 'Vocabulary', 'beginner'::public.difficulty_band, 'Cocokkan setiap item di kolom kiri dengan pasangannya di kolom kanan.', 'Cocokkan kata bahasa Inggris dengan artinya.', 'apple = apel, book = buku, house = rumah, dan water = air.', 'Ingat kosakata benda sehari-hari.', 20, 8, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('3805fd09-0b60-496b-8f9e-2c6edd1d5a2c', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-matching-vocabulary', 'matching_pairs'::public.question_type, 'Vocabulary', 'beginner'::public.difficulty_band, 'Cocokkan setiap item di kolom kiri dengan pasangannya di kolom kanan.', 'Cocokkan kata bahasa Inggris dengan artinya.', 'apple = apel, book = buku, house = rumah, dan water = air.', 'Ingat kosakata benda sehari-hari.', 20, '{}'::jsonb, 8, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -5642,6 +5740,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -5690,8 +5789,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/greetings-vocabulary/en-picture-book
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('9764eb59-5e22-45ba-8c4d-133a76fe4507', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-picture-book', 'picture_identification'::public.question_type, 'Vocabulary', 'beginner'::public.difficulty_band, 'Pilih nama yang sesuai dengan gambar.', 'Gambar ini menunjukkan benda apa?', 'Gambar menunjukkan buku, sehingga jawaban yang benar adalah book.', null, 10, 9, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('9764eb59-5e22-45ba-8c4d-133a76fe4507', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-picture-book', 'picture_identification'::public.question_type, 'Vocabulary', 'beginner'::public.difficulty_band, 'Pilih nama yang sesuai dengan gambar.', 'Gambar ini menunjukkan benda apa?', 'Gambar menunjukkan buku, sehingga jawaban yang benar adalah book.', null, 10, '{}'::jsonb, 9, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -5703,6 +5802,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -5753,8 +5853,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/greetings-vocabulary/en-picture-globe
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('e81e322e-357d-4dd6-8bcc-e847b4f895e6', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-picture-globe', 'picture_identification'::public.question_type, 'Vocabulary', 'beginner'::public.difficulty_band, 'Pilih nama yang sesuai dengan gambar.', 'Gambar ini menunjukkan benda apa?', 'Gambar menunjukkan globe atau bola dunia, sehingga jawabannya globe.', null, 10, 10, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('e81e322e-357d-4dd6-8bcc-e847b4f895e6', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-picture-globe', 'picture_identification'::public.question_type, 'Vocabulary', 'beginner'::public.difficulty_band, 'Pilih nama yang sesuai dengan gambar.', 'Gambar ini menunjukkan benda apa?', 'Gambar menunjukkan globe atau bola dunia, sehingga jawabannya globe.', null, 10, '{}'::jsonb, 10, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -5766,6 +5866,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -5816,8 +5917,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/greetings-vocabulary/en-picture-laptop
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('3dcb8684-7552-4cf4-8030-d9c76dbacf5d', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-picture-laptop', 'picture_identification'::public.question_type, 'Vocabulary', 'beginner'::public.difficulty_band, 'Pilih nama yang sesuai dengan gambar.', 'Gambar ini menunjukkan benda apa?', 'Gambar menunjukkan laptop, sehingga jawaban yang benar adalah laptop.', null, 10, 11, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('3dcb8684-7552-4cf4-8030-d9c76dbacf5d', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-picture-laptop', 'picture_identification'::public.question_type, 'Vocabulary', 'beginner'::public.difficulty_band, 'Pilih nama yang sesuai dengan gambar.', 'Gambar ini menunjukkan benda apa?', 'Gambar menunjukkan laptop, sehingga jawaban yang benar adalah laptop.', null, 10, '{}'::jsonb, 11, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -5829,6 +5930,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -5878,6 +5980,511 @@ on conflict (id) do update set
   alt_text = excluded.alt_text,
   sort_order = excluded.sort_order;
 
+-- questions: bahasa-inggris/greetings-vocabulary/en-listening-classroom
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('59b667f3-9847-4ec1-822e-bf03b192a790', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-listening-classroom', 'listening'::public.question_type, 'Listening', 'beginner'::public.difficulty_band, 'Dengarkan audio, lalu pilih jawaban yang sesuai.', 'Apa instruksi yang kamu dengar?', 'Instruksi yang diucapkan adalah "Please open your book to page ten", yaitu membuka buku ke halaman sepuluh.', 'Perhatikan kata "open" dan angka "ten".', 15, '{"speech":"Please open your book to page ten."}'::jsonb, 12, true)
+on conflict (id) do update set
+  lesson_id = excluded.lesson_id,
+  slug = excluded.slug,
+  type = excluded.type,
+  topic = excluded.topic,
+  difficulty = excluded.difficulty,
+  instruction = excluded.instruction,
+  prompt = excluded.prompt,
+  explanation = excluded.explanation,
+  hint = excluded.hint,
+  points = excluded.points,
+  scene = excluded.scene,
+  sort_order = excluded.sort_order,
+  is_active = excluded.is_active;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-listening-classroom/0
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('b30f8a9d-dccc-449c-8298-e1de66e5f034', '59b667f3-9847-4ec1-822e-bf03b192a790', 'Tolong buka bukumu ke halaman sepuluh.', true, 0)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-listening-classroom/1
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('9889cba6-3d57-4c0c-8faa-1654cc35962b', '59b667f3-9847-4ec1-822e-bf03b192a790', 'Tolong tutup bukumu dan dengarkan.', false, 1)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-listening-classroom/2
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('9abbc8a5-3926-4339-83c4-067064872e28', '59b667f3-9847-4ec1-822e-bf03b192a790', 'Tolong tulis namamu di papan tulis.', false, 2)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-listening-classroom/3
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('b7fc39c2-a1d1-4fc1-8596-7b0bc6dd3c96', '59b667f3-9847-4ec1-822e-bf03b192a790', 'Tolong baca halaman dua puluh.', false, 3)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- questions: bahasa-inggris/greetings-vocabulary/en-listening-greeting
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('35a7a7e2-3a03-402e-81c1-c76d7232a051', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-listening-greeting', 'listening'::public.question_type, 'Listening', 'beginner'::public.difficulty_band, 'Dengarkan audio, lalu pilih jawaban yang sesuai.', 'Sapaan apa yang kamu dengar?', 'Kalimat "Good morning, how are you today?" berarti selamat pagi, apa kabar hari ini.', 'Fokus pada "Good morning" dan "how are you".', 15, '{"speech":"Good morning, how are you today?"}'::jsonb, 13, true)
+on conflict (id) do update set
+  lesson_id = excluded.lesson_id,
+  slug = excluded.slug,
+  type = excluded.type,
+  topic = excluded.topic,
+  difficulty = excluded.difficulty,
+  instruction = excluded.instruction,
+  prompt = excluded.prompt,
+  explanation = excluded.explanation,
+  hint = excluded.hint,
+  points = excluded.points,
+  scene = excluded.scene,
+  sort_order = excluded.sort_order,
+  is_active = excluded.is_active;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-listening-greeting/0
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('5e7ece56-7005-4d16-87f6-e87d3ff19a7b', '35a7a7e2-3a03-402e-81c1-c76d7232a051', 'Selamat pagi, apa kabar hari ini?', true, 0)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-listening-greeting/1
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('f442b2fc-bd72-4b39-8e75-7c47abde9112', '35a7a7e2-3a03-402e-81c1-c76d7232a051', 'Selamat malam, sampai jumpa besok.', false, 1)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-listening-greeting/2
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('47f3bc6a-b2de-44f3-836d-98201c1eb8a7', '35a7a7e2-3a03-402e-81c1-c76d7232a051', 'Selamat siang, terima kasih banyak.', false, 2)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-listening-greeting/3
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('73e917b9-9c94-4a1e-8e14-45e6d8a9ef82', '35a7a7e2-3a03-402e-81c1-c76d7232a051', 'Selamat pagi, siapa namamu?', false, 3)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- questions: bahasa-inggris/greetings-vocabulary/en-speaking-greeting
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('7e066a48-0180-458d-8768-7905eb7e7c63', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-speaking-greeting', 'speaking'::public.question_type, 'Speaking', 'beginner'::public.difficulty_band, 'Ucapkan kalimat berikut, lalu periksa apakah ucapanmu dikenali.', 'Ucapkan sapaan: "Good morning, how are you?"', 'Sapaan yang benar adalah "Good morning, how are you?". Penilaian memeriksa apakah ucapan dikenali, bukan memberi skor pengucapan buatan.', 'Ucapkan dengan jelas dan perlahan.', 15, '{"speech":"Good morning, how are you?"}'::jsonb, 14, true)
+on conflict (id) do update set
+  lesson_id = excluded.lesson_id,
+  slug = excluded.slug,
+  type = excluded.type,
+  topic = excluded.topic,
+  difficulty = excluded.difficulty,
+  instruction = excluded.instruction,
+  prompt = excluded.prompt,
+  explanation = excluded.explanation,
+  hint = excluded.hint,
+  points = excluded.points,
+  scene = excluded.scene,
+  sort_order = excluded.sort_order,
+  is_active = excluded.is_active;
+
+-- question_answers: bahasa-inggris/greetings-vocabulary/en-speaking-greeting/0
+insert into public.question_answers (id, question_id, answer, is_case_sensitive)
+values ('ea523edb-66f7-46a0-8273-5985abf10a25', '7e066a48-0180-458d-8768-7905eb7e7c63', 'good morning how are you', false)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  answer = excluded.answer,
+  is_case_sensitive = excluded.is_case_sensitive;
+
+-- question_answers: bahasa-inggris/greetings-vocabulary/en-speaking-greeting/1
+insert into public.question_answers (id, question_id, answer, is_case_sensitive)
+values ('202d7e3c-f745-491e-8a1d-62b139cc64fc', '7e066a48-0180-458d-8768-7905eb7e7c63', 'good morning, how are you?', false)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  answer = excluded.answer,
+  is_case_sensitive = excluded.is_case_sensitive;
+
+-- questions: bahasa-inggris/greetings-vocabulary/en-translation-library
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('3c7a7b13-09a9-4c6c-8d5a-97fedffcfddd', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-translation-library', 'translation'::public.question_type, 'Translation', 'beginner'::public.difficulty_band, 'Susun terjemahan dari kata yang tersedia atau ketik jawabanmu sendiri.', 'Terjemahkan ke bahasa Inggris: "Saya membaca buku di perpustakaan."', 'Kalimat "Saya membaca buku di perpustakaan" menjadi "I read a book in the library". Kata "reads" adalah pengecoh karena subjeknya "I".', 'Gunakan bentuk dasar "read" untuk subjek "I".', 15, '{}'::jsonb, 15, true)
+on conflict (id) do update set
+  lesson_id = excluded.lesson_id,
+  slug = excluded.slug,
+  type = excluded.type,
+  topic = excluded.topic,
+  difficulty = excluded.difficulty,
+  instruction = excluded.instruction,
+  prompt = excluded.prompt,
+  explanation = excluded.explanation,
+  hint = excluded.hint,
+  points = excluded.points,
+  scene = excluded.scene,
+  sort_order = excluded.sort_order,
+  is_active = excluded.is_active;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-translation-library/0
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('402a5ee2-b5fe-4b27-833d-c4a62feb3256', '3c7a7b13-09a9-4c6c-8d5a-97fedffcfddd', 'I', false, 0)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-translation-library/1
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('01b8a8ee-3417-4596-8bbd-bdff84709345', '3c7a7b13-09a9-4c6c-8d5a-97fedffcfddd', 'read', false, 1)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-translation-library/2
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('351fd3dd-7395-4d2a-8d8d-da6f1103abd7', '3c7a7b13-09a9-4c6c-8d5a-97fedffcfddd', 'a', false, 2)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-translation-library/3
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('125ecd78-5802-427b-8794-95dea52cf5da', '3c7a7b13-09a9-4c6c-8d5a-97fedffcfddd', 'book', false, 3)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-translation-library/4
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('9cd51c99-30fa-4dcb-8468-89c8aa0cfefc', '3c7a7b13-09a9-4c6c-8d5a-97fedffcfddd', 'in', false, 4)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-translation-library/5
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('5cb3732d-d03f-4e4e-80cf-eab3f2cce8e5', '3c7a7b13-09a9-4c6c-8d5a-97fedffcfddd', 'the', false, 5)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-translation-library/6
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('3376d376-76e4-42c9-8cda-ed74a69e771d', '3c7a7b13-09a9-4c6c-8d5a-97fedffcfddd', 'library', false, 6)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-translation-library/7
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('e81fc2b2-3cb8-4e99-8bcf-5df3d2607c93', '3c7a7b13-09a9-4c6c-8d5a-97fedffcfddd', 'reads', false, 7)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_answers: bahasa-inggris/greetings-vocabulary/en-translation-library/0
+insert into public.question_answers (id, question_id, answer, is_case_sensitive)
+values ('527442e7-3fd8-4c7b-8d0b-ee6867b47e9c', '3c7a7b13-09a9-4c6c-8d5a-97fedffcfddd', 'I read a book in the library', false)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  answer = excluded.answer,
+  is_case_sensitive = excluded.is_case_sensitive;
+
+-- questions: bahasa-inggris/greetings-vocabulary/en-conversation-teacher
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('77c15c49-287f-48f9-83cd-cb1fd2624a10', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-conversation-teacher', 'conversation'::public.question_type, 'Conversation', 'beginner'::public.difficulty_band, 'Baca percakapan, lalu pilih respons yang paling tepat.', 'Kamu bertemu gurumu di pagi hari. Pilih respons yang paling sopan.', 'Respons sopan membalas sapaan pagi dan menjawab pertanyaan kabar: "Good morning, Ma''am. We are fine, thank you."', 'Balas sapaan terlebih dahulu, lalu jawab pertanyaan kabarnya.', 15, '{"npc":{"name":"Bu Rani","role":"Guru bahasa Inggris"},"screens":[{"speaker":"Bu Rani","line":"Good morning, students. How are you today?"}]}'::jsonb, 16, true)
+on conflict (id) do update set
+  lesson_id = excluded.lesson_id,
+  slug = excluded.slug,
+  type = excluded.type,
+  topic = excluded.topic,
+  difficulty = excluded.difficulty,
+  instruction = excluded.instruction,
+  prompt = excluded.prompt,
+  explanation = excluded.explanation,
+  hint = excluded.hint,
+  points = excluded.points,
+  scene = excluded.scene,
+  sort_order = excluded.sort_order,
+  is_active = excluded.is_active;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-conversation-teacher/0
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('fee47ca4-0028-4f0e-88a1-d67b6493845d', '77c15c49-287f-48f9-83cd-cb1fd2624a10', 'Good morning, Ma''am. We are fine, thank you.', true, 0)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-conversation-teacher/1
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('f9940025-2075-45c0-859d-748627925e78', '77c15c49-287f-48f9-83cd-cb1fd2624a10', 'Good night, Ma''am. See you tomorrow.', false, 1)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-conversation-teacher/2
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('d0cbb71c-69b8-4151-851b-46748c127e99', '77c15c49-287f-48f9-83cd-cb1fd2624a10', 'I am a student in this class.', false, 2)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-conversation-teacher/3
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('89ffe941-fd04-4ce3-89f1-c6382982b4c6', '77c15c49-287f-48f9-83cd-cb1fd2624a10', 'How are you, book?', false, 3)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- questions: bahasa-inggris/greetings-vocabulary/en-story-kiko-garden
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('fcd8eaef-4df5-4603-89ce-407ed34cafb8', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-story-kiko-garden', 'story'::public.question_type, 'Reading', 'beginner'::public.difficulty_band, 'Baca cerita sampai selesai, lalu jawab pertanyaan pemahaman.', 'Mengapa Kiko membawa lentera ke taman?', 'Cerita menyebut langit mendung dan lampu taman mati, sehingga Kiko membawa lentera agar taman terang kembali.', 'Perhatikan alasan yang Kiko ucapkan sendiri.', 20, '{"screens":[{"narration":"Setiap sore Kiko menyiram tanaman di taman sekolah. Hari itu langit mendung dan lampu taman mati."},{"speaker":"Kiko","line":"Taman ini terlalu gelap. Teman-teman tidak bisa membaca nama tanaman."},{"narration":"Kiko mengambil lentera kecil dari kelas, lalu menggantungnya di pagar taman. Taman kembali terang."}]}'::jsonb, 17, true)
+on conflict (id) do update set
+  lesson_id = excluded.lesson_id,
+  slug = excluded.slug,
+  type = excluded.type,
+  topic = excluded.topic,
+  difficulty = excluded.difficulty,
+  instruction = excluded.instruction,
+  prompt = excluded.prompt,
+  explanation = excluded.explanation,
+  hint = excluded.hint,
+  points = excluded.points,
+  scene = excluded.scene,
+  sort_order = excluded.sort_order,
+  is_active = excluded.is_active;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-story-kiko-garden/0
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('dfb61471-f7e3-46ba-8d1d-6309e3ab9489', 'fcd8eaef-4df5-4603-89ce-407ed34cafb8', 'Karena lampu taman mati dan taman menjadi gelap.', true, 0)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-story-kiko-garden/1
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('0548d7ed-edab-4ac2-86b3-d17cb6c38bff', 'fcd8eaef-4df5-4603-89ce-407ed34cafb8', 'Karena Kiko ingin menjual lentera itu.', false, 1)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-story-kiko-garden/2
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('ea0fea25-9b39-43a7-8877-7a4ce054c36c', 'fcd8eaef-4df5-4603-89ce-407ed34cafb8', 'Karena taman sekolah akan ditutup.', false, 2)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-inggris/greetings-vocabulary/en-story-kiko-garden/3
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('082ab85b-580a-4ac2-813a-cb6a4bd85fc6', 'fcd8eaef-4df5-4603-89ce-407ed34cafb8', 'Karena Kiko lupa membawa buku.', false, 3)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- questions: bahasa-inggris/greetings-vocabulary/en-matching-school
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('61f08fe6-1b04-4042-813b-83dd1ea42390', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-matching-school', 'matching_pairs'::public.question_type, 'Vocabulary', 'beginner'::public.difficulty_band, 'Cocokkan setiap item di kolom kiri dengan pasangannya di kolom kanan.', 'Cocokkan benda dan tempat di sekolah dengan artinya.', 'pencil = pensil, teacher = guru, classroom = ruang kelas, homework = pekerjaan rumah, library = perpustakaan, chair = kursi.', 'Ingat kosakata yang sering muncul di sekolah.', 20, '{}'::jsonb, 18, true)
+on conflict (id) do update set
+  lesson_id = excluded.lesson_id,
+  slug = excluded.slug,
+  type = excluded.type,
+  topic = excluded.topic,
+  difficulty = excluded.difficulty,
+  instruction = excluded.instruction,
+  prompt = excluded.prompt,
+  explanation = excluded.explanation,
+  hint = excluded.hint,
+  points = excluded.points,
+  scene = excluded.scene,
+  sort_order = excluded.sort_order,
+  is_active = excluded.is_active;
+
+-- question_pairs: bahasa-inggris/greetings-vocabulary/en-matching-school/pair-0
+insert into public.question_pairs (id, question_id, left_id, right_id, left_label, right_label, sort_order)
+values ('e9dae19d-c436-4e48-8389-c47cbb955049', '61f08fe6-1b04-4042-813b-83dd1ea42390', '3412bc59-7d12-43cb-86d6-936addc07ef8', 'b7a9d31d-5dbb-4a14-83cf-72c9e9efacd1', 'pencil', 'pensil', 0)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  left_id = excluded.left_id,
+  right_id = excluded.right_id,
+  left_label = excluded.left_label,
+  right_label = excluded.right_label,
+  sort_order = excluded.sort_order;
+
+-- question_pairs: bahasa-inggris/greetings-vocabulary/en-matching-school/pair-1
+insert into public.question_pairs (id, question_id, left_id, right_id, left_label, right_label, sort_order)
+values ('fdfdd0f4-bf54-49a7-8ebf-90e78118fc2b', '61f08fe6-1b04-4042-813b-83dd1ea42390', 'c47c668d-7a9b-4151-8eb1-8f64deb90bad', 'a1aa3994-2b9e-427c-8bde-02041dafa28a', 'teacher', 'guru', 1)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  left_id = excluded.left_id,
+  right_id = excluded.right_id,
+  left_label = excluded.left_label,
+  right_label = excluded.right_label,
+  sort_order = excluded.sort_order;
+
+-- question_pairs: bahasa-inggris/greetings-vocabulary/en-matching-school/pair-2
+insert into public.question_pairs (id, question_id, left_id, right_id, left_label, right_label, sort_order)
+values ('1137b4bc-d32e-41c4-8a72-f715cd232a50', '61f08fe6-1b04-4042-813b-83dd1ea42390', '22a1418f-a73a-4638-8f32-20e64a15e647', '1eb0e2dd-2ac3-4f26-8354-81357a41a595', 'classroom', 'ruang kelas', 2)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  left_id = excluded.left_id,
+  right_id = excluded.right_id,
+  left_label = excluded.left_label,
+  right_label = excluded.right_label,
+  sort_order = excluded.sort_order;
+
+-- question_pairs: bahasa-inggris/greetings-vocabulary/en-matching-school/pair-3
+insert into public.question_pairs (id, question_id, left_id, right_id, left_label, right_label, sort_order)
+values ('c70c0b28-33dd-4043-8126-4e7b462ba133', '61f08fe6-1b04-4042-813b-83dd1ea42390', 'fdaa1262-787b-46ea-84e0-eebcb5159b7f', '67487dbc-c3f5-48a7-84d4-7e0f3aae74de', 'homework', 'pekerjaan rumah', 3)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  left_id = excluded.left_id,
+  right_id = excluded.right_id,
+  left_label = excluded.left_label,
+  right_label = excluded.right_label,
+  sort_order = excluded.sort_order;
+
+-- question_pairs: bahasa-inggris/greetings-vocabulary/en-matching-school/pair-4
+insert into public.question_pairs (id, question_id, left_id, right_id, left_label, right_label, sort_order)
+values ('7accd9f6-0fca-4857-8672-b1210a7f9200', '61f08fe6-1b04-4042-813b-83dd1ea42390', 'bd2ee32a-f970-4182-840d-f26bdf6e9788', '345c68e8-0fe2-4dc4-8e10-f2490523ab86', 'library', 'perpustakaan', 4)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  left_id = excluded.left_id,
+  right_id = excluded.right_id,
+  left_label = excluded.left_label,
+  right_label = excluded.right_label,
+  sort_order = excluded.sort_order;
+
+-- question_pairs: bahasa-inggris/greetings-vocabulary/en-matching-school/pair-5
+insert into public.question_pairs (id, question_id, left_id, right_id, left_label, right_label, sort_order)
+values ('111dccb8-cfb5-416f-8a70-12015d46f298', '61f08fe6-1b04-4042-813b-83dd1ea42390', 'bdd4edc4-0ddb-4633-8bb0-47707f86949e', 'a723e45e-153a-4805-8caa-55ebc0b5bdbc', 'chair', 'kursi', 5)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  left_id = excluded.left_id,
+  right_id = excluded.right_id,
+  left_label = excluded.left_label,
+  right_label = excluded.right_label,
+  sort_order = excluded.sort_order;
+
+-- questions: bahasa-inggris/greetings-vocabulary/en-matching-verbs
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('35058079-7842-46b3-8d50-544531e2f862', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-matching-verbs', 'matching_pairs'::public.question_type, 'Vocabulary', 'beginner'::public.difficulty_band, 'Cocokkan setiap item di kolom kiri dengan pasangannya di kolom kanan.', 'Cocokkan kata kerja bahasa Inggris dengan artinya.', 'read = membaca, write = menulis, listen = mendengarkan, speak = berbicara, study = belajar.', 'Kata kerja dasar yang sering dipakai di kelas.', 20, '{}'::jsonb, 19, true)
+on conflict (id) do update set
+  lesson_id = excluded.lesson_id,
+  slug = excluded.slug,
+  type = excluded.type,
+  topic = excluded.topic,
+  difficulty = excluded.difficulty,
+  instruction = excluded.instruction,
+  prompt = excluded.prompt,
+  explanation = excluded.explanation,
+  hint = excluded.hint,
+  points = excluded.points,
+  scene = excluded.scene,
+  sort_order = excluded.sort_order,
+  is_active = excluded.is_active;
+
+-- question_pairs: bahasa-inggris/greetings-vocabulary/en-matching-verbs/pair-0
+insert into public.question_pairs (id, question_id, left_id, right_id, left_label, right_label, sort_order)
+values ('c8b43ca4-fd4e-4cb4-86c9-a01a37c92d3b', '35058079-7842-46b3-8d50-544531e2f862', 'a6101748-afbb-4b98-8892-c4e3098e11da', '0fd57d92-fbd1-4d64-8670-2043808cc026', 'read', 'membaca', 0)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  left_id = excluded.left_id,
+  right_id = excluded.right_id,
+  left_label = excluded.left_label,
+  right_label = excluded.right_label,
+  sort_order = excluded.sort_order;
+
+-- question_pairs: bahasa-inggris/greetings-vocabulary/en-matching-verbs/pair-1
+insert into public.question_pairs (id, question_id, left_id, right_id, left_label, right_label, sort_order)
+values ('e35ea190-8243-4c5c-8b42-963544a6bee3', '35058079-7842-46b3-8d50-544531e2f862', 'a5e87a39-2dfc-41e4-8398-4a0c3c592a8e', 'de2c4ddf-de01-4751-8cb2-171b5bb02052', 'write', 'menulis', 1)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  left_id = excluded.left_id,
+  right_id = excluded.right_id,
+  left_label = excluded.left_label,
+  right_label = excluded.right_label,
+  sort_order = excluded.sort_order;
+
+-- question_pairs: bahasa-inggris/greetings-vocabulary/en-matching-verbs/pair-2
+insert into public.question_pairs (id, question_id, left_id, right_id, left_label, right_label, sort_order)
+values ('b4e8bede-a250-41a4-8adf-33275cb7f172', '35058079-7842-46b3-8d50-544531e2f862', 'aeee2261-9e4c-4390-8d36-296b656022ce', '7fbd53e4-c552-4fb5-8f1f-e30da4ce5240', 'listen', 'mendengarkan', 2)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  left_id = excluded.left_id,
+  right_id = excluded.right_id,
+  left_label = excluded.left_label,
+  right_label = excluded.right_label,
+  sort_order = excluded.sort_order;
+
+-- question_pairs: bahasa-inggris/greetings-vocabulary/en-matching-verbs/pair-3
+insert into public.question_pairs (id, question_id, left_id, right_id, left_label, right_label, sort_order)
+values ('4bb47ddd-18af-4396-83e3-808b6974af5f', '35058079-7842-46b3-8d50-544531e2f862', '3b0799bb-ed85-4d29-82cd-536844a80bfa', '5cd3b259-a2b7-4676-8bc4-1fa33f744316', 'speak', 'berbicara', 3)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  left_id = excluded.left_id,
+  right_id = excluded.right_id,
+  left_label = excluded.left_label,
+  right_label = excluded.right_label,
+  sort_order = excluded.sort_order;
+
+-- question_pairs: bahasa-inggris/greetings-vocabulary/en-matching-verbs/pair-4
+insert into public.question_pairs (id, question_id, left_id, right_id, left_label, right_label, sort_order)
+values ('0e8fbfc8-4ca8-48ee-8cf0-6de777661ebd', '35058079-7842-46b3-8d50-544531e2f862', 'bce1bbb0-f456-4ca2-83fd-4688ace8cba0', 'a531c4aa-c4fd-4b1f-8ddd-5582905853f9', 'study', 'belajar', 4)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  left_id = excluded.left_id,
+  right_id = excluded.right_id,
+  left_label = excluded.left_label,
+  right_label = excluded.right_label,
+  sort_order = excluded.sort_order;
+
 -- lessons: bahasa-inggris/english-review
 insert into public.lessons (id, unit_id, slug, title, description, kind, estimated_minutes, xp_reward, coin_reward, sort_order, is_published)
 values ('9ba64941-a507-4dc7-8fc1-b2b4daf77c47', 'b7a20137-8711-43b7-81d0-f67ec776bbb5', 'english-review', 'English Review', 'Review simple present, past tense, and everyday vocabulary.', 'review'::public.lesson_kind, 5, 10, 2, 1, true)
@@ -5907,8 +6514,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: bahasa-inggris/english-review/review-english-third-person
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('71a83cff-e8ca-499d-89c9-a7df353e6483', '9ba64941-a507-4dc7-8fc1-b2b4daf77c47', 'review-english-third-person', 'multiple_choice'::public.question_type, 'Grammar', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'She ___ to school every day.', 'Subjek orang ketiga tunggal (she) memakai bentuk goes pada simple present.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('71a83cff-e8ca-499d-89c9-a7df353e6483', '9ba64941-a507-4dc7-8fc1-b2b4daf77c47', 'review-english-third-person', 'multiple_choice'::public.question_type, 'Grammar', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'She ___ to school every day.', 'Subjek orang ketiga tunggal (she) memakai bentuk goes pada simple present.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -5920,6 +6527,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -5960,8 +6568,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/english-review/review-english-past-go
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('ea2364a6-910c-49f4-8d2c-ef9602cc4791', '9ba64941-a507-4dc7-8fc1-b2b4daf77c47', 'review-english-past-go', 'multiple_choice'::public.question_type, 'Tenses', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'What is the past tense of "go"?', 'Bentuk past tense dari go adalah went. Gone adalah past participle.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('ea2364a6-910c-49f4-8d2c-ef9602cc4791', '9ba64941-a507-4dc7-8fc1-b2b4daf77c47', 'review-english-past-go', 'multiple_choice'::public.question_type, 'Tenses', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'What is the past tense of "go"?', 'Bentuk past tense dari go adalah went. Gone adalah past participle.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -5973,6 +6581,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6013,8 +6622,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/english-review/review-english-book
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('61b402c6-bcb5-4e63-8fae-b960ed6fde00', '9ba64941-a507-4dc7-8fc1-b2b4daf77c47', 'review-english-book', 'typing'::public.question_type, 'Vocabulary', 'beginner'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Write the English word for "buku".', '"Buku" dalam Bahasa Inggris adalah book.', null, 15, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('61b402c6-bcb5-4e63-8fae-b960ed6fde00', '9ba64941-a507-4dc7-8fc1-b2b4daf77c47', 'review-english-book', 'typing'::public.question_type, 'Vocabulary', 'beginner'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Write the English word for "buku".', '"Buku" dalam Bahasa Inggris adalah book.', null, 15, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6026,6 +6635,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6066,8 +6676,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: bahasa-inggris/english-challenge/challenge-english-present-perfect
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('457e4d21-7161-4f42-8b46-940ec7dd7cc1', '199ce85e-7a32-43ba-8edb-437e250548dc', 'challenge-english-present-perfect', 'multiple_choice'::public.question_type, 'Tenses', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'They ___ lived here since 2020.', 'Subjek they memakai have pada present perfect: have + past participle (lived).', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('457e4d21-7161-4f42-8b46-940ec7dd7cc1', '199ce85e-7a32-43ba-8edb-437e250548dc', 'challenge-english-present-perfect', 'multiple_choice'::public.question_type, 'Tenses', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'They ___ lived here since 2020.', 'Subjek they memakai have pada present perfect: have + past participle (lived).', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6079,6 +6689,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6119,8 +6730,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/english-challenge/challenge-english-interested
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('b9ef9f41-c957-45b5-8a78-64aed5bdd757', '199ce85e-7a32-43ba-8edb-437e250548dc', 'challenge-english-interested', 'fill_blank'::public.question_type, 'Preposition', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'I am interested ___ learning English.', 'Ungkapan yang benar adalah interested in, bukan interested on atau at.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('b9ef9f41-c957-45b5-8a78-64aed5bdd757', '199ce85e-7a32-43ba-8edb-437e250548dc', 'challenge-english-interested', 'fill_blank'::public.question_type, 'Preposition', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'I am interested ___ learning English.', 'Ungkapan yang benar adalah interested in, bukan interested on atau at.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6132,6 +6743,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6144,8 +6756,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: bahasa-inggris/english-challenge/challenge-english-negative
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('345fb490-a916-418c-8f4f-fa739e3ae89c', '199ce85e-7a32-43ba-8edb-437e250548dc', 'challenge-english-negative', 'multiple_choice'::public.question_type, 'Grammar', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Choose the correct sentence.', 'Untuk he/she/it pada simple present, bentuk negatifnya memakai doesn''t + verb dasar.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('345fb490-a916-418c-8f4f-fa739e3ae89c', '199ce85e-7a32-43ba-8edb-437e250548dc', 'challenge-english-negative', 'multiple_choice'::public.question_type, 'Grammar', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Choose the correct sentence.', 'Untuk he/she/it pada simple present, bentuk negatifnya memakai doesn''t + verb dasar.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6157,6 +6769,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6249,8 +6862,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: bahasa-inggris/simple-present/en-third-person-goes
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('75ff211b-29ad-4484-84e9-8e04a0bf47c1', 'cfe5773d-6947-4a29-8780-e7d86be007d7', 'en-third-person-goes', 'multiple_choice'::public.question_type, 'Grammar', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'She ___ to school every day.', 'Subjek he/she/it memakai kata kerja bentuk -s pada simple present: she goes.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('75ff211b-29ad-4484-84e9-8e04a0bf47c1', 'cfe5773d-6947-4a29-8780-e7d86be007d7', 'en-third-person-goes', 'multiple_choice'::public.question_type, 'Grammar', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'She ___ to school every day.', 'Subjek he/she/it memakai kata kerja bentuk -s pada simple present: she goes.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6262,6 +6875,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6302,8 +6916,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/simple-present/en-negative-dont
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('0346662a-29c4-47a0-83f5-53129357b631', 'cfe5773d-6947-4a29-8780-e7d86be007d7', 'en-negative-dont', 'multiple_choice'::public.question_type, 'Grammar', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'They ___ like coffee.', 'Subjek they memakai don''t untuk kalimat negatif. Doesn''t dipakai untuk he/she/it.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('0346662a-29c4-47a0-83f5-53129357b631', 'cfe5773d-6947-4a29-8780-e7d86be007d7', 'en-negative-dont', 'multiple_choice'::public.question_type, 'Grammar', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'They ___ like coffee.', 'Subjek they memakai don''t untuk kalimat negatif. Doesn''t dipakai untuk he/she/it.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6315,6 +6929,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6355,8 +6970,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/simple-present/en-question-do
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('b902d357-97eb-4535-8b3b-c4e6da252d10', 'cfe5773d-6947-4a29-8780-e7d86be007d7', 'en-question-do', 'multiple_choice'::public.question_type, 'Grammar', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', '___ you speak English?', 'Pertanyaan dengan subjek you memakai Do di awal kalimat: Do you speak English?', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('b902d357-97eb-4535-8b3b-c4e6da252d10', 'cfe5773d-6947-4a29-8780-e7d86be007d7', 'en-question-do', 'multiple_choice'::public.question_type, 'Grammar', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', '___ you speak English?', 'Pertanyaan dengan subjek you memakai Do di awal kalimat: Do you speak English?', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6368,6 +6983,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6408,8 +7024,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/simple-present/en-to-be-am
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('92b27608-c8e6-47fa-8ea0-1d9dcffd7106', 'cfe5773d-6947-4a29-8780-e7d86be007d7', 'en-to-be-am', 'fill_blank'::public.question_type, 'Grammar', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi kalimat: I ___ a student.', 'To be untuk subjek I adalah am. You/we/they memakai are, sedangkan he/she/it memakai is.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('92b27608-c8e6-47fa-8ea0-1d9dcffd7106', 'cfe5773d-6947-4a29-8780-e7d86be007d7', 'en-to-be-am', 'fill_blank'::public.question_type, 'Grammar', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lengkapi kalimat: I ___ a student.', 'To be untuk subjek I adalah am. You/we/they memakai are, sedangkan he/she/it memakai is.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6421,6 +7037,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6433,8 +7050,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: bahasa-inggris/simple-present/en-adverb-position
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('e951e034-eb91-4af4-890f-9f7d7624ab8c', 'cfe5773d-6947-4a29-8780-e7d86be007d7', 'en-adverb-position', 'multiple_choice'::public.question_type, 'Grammar', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kalimat dengan adverb of frequency yang benar adalah…', 'Adverb of frequency seperti always biasanya diletakkan sebelum kata kerja utama.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('e951e034-eb91-4af4-890f-9f7d7624ab8c', 'cfe5773d-6947-4a29-8780-e7d86be007d7', 'en-adverb-position', 'multiple_choice'::public.question_type, 'Grammar', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kalimat dengan adverb of frequency yang benar adalah…', 'Adverb of frequency seperti always biasanya diletakkan sebelum kata kerja utama.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6446,6 +7063,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6514,8 +7132,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: bahasa-inggris/latihan-simple-present/practice-eng-goes
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('d45c37cf-aa03-46fa-8473-5bea4bf5e648', 'baa3ca13-70a4-4064-8c72-20b143c4a6a9', 'practice-eng-goes', 'multiple_choice'::public.question_type, 'Simple Present', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'She ___ to school every day.', 'Subjek she memakai bentuk goes pada simple present. Go dipakai untuk I, you, we, dan they.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('d45c37cf-aa03-46fa-8473-5bea4bf5e648', 'baa3ca13-70a4-4064-8c72-20b143c4a6a9', 'practice-eng-goes', 'multiple_choice'::public.question_type, 'Simple Present', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'She ___ to school every day.', 'Subjek she memakai bentuk goes pada simple present. Go dipakai untuk I, you, we, dan they.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6527,6 +7145,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6567,8 +7186,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/latihan-simple-present/practice-eng-dont
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('71628c6c-82c4-43a6-8251-f6d1a648f2a5', 'baa3ca13-70a4-4064-8c72-20b143c4a6a9', 'practice-eng-dont', 'multiple_choice'::public.question_type, 'Simple Present', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'They ___ like coffee.', 'They memakai don''t. Doesn''t hanya untuk he, she, dan it.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('71628c6c-82c4-43a6-8251-f6d1a648f2a5', 'baa3ca13-70a4-4064-8c72-20b143c4a6a9', 'practice-eng-dont', 'multiple_choice'::public.question_type, 'Simple Present', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'They ___ like coffee.', 'They memakai don''t. Doesn''t hanya untuk he, she, dan it.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6580,6 +7199,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6620,8 +7240,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/latihan-simple-present/practice-eng-plays
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('14771885-4838-4904-89d1-159cd34c58e6', 'baa3ca13-70a4-4064-8c72-20b143c4a6a9', 'practice-eng-plays', 'fill_blank'::public.question_type, 'Simple Present', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'My brother __ (play) football on Sundays.', 'My brother setara dengan he, sehingga kata kerja mendapat akhiran -s: plays.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('14771885-4838-4904-89d1-159cd34c58e6', 'baa3ca13-70a4-4064-8c72-20b143c4a6a9', 'practice-eng-plays', 'fill_blank'::public.question_type, 'Simple Present', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'My brother __ (play) football on Sundays.', 'My brother setara dengan he, sehingga kata kerja mendapat akhiran -s: plays.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6633,6 +7253,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6673,8 +7294,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: bahasa-inggris/checkpoint-simple-present/checkpoint-eng-third
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('da5d402b-6705-40b1-81f4-454b3461070e', 'bfa85fdd-25eb-48ec-827d-f87d774c06e0', 'checkpoint-eng-third', 'multiple_choice'::public.question_type, 'Grammar', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Pada simple present, kata kerja untuk he/she/it…', 'He, she, dan it memakai bentuk kata kerja dengan -s/-es, misalnya works dan watches.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('da5d402b-6705-40b1-81f4-454b3461070e', 'bfa85fdd-25eb-48ec-827d-f87d774c06e0', 'checkpoint-eng-third', 'multiple_choice'::public.question_type, 'Grammar', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Pada simple present, kata kerja untuk he/she/it…', 'He, she, dan it memakai bentuk kata kerja dengan -s/-es, misalnya works dan watches.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6686,6 +7307,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6726,8 +7348,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/checkpoint-simple-present/checkpoint-eng-do
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('3cfeebd0-3d3c-4399-8f75-a98f8ebe6c2f', 'bfa85fdd-25eb-48ec-827d-f87d774c06e0', 'checkpoint-eng-do', 'multiple_choice'::public.question_type, 'Grammar', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', '___ you speak English?', 'Pertanyaan simple present untuk you memakai Do. Does dipakai untuk he/she/it.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('3cfeebd0-3d3c-4399-8f75-a98f8ebe6c2f', 'bfa85fdd-25eb-48ec-827d-f87d774c06e0', 'checkpoint-eng-do', 'multiple_choice'::public.question_type, 'Grammar', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', '___ you speak English?', 'Pertanyaan simple present untuk you memakai Do. Does dipakai untuk he/she/it.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6739,6 +7361,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6779,8 +7402,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/checkpoint-simple-present/checkpoint-eng-watches
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('718752d1-c09d-410e-861c-c2105709b2b1', 'bfa85fdd-25eb-48ec-827d-f87d774c06e0', 'checkpoint-eng-watches', 'typing'::public.question_type, 'Grammar', 'elementary'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Write the correct present form of "watch" for he/she/it.', 'Kata kerja berakhiran -ch mendapat -es: watch menjadi watches.', null, 15, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('718752d1-c09d-410e-861c-c2105709b2b1', 'bfa85fdd-25eb-48ec-827d-f87d774c06e0', 'checkpoint-eng-watches', 'typing'::public.question_type, 'Grammar', 'elementary'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Write the correct present form of "watch" for he/she/it.', 'Kata kerja berakhiran -ch mendapat -es: watch menjadi watches.', null, 15, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6792,6 +7415,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6856,8 +7480,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: bahasa-inggris/past-tense-reading/en-past-go
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('3d244263-282d-4d7c-847b-a31665306438', '5ae0f534-d9b1-4251-8357-df3bd7bdb8ba', 'en-past-go', 'multiple_choice'::public.question_type, 'Grammar', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk lampau dari "go" adalah…', 'Go adalah kata kerja tidak beraturan: go – went – gone.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('3d244263-282d-4d7c-847b-a31665306438', '5ae0f534-d9b1-4251-8357-df3bd7bdb8ba', 'en-past-go', 'multiple_choice'::public.question_type, 'Grammar', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk lampau dari "go" adalah…', 'Go adalah kata kerja tidak beraturan: go – went – gone.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6869,6 +7493,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6909,8 +7534,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/past-tense-reading/en-past-continuous
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('1433d078-7ded-4839-8238-ec63fe1dbba2', '5ae0f534-d9b1-4251-8357-df3bd7bdb8ba', 'en-past-continuous', 'multiple_choice'::public.question_type, 'Grammar', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'They ___ football when it started to rain.', 'Past continuous (were + verb-ing) dipakai untuk aksi yang sedang berlangsung saat kejadian lain terjadi.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('1433d078-7ded-4839-8238-ec63fe1dbba2', '5ae0f534-d9b1-4251-8357-df3bd7bdb8ba', 'en-past-continuous', 'multiple_choice'::public.question_type, 'Grammar', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'They ___ football when it started to rain.', 'Past continuous (were + verb-ing) dipakai untuk aksi yang sedang berlangsung saat kejadian lain terjadi.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6922,6 +7547,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -6962,8 +7588,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/past-tense-reading/en-interested-in
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('30862741-dd8e-4ce3-8c0f-61754de1d12f', '5ae0f534-d9b1-4251-8357-df3bd7bdb8ba', 'en-interested-in', 'multiple_choice'::public.question_type, 'Preposition', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'She is interested ___ learning Japanese.', 'Kata sifat interested selalu berpasangan dengan preposisi in.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('30862741-dd8e-4ce3-8c0f-61754de1d12f', '5ae0f534-d9b1-4251-8357-df3bd7bdb8ba', 'en-interested-in', 'multiple_choice'::public.question_type, 'Preposition', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'She is interested ___ learning Japanese.', 'Kata sifat interested selalu berpasangan dengan preposisi in.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6975,6 +7601,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7015,8 +7642,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/past-tense-reading/en-comparative-easy
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('47707c70-c837-4323-858a-f87538fca3ce', '5ae0f534-d9b1-4251-8357-df3bd7bdb8ba', 'en-comparative-easy', 'fill_blank'::public.question_type, 'Grammar', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Bentuk comparative dari "easy" adalah ___.', 'Kata sifat dua suku kata berakhiran -y mengubah y menjadi i lalu ditambah -er: easier.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('47707c70-c837-4323-858a-f87538fca3ce', '5ae0f534-d9b1-4251-8357-df3bd7bdb8ba', 'en-comparative-easy', 'fill_blank'::public.question_type, 'Grammar', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Bentuk comparative dari "easy" adalah ___.', 'Kata sifat dua suku kata berakhiran -y mengubah y menjadi i lalu ditambah -er: easier.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -7028,6 +7655,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7040,8 +7668,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: bahasa-inggris/past-tense-reading/en-reading-inference
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('72e7e119-3bb7-4cf0-828b-41b3c152988f', '5ae0f534-d9b1-4251-8357-df3bd7bdb8ba', 'en-reading-inference', 'multiple_choice'::public.question_type, 'Reading', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Rina woke up late, so she missed the bus. Why did Rina miss the bus?', 'Kata "so" menunjukkan akibat. Penyebab yang disebutkan adalah Rina bangun terlambat.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('72e7e119-3bb7-4cf0-828b-41b3c152988f', '5ae0f534-d9b1-4251-8357-df3bd7bdb8ba', 'en-reading-inference', 'multiple_choice'::public.question_type, 'Reading', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Rina woke up late, so she missed the bus. Why did Rina miss the bus?', 'Kata "so" menunjukkan akibat. Penyebab yang disebutkan adalah Rina bangun terlambat.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -7053,6 +7681,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7121,8 +7750,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: bahasa-inggris/legendary-past-tense/legendary-eng-watched
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('f2bce1c0-4eff-41c9-8147-483be42f4d78', '7e51f1bd-8638-434d-803a-231c52260475', 'legendary-eng-watched', 'multiple_choice'::public.question_type, 'Past Tense', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Yesterday I ___ a movie.', 'Penanda waktu yesterday menuntut simple past: watched.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('f2bce1c0-4eff-41c9-8147-483be42f4d78', '7e51f1bd-8638-434d-803a-231c52260475', 'legendary-eng-watched', 'multiple_choice'::public.question_type, 'Past Tense', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Yesterday I ___ a movie.', 'Penanda waktu yesterday menuntut simple past: watched.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -7134,6 +7763,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7174,8 +7804,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/legendary-past-tense/legendary-eng-didnt
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('6ed51da6-a417-4c8f-86c4-97e4b9d5f7cd', '7e51f1bd-8638-434d-803a-231c52260475', 'legendary-eng-didnt', 'multiple_choice'::public.question_type, 'Past Tense', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'She didn''t ___ to the party.', 'Setelah didn''t, kata kerja kembali ke bentuk dasar (go), bukan bentuk lampau.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('6ed51da6-a417-4c8f-86c4-97e4b9d5f7cd', '7e51f1bd-8638-434d-803a-231c52260475', 'legendary-eng-didnt', 'multiple_choice'::public.question_type, 'Past Tense', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'She didn''t ___ to the party.', 'Setelah didn''t, kata kerja kembali ke bentuk dasar (go), bukan bentuk lampau.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -7187,6 +7817,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7227,8 +7858,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-inggris/legendary-past-tense/legendary-eng-visited
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('248fa55a-df43-483e-8673-37df9863854e', '7e51f1bd-8638-434d-803a-231c52260475', 'legendary-eng-visited', 'fill_blank'::public.question_type, 'Past Tense', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'They __ (visit) the museum last week.', 'Last week menunjukkan simple past. Visit adalah kata kerja beraturan, sehingga menjadi visited.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('248fa55a-df43-483e-8673-37df9863854e', '7e51f1bd-8638-434d-803a-231c52260475', 'legendary-eng-visited', 'fill_blank'::public.question_type, 'Past Tense', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'They __ (visit) the museum last week.', 'Last week menunjukkan simple past. Visit adalah kata kerja beraturan, sehingga menjadi visited.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -7240,6 +7871,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7332,8 +7964,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: bahasa-indonesia/ejaan-dasar/id-huruf-kapital
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('10c9c883-de4c-4b70-8b85-63d665e39ae5', '75c30eb4-e575-4159-8dcc-6ee667a975ca', 'id-huruf-kapital', 'multiple_choice'::public.question_type, 'Ejaan', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Huruf kapital dipakai pada…', 'Huruf pertama awal kalimat ditulis kapital. Kata lain mengikuti aturan, misalnya nama diri juga kapital.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('10c9c883-de4c-4b70-8b85-63d665e39ae5', '75c30eb4-e575-4159-8dcc-6ee667a975ca', 'id-huruf-kapital', 'multiple_choice'::public.question_type, 'Ejaan', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Huruf kapital dipakai pada…', 'Huruf pertama awal kalimat ditulis kapital. Kata lain mengikuti aturan, misalnya nama diri juga kapital.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -7345,6 +7977,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7385,8 +8018,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/ejaan-dasar/id-tanda-titik
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('e24282e4-596a-4be8-8c4f-dea3c1f754c6', '75c30eb4-e575-4159-8dcc-6ee667a975ca', 'id-tanda-titik', 'multiple_choice'::public.question_type, 'Tanda Baca', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tanda baca yang mengakhiri kalimat berita adalah…', 'Kalimat berita diakhiri titik. Tanda tanya untuk pertanyaan dan tanda seru untuk perintah atau seruan.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('e24282e4-596a-4be8-8c4f-dea3c1f754c6', '75c30eb4-e575-4159-8dcc-6ee667a975ca', 'id-tanda-titik', 'multiple_choice'::public.question_type, 'Tanda Baca', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tanda baca yang mengakhiri kalimat berita adalah…', 'Kalimat berita diakhiri titik. Tanda tanya untuk pertanyaan dan tanda seru untuk perintah atau seruan.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -7398,6 +8031,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7438,8 +8072,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/ejaan-dasar/id-kata-baku
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('8e17f360-28ad-4ba5-851c-1460c4e85392', '75c30eb4-e575-4159-8dcc-6ee667a975ca', 'id-kata-baku', 'multiple_choice'::public.question_type, 'Kata Baku', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk baku yang benar adalah…', 'Menurut KBBI, bentuk baku adalah praktik, bukan praktek.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('8e17f360-28ad-4ba5-851c-1460c4e85392', '75c30eb4-e575-4159-8dcc-6ee667a975ca', 'id-kata-baku', 'multiple_choice'::public.question_type, 'Kata Baku', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk baku yang benar adalah…', 'Menurut KBBI, bentuk baku adalah praktik, bukan praktek.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -7451,6 +8085,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7491,8 +8126,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/ejaan-dasar/id-imbuhan-menulis
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('68616fc9-3a34-4a43-86a0-1179cd7847ff', '75c30eb4-e575-4159-8dcc-6ee667a975ca', 'id-imbuhan-menulis', 'fill_blank'::public.question_type, 'Imbuhan', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Gabungan imbuhan me- dan kata "tulis" menghasilkan kata ___.', 'Awalan me- berubah menjadi men- di depan kata yang diawali t, sehingga menjadi menulis.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('68616fc9-3a34-4a43-86a0-1179cd7847ff', '75c30eb4-e575-4159-8dcc-6ee667a975ca', 'id-imbuhan-menulis', 'fill_blank'::public.question_type, 'Imbuhan', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Gabungan imbuhan me- dan kata "tulis" menghasilkan kata ___.', 'Awalan me- berubah menjadi men- di depan kata yang diawali t, sehingga menjadi menulis.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -7504,6 +8139,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7516,8 +8152,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: bahasa-indonesia/ejaan-dasar/id-subjek-predikat
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('7bc6aa5c-1571-450b-8886-15db8dd370ea', '75c30eb4-e575-4159-8dcc-6ee667a975ca', 'id-subjek-predikat', 'multiple_choice'::public.question_type, 'Kalimat', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Predikat pada kalimat "Ani membaca buku" adalah…', 'Ani adalah subjek, membaca adalah predikat, dan buku adalah objek.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('7bc6aa5c-1571-450b-8886-15db8dd370ea', '75c30eb4-e575-4159-8dcc-6ee667a975ca', 'id-subjek-predikat', 'multiple_choice'::public.question_type, 'Kalimat', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Predikat pada kalimat "Ani membaca buku" adalah…', 'Ani adalah subjek, membaca adalah predikat, dan buku adalah objek.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -7529,6 +8165,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7597,8 +8234,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: bahasa-indonesia/indonesia-review/review-indonesia-preposition
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('b197cdfb-066f-4053-892e-ee4f6ebd3627', '3eb21734-0205-454b-8656-c801ac5ddfcd', 'review-indonesia-preposition', 'multiple_choice'::public.question_type, 'Ejaan', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Penulisan kata depan "di" yang benar adalah…', 'Kata depan di ditulis terpisah dari kata yang mengikutinya, seperti di rumah. Awalan di- ditulis serangkai, seperti ditulis.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('b197cdfb-066f-4053-892e-ee4f6ebd3627', '3eb21734-0205-454b-8656-c801ac5ddfcd', 'review-indonesia-preposition', 'multiple_choice'::public.question_type, 'Ejaan', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Penulisan kata depan "di" yang benar adalah…', 'Kata depan di ditulis terpisah dari kata yang mengikutinya, seperti di rumah. Awalan di- ditulis serangkai, seperti ditulis.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -7610,6 +8247,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7650,8 +8288,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/indonesia-review/review-indonesia-effective
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('6a0d1b2d-2bb7-4636-81b8-bd9eb9de8aa6', '3eb21734-0205-454b-8656-c801ac5ddfcd', 'review-indonesia-effective', 'multiple_choice'::public.question_type, 'Kalimat Efektif', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kalimat yang paling efektif adalah…', 'Kata para sudah bermakna jamak, sehingga tidak perlu diulang dengan semua atau siswa-siswa.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('6a0d1b2d-2bb7-4636-81b8-bd9eb9de8aa6', '3eb21734-0205-454b-8656-c801ac5ddfcd', 'review-indonesia-effective', 'multiple_choice'::public.question_type, 'Kalimat Efektif', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kalimat yang paling efektif adalah…', 'Kata para sudah bermakna jamak, sehingga tidak perlu diulang dengan semua atau siswa-siswa.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -7663,6 +8301,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7703,8 +8342,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/indonesia-review/review-indonesia-aktivitas
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('d2983eb3-08b6-4a58-85ac-39c1a1dcb900', '3eb21734-0205-454b-8656-c801ac5ddfcd', 'review-indonesia-aktivitas', 'typing'::public.question_type, 'Kata Baku', 'beginner'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Tulis bentuk baku dari kata "aktifitas".', 'Bentuk baku yang tercatat adalah aktivitas, bukan aktifitas.', null, 15, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('d2983eb3-08b6-4a58-85ac-39c1a1dcb900', '3eb21734-0205-454b-8656-c801ac5ddfcd', 'review-indonesia-aktivitas', 'typing'::public.question_type, 'Kata Baku', 'beginner'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Tulis bentuk baku dari kata "aktifitas".', 'Bentuk baku yang tercatat adalah aktivitas, bukan aktifitas.', null, 15, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -7716,6 +8355,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7756,8 +8396,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: bahasa-indonesia/indonesia-challenge/challenge-indonesia-procedure
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('dcb32268-e15e-4dec-8a16-1b731fb8b5d1', '871f9c88-cb4a-4804-8a24-922202e52f75', 'challenge-indonesia-procedure', 'multiple_choice'::public.question_type, 'Teks Prosedur', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Struktur teks prosedur yang tepat adalah…', 'Teks prosedur memuat tujuan, alat/bahan bila diperlukan, lalu langkah-langkah yang berurutan.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('dcb32268-e15e-4dec-8a16-1b731fb8b5d1', '871f9c88-cb4a-4804-8a24-922202e52f75', 'challenge-indonesia-procedure', 'multiple_choice'::public.question_type, 'Teks Prosedur', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Struktur teks prosedur yang tepat adalah…', 'Teks prosedur memuat tujuan, alat/bahan bila diperlukan, lalu langkah-langkah yang berurutan.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -7769,6 +8409,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7809,8 +8450,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/indonesia-challenge/challenge-indonesia-karena
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('7efbee57-17cf-47b3-868c-2bb78d3ce38f', '871f9c88-cb4a-4804-8a24-922202e52f75', 'challenge-indonesia-karena', 'fill_blank'::public.question_type, 'Konjungsi', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Hubungan sebab-akibat dapat ditandai dengan konjungsi ___', 'Karena menandai sebab. Akibatnya dapat ditandai dengan sehingga atau maka.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('7efbee57-17cf-47b3-868c-2bb78d3ce38f', '871f9c88-cb4a-4804-8a24-922202e52f75', 'challenge-indonesia-karena', 'fill_blank'::public.question_type, 'Konjungsi', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Hubungan sebab-akibat dapat ditandai dengan konjungsi ___', 'Karena menandai sebab. Akibatnya dapat ditandai dengan sehingga atau maka.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -7822,6 +8463,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7834,8 +8476,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: bahasa-indonesia/indonesia-challenge/challenge-indonesia-spelling
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('9978e1c4-d701-4c55-8ae9-b7747cff82a3', '871f9c88-cb4a-4804-8a24-922202e52f75', 'challenge-indonesia-spelling', 'multiple_choice'::public.question_type, 'Ejaan', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kalimat dengan ejaan yang benar adalah…', 'Huruf pertama kalimat diawali kapital, dan kata depan di ditulis terpisah.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('9978e1c4-d701-4c55-8ae9-b7747cff82a3', '871f9c88-cb4a-4804-8a24-922202e52f75', 'challenge-indonesia-spelling', 'multiple_choice'::public.question_type, 'Ejaan', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kalimat dengan ejaan yang benar adalah…', 'Huruf pertama kalimat diawali kapital, dan kata depan di ditulis terpisah.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -7847,6 +8489,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7939,8 +8582,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: bahasa-indonesia/kalimat-efektif/id-kalimat-ringkas
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('04fe7ae5-cde9-404f-8796-acd909ce046f', '747bbdac-6635-440b-88f1-b66b50a73e03', 'id-kalimat-ringkas', 'multiple_choice'::public.question_type, 'Kalimat Efektif', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kalimat paling efektif adalah…', 'Kata "para" sudah bermakna jamak sehingga tidak perlu digabung dengan bentuk ulang siswa-siswa.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('04fe7ae5-cde9-404f-8796-acd909ce046f', '747bbdac-6635-440b-88f1-b66b50a73e03', 'id-kalimat-ringkas', 'multiple_choice'::public.question_type, 'Kalimat Efektif', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kalimat paling efektif adalah…', 'Kata "para" sudah bermakna jamak sehingga tidak perlu digabung dengan bentuk ulang siswa-siswa.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -7952,6 +8595,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -7992,8 +8636,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/kalimat-efektif/id-konjungsi-sebab
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('ec99aa80-8e98-4a2c-87eb-6293acf38678', '747bbdac-6635-440b-88f1-b66b50a73e03', 'id-konjungsi-sebab', 'multiple_choice'::public.question_type, 'Konjungsi', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Konjungsi yang menyatakan sebab adalah…', 'Karena menandai sebab. Tetapi dan meskipun menandai pertentangan, sedangkan sehingga menandai akibat.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('ec99aa80-8e98-4a2c-87eb-6293acf38678', '747bbdac-6635-440b-88f1-b66b50a73e03', 'id-konjungsi-sebab', 'multiple_choice'::public.question_type, 'Konjungsi', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Konjungsi yang menyatakan sebab adalah…', 'Karena menandai sebab. Tetapi dan meskipun menandai pertentangan, sedangkan sehingga menandai akibat.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8005,6 +8649,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -8045,8 +8690,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/kalimat-efektif/id-kalimat-tanya
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('856a45a0-4cbd-409b-845b-5977a17c5c6a', '747bbdac-6635-440b-88f1-b66b50a73e03', 'id-kalimat-tanya', 'multiple_choice'::public.question_type, 'Tanda Baca', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kalimat "Kapan kamu belajar" seharusnya diakhiri…', 'Kalimat tanya diakhiri tanda tanya, bukan titik.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('856a45a0-4cbd-409b-845b-5977a17c5c6a', '747bbdac-6635-440b-88f1-b66b50a73e03', 'id-kalimat-tanya', 'multiple_choice'::public.question_type, 'Tanda Baca', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kalimat "Kapan kamu belajar" seharusnya diakhiri…', 'Kalimat tanya diakhiri tanda tanya, bukan titik.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8058,6 +8703,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -8098,8 +8744,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/kalimat-efektif/id-kata-depan-di
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('2c015969-8ac2-428f-8cba-3c35b6631bfa', '747bbdac-6635-440b-88f1-b66b50a73e03', 'id-kata-depan-di', 'fill_blank'::public.question_type, 'Kata Depan', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Buku itu terletak ___ atas meja.', 'Kata depan di ditulis terpisah dari kata tempat, seperti di atas dan di rumah.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('2c015969-8ac2-428f-8cba-3c35b6631bfa', '747bbdac-6635-440b-88f1-b66b50a73e03', 'id-kata-depan-di', 'fill_blank'::public.question_type, 'Kata Depan', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Buku itu terletak ___ atas meja.', 'Kata depan di ditulis terpisah dari kata tempat, seperti di atas dan di rumah.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8111,6 +8757,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -8123,8 +8770,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: bahasa-indonesia/kalimat-efektif/id-gagasan-utama
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('5250ba21-2456-4e2c-864e-4c6d65e3684e', '747bbdac-6635-440b-88f1-b66b50a73e03', 'id-gagasan-utama', 'multiple_choice'::public.question_type, 'Paragraf', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Gagasan utama sebuah paragraf biasanya terdapat pada…', 'Gagasan utama dituangkan dalam kalimat utama, lalu dijelaskan oleh kalimat penjelas.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('5250ba21-2456-4e2c-864e-4c6d65e3684e', '747bbdac-6635-440b-88f1-b66b50a73e03', 'id-gagasan-utama', 'multiple_choice'::public.question_type, 'Paragraf', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Gagasan utama sebuah paragraf biasanya terdapat pada…', 'Gagasan utama dituangkan dalam kalimat utama, lalu dijelaskan oleh kalimat penjelas.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8136,6 +8783,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -8204,8 +8852,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: bahasa-indonesia/latihan-kalimat-efektif/practice-id-para
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('688caa9e-7dc5-40ca-8d75-3408e9723334', 'd49e1fa3-3e86-4e0b-8d45-1ac34637a366', 'practice-id-para', 'multiple_choice'::public.question_type, 'Kalimat Efektif', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Pilih kalimat efektif yang benar.', 'Kata para sudah bermakna jamak, sehingga tidak perlu diulang dengan siswa-siswa atau semuanya.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('688caa9e-7dc5-40ca-8d75-3408e9723334', 'd49e1fa3-3e86-4e0b-8d45-1ac34637a366', 'practice-id-para', 'multiple_choice'::public.question_type, 'Kalimat Efektif', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Pilih kalimat efektif yang benar.', 'Kata para sudah bermakna jamak, sehingga tidak perlu diulang dengan siswa-siswa atau semuanya.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8217,6 +8865,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -8257,8 +8906,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/latihan-kalimat-efektif/practice-id-baku
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('ec9a1576-679e-481a-80c9-6fb72e8dd26a', 'd49e1fa3-3e86-4e0b-8d45-1ac34637a366', 'practice-id-baku', 'multiple_choice'::public.question_type, 'Kata Baku', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk baku yang sesuai KBBI adalah…', 'Kata baku menurut KBBI adalah praktik, bukan praktek.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('ec9a1576-679e-481a-80c9-6fb72e8dd26a', 'd49e1fa3-3e86-4e0b-8d45-1ac34637a366', 'practice-id-baku', 'multiple_choice'::public.question_type, 'Kata Baku', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk baku yang sesuai KBBI adalah…', 'Kata baku menurut KBBI adalah praktik, bukan praktek.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8270,6 +8919,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -8310,8 +8960,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/latihan-kalimat-efektif/practice-id-analisis
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('286bc5e6-80e2-472b-8f52-dbb5d766e11d', 'd49e1fa3-3e86-4e0b-8d45-1ac34637a366', 'practice-id-analisis', 'fill_blank'::public.question_type, 'Kata Baku', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Bentuk baku dari kata ''analisa'' adalah __.', 'KBBI mencatat analisis sebagai bentuk baku; analisa adalah bentuk tidak baku.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('286bc5e6-80e2-472b-8f52-dbb5d766e11d', 'd49e1fa3-3e86-4e0b-8d45-1ac34637a366', 'practice-id-analisis', 'fill_blank'::public.question_type, 'Kata Baku', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Bentuk baku dari kata ''analisa'' adalah __.', 'KBBI mencatat analisis sebagai bentuk baku; analisa adalah bentuk tidak baku.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8323,6 +8973,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -8363,8 +9014,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: bahasa-indonesia/checkpoint-ejaan-kalimat/checkpoint-id-unsur
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('b5f9d46e-d760-4422-8ab3-62ee451037a1', '036180fd-8576-4fac-8c0c-86cbc4d82809', 'checkpoint-id-unsur', 'multiple_choice'::public.question_type, 'Struktur Kalimat', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kalimat minimal memiliki…', 'Subjek dan predikat adalah unsur minimal sebuah kalimat. Objek dan keterangan bersifat tambahan.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('b5f9d46e-d760-4422-8ab3-62ee451037a1', '036180fd-8576-4fac-8c0c-86cbc4d82809', 'checkpoint-id-unsur', 'multiple_choice'::public.question_type, 'Struktur Kalimat', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kalimat minimal memiliki…', 'Subjek dan predikat adalah unsur minimal sebuah kalimat. Objek dan keterangan bersifat tambahan.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8376,6 +9027,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -8416,8 +9068,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/checkpoint-ejaan-kalimat/checkpoint-id-di
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('82210b56-3839-4837-8767-3f7b8dc99190', '036180fd-8576-4fac-8c0c-86cbc4d82809', 'checkpoint-id-di', 'multiple_choice'::public.question_type, 'Ejaan', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Penulisan "di" sebagai kata depan yang benar adalah…', 'Sebagai kata depan penunjuk tempat, di ditulis terpisah: di rumah. Sebagai awalan, ditulis serangkai: ditulis.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('82210b56-3839-4837-8767-3f7b8dc99190', '036180fd-8576-4fac-8c0c-86cbc4d82809', 'checkpoint-id-di', 'multiple_choice'::public.question_type, 'Ejaan', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Penulisan "di" sebagai kata depan yang benar adalah…', 'Sebagai kata depan penunjuk tempat, di ditulis terpisah: di rumah. Sebagai awalan, ditulis serangkai: ditulis.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8429,6 +9081,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -8469,8 +9122,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/checkpoint-ejaan-kalimat/checkpoint-id-zaman
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('6c5cd715-5af9-4e50-87df-fade7d3300ba', '036180fd-8576-4fac-8c0c-86cbc4d82809', 'checkpoint-id-zaman', 'typing'::public.question_type, 'Kata Baku', 'elementary'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Tulis bentuk baku dari kata ''jaman''.', 'Bentuk baku menurut KBBI adalah zaman, bukan jaman.', null, 15, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('6c5cd715-5af9-4e50-87df-fade7d3300ba', '036180fd-8576-4fac-8c0c-86cbc4d82809', 'checkpoint-id-zaman', 'typing'::public.question_type, 'Kata Baku', 'elementary'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Tulis bentuk baku dari kata ''jaman''.', 'Bentuk baku menurut KBBI adalah zaman, bukan jaman.', null, 15, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8482,6 +9135,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -8546,8 +9200,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: bahasa-indonesia/teks-dan-gagasan/id-eksposisi-tujuan
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('11b871df-d560-47a6-8910-c8fd72467c66', 'c847d1e1-3c9c-4e49-8efe-ab22ede9c9f1', 'id-eksposisi-tujuan', 'multiple_choice'::public.question_type, 'Jenis Teks', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tujuan utama teks eksposisi adalah…', 'Eksposisi memaparkan informasi disertai fakta dan penalaran agar pembaca memahami suatu gagasan.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('11b871df-d560-47a6-8910-c8fd72467c66', 'c847d1e1-3c9c-4e49-8efe-ab22ede9c9f1', 'id-eksposisi-tujuan', 'multiple_choice'::public.question_type, 'Jenis Teks', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tujuan utama teks eksposisi adalah…', 'Eksposisi memaparkan informasi disertai fakta dan penalaran agar pembaca memahami suatu gagasan.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8559,6 +9213,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -8599,8 +9254,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/teks-dan-gagasan/id-personifikasi
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('7da05bee-f72e-4da5-8284-04c6bf1cef4b', 'c847d1e1-3c9c-4e49-8efe-ab22ede9c9f1', 'id-personifikasi', 'multiple_choice'::public.question_type, 'Majas', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kalimat yang mengandung personifikasi adalah…', 'Personifikasi memberikan sifat manusia kepada benda, misalnya angin yang "berbisik".', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('7da05bee-f72e-4da5-8284-04c6bf1cef4b', 'c847d1e1-3c9c-4e49-8efe-ab22ede9c9f1', 'id-personifikasi', 'multiple_choice'::public.question_type, 'Majas', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kalimat yang mengandung personifikasi adalah…', 'Personifikasi memberikan sifat manusia kepada benda, misalnya angin yang "berbisik".', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8612,6 +9267,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -8652,8 +9308,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/teks-dan-gagasan/id-opini
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('4b2c0e62-9bfa-4fa8-8781-7c0380404715', 'c847d1e1-3c9c-4e49-8efe-ab22ede9c9f1', 'id-opini', 'multiple_choice'::public.question_type, 'Fakta dan Opini', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Pernyataan yang merupakan opini adalah…', 'Opini berisi penilaian pribadi dan ditandai frasa seperti "menurut saya". Pernyataan lain dapat diverifikasi.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('4b2c0e62-9bfa-4fa8-8781-7c0380404715', 'c847d1e1-3c9c-4e49-8efe-ab22ede9c9f1', 'id-opini', 'multiple_choice'::public.question_type, 'Fakta dan Opini', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Pernyataan yang merupakan opini adalah…', 'Opini berisi penilaian pribadi dan ditandai frasa seperti "menurut saya". Pernyataan lain dapat diverifikasi.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8665,6 +9321,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -8705,8 +9362,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/teks-dan-gagasan/id-unsur-berita
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('92b30329-5390-4508-8dee-3c0592afa352', 'c847d1e1-3c9c-4e49-8efe-ab22ede9c9f1', 'id-unsur-berita', 'fill_blank'::public.question_type, 'Berita', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Unsur berita yang menjelaskan alasan terjadinya peristiwa disebut ___.', 'Rumus 5W1H mencakup what, who, when, where, why, dan how. Why menjelaskan alasan peristiwa.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('92b30329-5390-4508-8dee-3c0592afa352', 'c847d1e1-3c9c-4e49-8efe-ab22ede9c9f1', 'id-unsur-berita', 'fill_blank'::public.question_type, 'Berita', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Unsur berita yang menjelaskan alasan terjadinya peristiwa disebut ___.', 'Rumus 5W1H mencakup what, who, when, where, why, dan how. Why menjelaskan alasan peristiwa.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8718,6 +9375,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -8738,8 +9396,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: bahasa-indonesia/teks-dan-gagasan/id-simpulan
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('04b20e53-eefd-43b4-85a5-4ca5af99f012', 'c847d1e1-3c9c-4e49-8efe-ab22ede9c9f1', 'id-simpulan', 'multiple_choice'::public.question_type, 'Membaca', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Simpulan yang tepat harus berdasarkan…', 'Simpulan yang baik ditarik dari informasi dan bukti yang tersedia di dalam teks.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('04b20e53-eefd-43b4-85a5-4ca5af99f012', 'c847d1e1-3c9c-4e49-8efe-ab22ede9c9f1', 'id-simpulan', 'multiple_choice'::public.question_type, 'Membaca', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Simpulan yang tepat harus berdasarkan…', 'Simpulan yang baik ditarik dari informasi dan bukti yang tersedia di dalam teks.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8751,6 +9409,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -8819,8 +9478,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: bahasa-indonesia/legendary-jenis-teks/legendary-id-argumentasi
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('6d7e9931-92a1-4dff-86c7-a4974c79f208', 'e2105d75-a72c-4e7a-8634-abb705cc1820', 'legendary-id-argumentasi', 'multiple_choice'::public.question_type, 'Teks Argumentasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tujuan utama teks argumentasi adalah…', 'Teks argumentasi memuat pendapat yang didukung alasan dan bukti agar pembaca meyakini sudut pandang penulis.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('6d7e9931-92a1-4dff-86c7-a4974c79f208', 'e2105d75-a72c-4e7a-8634-abb705cc1820', 'legendary-id-argumentasi', 'multiple_choice'::public.question_type, 'Teks Argumentasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Tujuan utama teks argumentasi adalah…', 'Teks argumentasi memuat pendapat yang didukung alasan dan bukti agar pembaca meyakini sudut pandang penulis.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8832,6 +9491,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -8872,8 +9532,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/legendary-jenis-teks/legendary-id-prosedur
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('467e68fe-4078-419f-887e-b79c4a275432', 'e2105d75-a72c-4e7a-8634-abb705cc1820', 'legendary-id-prosedur', 'multiple_choice'::public.question_type, 'Teks Prosedur', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Struktur teks prosedur yang tepat adalah…', 'Teks prosedur memandu pembaca melakukan sesuatu melalui tujuan, alat/bahan, dan langkah berurutan.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('467e68fe-4078-419f-887e-b79c4a275432', 'e2105d75-a72c-4e7a-8634-abb705cc1820', 'legendary-id-prosedur', 'multiple_choice'::public.question_type, 'Teks Prosedur', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Struktur teks prosedur yang tepat adalah…', 'Teks prosedur memandu pembaca melakukan sesuatu melalui tujuan, alat/bahan, dan langkah berurutan.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8885,6 +9545,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -8925,8 +9586,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: bahasa-indonesia/legendary-jenis-teks/legendary-id-eksposisi
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('48a7c5b8-5a78-4da3-8c93-1085f01bd3d2', 'e2105d75-a72c-4e7a-8634-abb705cc1820', 'legendary-id-eksposisi', 'fill_blank'::public.question_type, 'Teks Eksposisi', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Teks yang menjelaskan gagasan atau proses secara informatif disebut teks __.', 'Teks eksposisi memaparkan informasi dan gagasan tanpa bertujuan memengaruhi pembaca seperti argumentasi.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('48a7c5b8-5a78-4da3-8c93-1085f01bd3d2', 'e2105d75-a72c-4e7a-8634-abb705cc1820', 'legendary-id-eksposisi', 'fill_blank'::public.question_type, 'Teks Eksposisi', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Teks yang menjelaskan gagasan atau proses secara informatif disebut teks __.', 'Teks eksposisi memaparkan informasi dan gagasan tanpa bertujuan memengaruhi pembaca seperti argumentasi.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8938,6 +9599,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9030,8 +9692,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: pendidikan-pancasila/pancasila-dasar/ppk-sila-pertama
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('fde6db3f-c4d4-407a-80ea-8baaab5d29cd', '0d9a2b2c-1ee7-49c8-8657-a457d66d60f5', 'ppk-sila-pertama', 'multiple_choice'::public.question_type, 'Pancasila', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bunyi sila pertama Pancasila adalah…', 'Sila pertama menegaskan Ketuhanan Yang Maha Esa. Sila kedua tentang kemanusiaan yang adil dan beradab.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('fde6db3f-c4d4-407a-80ea-8baaab5d29cd', '0d9a2b2c-1ee7-49c8-8657-a457d66d60f5', 'ppk-sila-pertama', 'multiple_choice'::public.question_type, 'Pancasila', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bunyi sila pertama Pancasila adalah…', 'Sila pertama menegaskan Ketuhanan Yang Maha Esa. Sila kedua tentang kemanusiaan yang adil dan beradab.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9043,6 +9705,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9083,8 +9746,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/pancasila-dasar/ppk-jumlah-sila
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('52544703-1e61-42dc-85b5-ad6eb41e46a6', '0d9a2b2c-1ee7-49c8-8657-a457d66d60f5', 'ppk-jumlah-sila', 'multiple_choice'::public.question_type, 'Pancasila', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Pancasila terdiri atas…', 'Pancasila berarti lima dasar, sehingga terdiri atas lima sila.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('52544703-1e61-42dc-85b5-ad6eb41e46a6', '0d9a2b2c-1ee7-49c8-8657-a457d66d60f5', 'ppk-jumlah-sila', 'multiple_choice'::public.question_type, 'Pancasila', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Pancasila terdiri atas…', 'Pancasila berarti lima dasar, sehingga terdiri atas lima sila.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9096,6 +9759,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9136,8 +9800,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/pancasila-dasar/ppk-lambang-kedua
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('ee1a9eac-df31-49e8-85c6-e5f27d0f55bb', '0d9a2b2c-1ee7-49c8-8657-a457d66d60f5', 'ppk-lambang-kedua', 'multiple_choice'::public.question_type, 'Lambang', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Lambang sila kedua Pancasila adalah…', 'Rantai melambangkan kemanusiaan yang saling terhubung. Bintang melambangkan sila pertama.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('ee1a9eac-df31-49e8-85c6-e5f27d0f55bb', '0d9a2b2c-1ee7-49c8-8657-a457d66d60f5', 'ppk-lambang-kedua', 'multiple_choice'::public.question_type, 'Lambang', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Lambang sila kedua Pancasila adalah…', 'Rantai melambangkan kemanusiaan yang saling terhubung. Bintang melambangkan sila pertama.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9149,6 +9813,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9189,8 +9854,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/pancasila-dasar/ppk-bhinneka
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('5b8d8b6e-6c7b-4789-893c-819c70fa1b07', '0d9a2b2c-1ee7-49c8-8657-a457d66d60f5', 'ppk-bhinneka', 'fill_blank'::public.question_type, 'Semboyan', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Semboyan bangsa Indonesia adalah ___ Tunggal Ika.', 'Bhinneka Tunggal Ika berarti berbeda-beda tetapi tetap satu.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('5b8d8b6e-6c7b-4789-893c-819c70fa1b07', '0d9a2b2c-1ee7-49c8-8657-a457d66d60f5', 'ppk-bhinneka', 'fill_blank'::public.question_type, 'Semboyan', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Semboyan bangsa Indonesia adalah ___ Tunggal Ika.', 'Bhinneka Tunggal Ika berarti berbeda-beda tetapi tetap satu.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9202,6 +9867,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9214,8 +9880,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: pendidikan-pancasila/pancasila-dasar/ppk-sila-persatuan
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('a19b9a8c-c801-4aa5-8bfd-d312535b9a10', '0d9a2b2c-1ee7-49c8-8657-a457d66d60f5', 'ppk-sila-persatuan', 'multiple_choice'::public.question_type, 'Pancasila', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Sila yang menekankan persatuan bangsa adalah sila…', 'Sila ketiga berbunyi Persatuan Indonesia dan dilambangkan pohon beringin.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('a19b9a8c-c801-4aa5-8bfd-d312535b9a10', '0d9a2b2c-1ee7-49c8-8657-a457d66d60f5', 'ppk-sila-persatuan', 'multiple_choice'::public.question_type, 'Pancasila', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Sila yang menekankan persatuan bangsa adalah sila…', 'Sila ketiga berbunyi Persatuan Indonesia dan dilambangkan pohon beringin.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9227,6 +9893,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9295,8 +9962,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: pendidikan-pancasila/pancasila-review/review-pancasila-first
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('f9790f1d-7a53-4861-8a47-ff4cca37d865', '18851fbb-b35b-457a-8b87-132ce1bedad1', 'review-pancasila-first', 'multiple_choice'::public.question_type, 'Pancasila', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Sila pertama Pancasila berbunyi…', 'Sila pertama menegaskan Ketuhanan Yang Maha Esa sebagai dasar kehidupan beragama bangsa.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('f9790f1d-7a53-4861-8a47-ff4cca37d865', '18851fbb-b35b-457a-8b87-132ce1bedad1', 'review-pancasila-first', 'multiple_choice'::public.question_type, 'Pancasila', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Sila pertama Pancasila berbunyi…', 'Sila pertama menegaskan Ketuhanan Yang Maha Esa sebagai dasar kehidupan beragama bangsa.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9308,6 +9975,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9348,8 +10016,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/pancasila-review/review-pancasila-constitution
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('5b8a386e-cb19-4394-8c25-51e512c9ee64', '18851fbb-b35b-457a-8b87-132ce1bedad1', 'review-pancasila-constitution', 'multiple_choice'::public.question_type, 'Konstitusi', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Dasar hukum tertulis utama negara Indonesia adalah…', 'UUD 1945 adalah konstitusi tertulis. Pancasila adalah dasar negara dan sumber nilai.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('5b8a386e-cb19-4394-8c25-51e512c9ee64', '18851fbb-b35b-457a-8b87-132ce1bedad1', 'review-pancasila-constitution', 'multiple_choice'::public.question_type, 'Konstitusi', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Dasar hukum tertulis utama negara Indonesia adalah…', 'UUD 1945 adalah konstitusi tertulis. Pancasila adalah dasar negara dan sumber nilai.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9361,6 +10029,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9401,8 +10070,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/pancasila-review/review-pancasila-fifth
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('d17418a7-c399-480b-80b9-90762ebc40a9', '18851fbb-b35b-457a-8b87-132ce1bedad1', 'review-pancasila-fifth', 'fill_blank'::public.question_type, 'Pancasila', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Sila ke-___ berbunyi "Keadilan sosial bagi seluruh rakyat Indonesia".', 'Sila kelima menekankan keadilan sosial bagi seluruh rakyat Indonesia.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('d17418a7-c399-480b-80b9-90762ebc40a9', '18851fbb-b35b-457a-8b87-132ce1bedad1', 'review-pancasila-fifth', 'fill_blank'::public.question_type, 'Pancasila', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Sila ke-___ berbunyi "Keadilan sosial bagi seluruh rakyat Indonesia".', 'Sila kelima menekankan keadilan sosial bagi seluruh rakyat Indonesia.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9414,6 +10083,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9462,8 +10132,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: pendidikan-pancasila/pancasila-challenge/challenge-pancasila-democracy
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('f0f3e66b-7b38-4927-87cb-612f3c2b0d10', 'c83e4b4f-38dc-42a1-847d-1b71c9c614b1', 'challenge-pancasila-democracy', 'multiple_choice'::public.question_type, 'Demokrasi', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Prinsip utama demokrasi adalah…', 'Demokrasi menempatkan kedaulatan rakyat sebagai dasar, diwujudkan melalui pemilu dan partisipasi publik.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('f0f3e66b-7b38-4927-87cb-612f3c2b0d10', 'c83e4b4f-38dc-42a1-847d-1b71c9c614b1', 'challenge-pancasila-democracy', 'multiple_choice'::public.question_type, 'Demokrasi', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Prinsip utama demokrasi adalah…', 'Demokrasi menempatkan kedaulatan rakyat sebagai dasar, diwujudkan melalui pemilu dan partisipasi publik.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9475,6 +10145,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9515,8 +10186,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/pancasila-challenge/challenge-pancasila-obligation
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('ce396e62-951c-40d9-8a53-f5a6fb7c4d7f', 'c83e4b4f-38dc-42a1-847d-1b71c9c614b1', 'challenge-pancasila-obligation', 'multiple_choice'::public.question_type, 'Hak dan Kewajiban', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Contoh kewajiban warga negara adalah…', 'Membayar pajak adalah kewajiban. Pelayanan kesehatan dan pendidikan lebih tepat disebut hak.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('ce396e62-951c-40d9-8a53-f5a6fb7c4d7f', 'c83e4b4f-38dc-42a1-847d-1b71c9c614b1', 'challenge-pancasila-obligation', 'multiple_choice'::public.question_type, 'Hak dan Kewajiban', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Contoh kewajiban warga negara adalah…', 'Membayar pajak adalah kewajiban. Pelayanan kesehatan dan pendidikan lebih tepat disebut hak.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9528,6 +10199,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9568,8 +10240,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/pancasila-challenge/challenge-pancasila-gotong-royong
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('ce56183f-4feb-4c61-82ce-30268974021c', 'c83e4b4f-38dc-42a1-847d-1b71c9c614b1', 'challenge-pancasila-gotong-royong', 'fill_blank'::public.question_type, 'Keberagaman', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Bekerja sama tanpa pamrih untuk kepentingan bersama disebut ___', 'Gotong royong mencerminkan kerja sama sukarela dan kebersamaan dalam masyarakat.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('ce56183f-4feb-4c61-82ce-30268974021c', 'c83e4b4f-38dc-42a1-847d-1b71c9c614b1', 'challenge-pancasila-gotong-royong', 'fill_blank'::public.question_type, 'Keberagaman', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Bekerja sama tanpa pamrih untuk kepentingan bersama disebut ___', 'Gotong royong mencerminkan kerja sama sukarela dan kebersamaan dalam masyarakat.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9581,6 +10253,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9645,8 +10318,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: pendidikan-pancasila/norma-hak-kewajiban/ppk-norma-agama
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('dd99b61b-a3d9-4f4d-88f4-bba15f4c8f3f', '0333966d-2c0e-471e-8972-4f45103d20ed', 'ppk-norma-agama', 'multiple_choice'::public.question_type, 'Norma', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Norma yang bersumber dari ajaran agama disebut norma…', 'Norma agama berasal dari ajaran agama. Norma hukum bersumber dari peraturan negara.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('dd99b61b-a3d9-4f4d-88f4-bba15f4c8f3f', '0333966d-2c0e-471e-8972-4f45103d20ed', 'ppk-norma-agama', 'multiple_choice'::public.question_type, 'Norma', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Norma yang bersumber dari ajaran agama disebut norma…', 'Norma agama berasal dari ajaran agama. Norma hukum bersumber dari peraturan negara.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9658,6 +10331,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9698,8 +10372,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/norma-hak-kewajiban/ppk-hak-siswa
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('6a23597d-1035-4295-8ddf-0bcede4dc0de', '0333966d-2c0e-471e-8972-4f45103d20ed', 'ppk-hak-siswa', 'multiple_choice'::public.question_type, 'Hak', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Hak seorang siswa di sekolah adalah…', 'Setiap siswa berhak memperoleh pendidikan. Membolos dan merusak fasilitas justru melanggar kewajiban.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('6a23597d-1035-4295-8ddf-0bcede4dc0de', '0333966d-2c0e-471e-8972-4f45103d20ed', 'ppk-hak-siswa', 'multiple_choice'::public.question_type, 'Hak', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Hak seorang siswa di sekolah adalah…', 'Setiap siswa berhak memperoleh pendidikan. Membolos dan merusak fasilitas justru melanggar kewajiban.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9711,6 +10385,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9751,8 +10426,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/norma-hak-kewajiban/ppk-kewajiban
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('235a2bb7-1dfe-40cc-8f6c-73f056d1a86e', '0333966d-2c0e-471e-8972-4f45103d20ed', 'ppk-kewajiban', 'multiple_choice'::public.question_type, 'Kewajiban', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Contoh kewajiban siswa di kelas adalah…', 'Kewajiban adalah hal yang harus dilakukan, misalnya menaati tata tertib dan menyelesaikan tugas.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('235a2bb7-1dfe-40cc-8f6c-73f056d1a86e', '0333966d-2c0e-471e-8972-4f45103d20ed', 'ppk-kewajiban', 'multiple_choice'::public.question_type, 'Kewajiban', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Contoh kewajiban siswa di kelas adalah…', 'Kewajiban adalah hal yang harus dilakukan, misalnya menaati tata tertib dan menyelesaikan tugas.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9764,6 +10439,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9804,8 +10480,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/norma-hak-kewajiban/ppk-mufakat
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('bba3abdf-794f-408c-80c2-9084f29bebc9', '0333966d-2c0e-471e-8972-4f45103d20ed', 'ppk-mufakat', 'fill_blank'::public.question_type, 'Musyawarah', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Musyawarah dilakukan untuk mencapai ___.', 'Musyawarah bertujuan mencapai mufakat, yaitu kesepakatan bersama tanpa memaksakan kehendak.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('bba3abdf-794f-408c-80c2-9084f29bebc9', '0333966d-2c0e-471e-8972-4f45103d20ed', 'ppk-mufakat', 'fill_blank'::public.question_type, 'Musyawarah', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Musyawarah dilakukan untuk mencapai ___.', 'Musyawarah bertujuan mencapai mufakat, yaitu kesepakatan bersama tanpa memaksakan kehendak.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9817,6 +10493,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9829,8 +10506,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: pendidikan-pancasila/norma-hak-kewajiban/ppk-toleransi
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('591d19f3-4750-499d-87bb-b78e1fa8d04a', '0333966d-2c0e-471e-8972-4f45103d20ed', 'ppk-toleransi', 'multiple_choice'::public.question_type, 'Toleransi', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Sikap toleransi yang tepat adalah…', 'Toleransi berarti menghargai perbedaan tanpa memaksakan pandangan sendiri.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('591d19f3-4750-499d-87bb-b78e1fa8d04a', '0333966d-2c0e-471e-8972-4f45103d20ed', 'ppk-toleransi', 'multiple_choice'::public.question_type, 'Toleransi', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Sikap toleransi yang tepat adalah…', 'Toleransi berarti menghargai perbedaan tanpa memaksakan pandangan sendiri.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9842,6 +10519,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9910,8 +10588,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: pendidikan-pancasila/latihan-norma-dan-hak/practice-ppk-kesusilaan
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('e7706bc6-9e3f-496a-8fc0-6ef38b3d13fb', '1bb824f9-ab51-4272-8953-062f34518556', 'practice-ppk-kesusilaan', 'multiple_choice'::public.question_type, 'Norma', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Norma yang bersumber dari hati nurani manusia adalah norma…', 'Norma kesusilaan tumbuh dari hati nurani. Norma hukum bersumber dari negara, norma agama dari ajaran agama.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('e7706bc6-9e3f-496a-8fc0-6ef38b3d13fb', '1bb824f9-ab51-4272-8953-062f34518556', 'practice-ppk-kesusilaan', 'multiple_choice'::public.question_type, 'Norma', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Norma yang bersumber dari hati nurani manusia adalah norma…', 'Norma kesusilaan tumbuh dari hati nurani. Norma hukum bersumber dari negara, norma agama dari ajaran agama.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9923,6 +10601,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -9963,8 +10642,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/latihan-norma-dan-hak/practice-ppk-hak
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('8c376c64-250d-4c70-8dfd-1c24b06bd256', '1bb824f9-ab51-4272-8953-062f34518556', 'practice-ppk-hak', 'multiple_choice'::public.question_type, 'Hak', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Contoh hak warga negara adalah…', 'Pendidikan adalah hak. Membayar pajak, menaati hukum, dan menjaga ketertiban adalah kewajiban.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('8c376c64-250d-4c70-8dfd-1c24b06bd256', '1bb824f9-ab51-4272-8953-062f34518556', 'practice-ppk-hak', 'multiple_choice'::public.question_type, 'Hak', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Contoh hak warga negara adalah…', 'Pendidikan adalah hak. Membayar pajak, menaati hukum, dan menjaga ketertiban adalah kewajiban.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -9976,6 +10655,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10016,8 +10696,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/latihan-norma-dan-hak/practice-ppk-hukum
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('f67a3fbb-e59c-48d3-8e1a-a1bf902e641f', '1bb824f9-ab51-4272-8953-062f34518556', 'practice-ppk-hukum', 'fill_blank'::public.question_type, 'Norma', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Norma yang memiliki sanksi tegas dan tertulis dari negara adalah norma __.', 'Norma hukum bersifat mengikat dan sanksinya ditegakkan oleh negara.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('f67a3fbb-e59c-48d3-8e1a-a1bf902e641f', '1bb824f9-ab51-4272-8953-062f34518556', 'practice-ppk-hukum', 'fill_blank'::public.question_type, 'Norma', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Norma yang memiliki sanksi tegas dan tertulis dari negara adalah norma __.', 'Norma hukum bersifat mengikat dan sanksinya ditegakkan oleh negara.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -10029,6 +10709,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10069,8 +10750,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: pendidikan-pancasila/checkpoint-pancasila/checkpoint-ppk-dasar
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('8f915a64-0483-4e60-8a34-13553e7fe4f0', 'ca4242a8-a188-439f-8039-95a95ecd172e', 'checkpoint-ppk-dasar', 'multiple_choice'::public.question_type, 'Pancasila', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kedudukan Pancasila bagi Indonesia adalah…', 'Pancasila adalah dasar negara sekaligus pandangan hidup bangsa Indonesia.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('8f915a64-0483-4e60-8a34-13553e7fe4f0', 'ca4242a8-a188-439f-8039-95a95ecd172e', 'checkpoint-ppk-dasar', 'multiple_choice'::public.question_type, 'Pancasila', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Kedudukan Pancasila bagi Indonesia adalah…', 'Pancasila adalah dasar negara sekaligus pandangan hidup bangsa Indonesia.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -10082,6 +10763,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10122,8 +10804,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/checkpoint-pancasila/checkpoint-ppk-sila3
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('12239395-ad3a-4015-8334-8591b2b6b560', 'ca4242a8-a188-439f-8039-95a95ecd172e', 'checkpoint-ppk-sila3', 'multiple_choice'::public.question_type, 'Pancasila', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Lambang sila ketiga Pancasila adalah…', 'Sila ketiga "Persatuan Indonesia" dilambangkan pohon beringin. Padi dan kapas melambangkan sila kelima.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('12239395-ad3a-4015-8334-8591b2b6b560', 'ca4242a8-a188-439f-8039-95a95ecd172e', 'checkpoint-ppk-sila3', 'multiple_choice'::public.question_type, 'Pancasila', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Lambang sila ketiga Pancasila adalah…', 'Sila ketiga "Persatuan Indonesia" dilambangkan pohon beringin. Padi dan kapas melambangkan sila kelima.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -10135,6 +10817,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10175,8 +10858,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/checkpoint-pancasila/checkpoint-ppk-sila2
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('ce483f60-5045-4ed9-86b3-3e31cc4fe615', 'ca4242a8-a188-439f-8039-95a95ecd172e', 'checkpoint-ppk-sila2', 'typing'::public.question_type, 'Pancasila', 'elementary'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Tulis bunyi sila kedua Pancasila.', 'Sila kedua berbunyi "Kemanusiaan yang adil dan beradab" dan dilambangkan rantai.', null, 15, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('ce483f60-5045-4ed9-86b3-3e31cc4fe615', 'ca4242a8-a188-439f-8039-95a95ecd172e', 'checkpoint-ppk-sila2', 'typing'::public.question_type, 'Pancasila', 'elementary'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Tulis bunyi sila kedua Pancasila.', 'Sila kedua berbunyi "Kemanusiaan yang adil dan beradab" dan dilambangkan rantai.', null, 15, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -10188,6 +10871,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10252,8 +10936,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: pendidikan-pancasila/warga-negara/ppk-demokrasi
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('ac641467-93b6-484a-8c1f-a427f50191df', '78dea9ed-6cfa-4d21-891f-3a104ad12f6e', 'ppk-demokrasi', 'multiple_choice'::public.question_type, 'Demokrasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Salah satu ciri utama negara demokrasi adalah…', 'Demokrasi menghargai kedaulatan rakyat, termasuk melalui pemilu yang bebas, umum, dan rahasia.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('ac641467-93b6-484a-8c1f-a427f50191df', '78dea9ed-6cfa-4d21-891f-3a104ad12f6e', 'ppk-demokrasi', 'multiple_choice'::public.question_type, 'Demokrasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Salah satu ciri utama negara demokrasi adalah…', 'Demokrasi menghargai kedaulatan rakyat, termasuk melalui pemilu yang bebas, umum, dan rahasia.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -10265,6 +10949,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10305,8 +10990,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/warga-negara/ppk-uud-1945
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('fd13070d-3085-41ee-8ea1-ae99497cb322', '78dea9ed-6cfa-4d21-891f-3a104ad12f6e', 'ppk-uud-1945', 'multiple_choice'::public.question_type, 'Konstitusi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Undang-Undang Dasar Negara Republik Indonesia Tahun 1945 berkedudukan sebagai…', 'UUD 1945 adalah hukum dasar tertinggi yang menjadi acuan seluruh peraturan di Indonesia.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('fd13070d-3085-41ee-8ea1-ae99497cb322', '78dea9ed-6cfa-4d21-891f-3a104ad12f6e', 'ppk-uud-1945', 'multiple_choice'::public.question_type, 'Konstitusi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Undang-Undang Dasar Negara Republik Indonesia Tahun 1945 berkedudukan sebagai…', 'UUD 1945 adalah hukum dasar tertinggi yang menjadi acuan seluruh peraturan di Indonesia.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -10318,6 +11003,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10358,8 +11044,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/warga-negara/ppk-nkri
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('cca6c4fa-e1a6-4e19-8ed3-248c68b63691', '78dea9ed-6cfa-4d21-891f-3a104ad12f6e', 'ppk-nkri', 'multiple_choice'::public.question_type, 'Negara', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'NKRI singkatan dari…', 'NKRI adalah Negara Kesatuan Republik Indonesia, bentuk negara yang bersatu dan berdaulat.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('cca6c4fa-e1a6-4e19-8ed3-248c68b63691', '78dea9ed-6cfa-4d21-891f-3a104ad12f6e', 'ppk-nkri', 'multiple_choice'::public.question_type, 'Negara', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'NKRI singkatan dari…', 'NKRI adalah Negara Kesatuan Republik Indonesia, bentuk negara yang bersatu dan berdaulat.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -10371,6 +11057,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10411,8 +11098,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/warga-negara/ppk-gotong-royong
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('11974388-c95f-477a-82f6-ed88b651900a', '78dea9ed-6cfa-4d21-891f-3a104ad12f6e', 'ppk-gotong-royong', 'fill_blank'::public.question_type, 'Gotong Royong', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Bekerja bersama untuk kepentingan bersama disebut gotong ___.', 'Gotong royong mencerminkan solidaritas dan kebersamaan warga.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('11974388-c95f-477a-82f6-ed88b651900a', '78dea9ed-6cfa-4d21-891f-3a104ad12f6e', 'ppk-gotong-royong', 'fill_blank'::public.question_type, 'Gotong Royong', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Bekerja bersama untuk kepentingan bersama disebut gotong ___.', 'Gotong royong mencerminkan solidaritas dan kebersamaan warga.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -10424,6 +11111,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10436,8 +11124,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: pendidikan-pancasila/warga-negara/ppk-partisipasi
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('9a012f1b-a91a-4046-84fc-e5f6a12d30b9', '78dea9ed-6cfa-4d21-891f-3a104ad12f6e', 'ppk-partisipasi', 'multiple_choice'::public.question_type, 'Partisipasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk partisipasi warga negara yang baik adalah…', 'Partisipasi positif dapat dilakukan lewat kegiatan sosial, menjaga lingkungan, dan mematuhi aturan.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('9a012f1b-a91a-4046-84fc-e5f6a12d30b9', '78dea9ed-6cfa-4d21-891f-3a104ad12f6e', 'ppk-partisipasi', 'multiple_choice'::public.question_type, 'Partisipasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk partisipasi warga negara yang baik adalah…', 'Partisipasi positif dapat dilakukan lewat kegiatan sosial, menjaga lingkungan, dan mematuhi aturan.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -10449,6 +11137,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10517,8 +11206,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: pendidikan-pancasila/legendary-warga-negara/legendary-ppk-demokrasi
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('415f8aa9-b844-412f-822f-13796c35f814', 'c0342b70-fc03-40e2-8357-a8f3ea8f9c1b', 'legendary-ppk-demokrasi', 'multiple_choice'::public.question_type, 'Demokrasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Pengambilan keputusan dalam demokrasi Pancasila mengutamakan…', 'Demokrasi Pancasila menempatkan musyawarah untuk mufakat sebagai jalan utama; pemungutan suara menjadi alternatif terakhir.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('415f8aa9-b844-412f-822f-13796c35f814', 'c0342b70-fc03-40e2-8357-a8f3ea8f9c1b', 'legendary-ppk-demokrasi', 'multiple_choice'::public.question_type, 'Demokrasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Pengambilan keputusan dalam demokrasi Pancasila mengutamakan…', 'Demokrasi Pancasila menempatkan musyawarah untuk mufakat sebagai jalan utama; pemungutan suara menjadi alternatif terakhir.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -10530,6 +11219,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10570,8 +11260,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/legendary-warga-negara/legendary-ppk-kewajiban
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('e9ef8dc5-b2d3-496e-8938-2ca4549efeda', 'c0342b70-fc03-40e2-8357-a8f3ea8f9c1b', 'legendary-ppk-kewajiban', 'multiple_choice'::public.question_type, 'Kewajiban', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Berikut yang termasuk kewajiban warga negara adalah…', 'Menaati hukum dan membayar pajak adalah kewajiban konstitusional warga negara.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('e9ef8dc5-b2d3-496e-8938-2ca4549efeda', 'c0342b70-fc03-40e2-8357-a8f3ea8f9c1b', 'legendary-ppk-kewajiban', 'multiple_choice'::public.question_type, 'Kewajiban', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Berikut yang termasuk kewajiban warga negara adalah…', 'Menaati hukum dan membayar pajak adalah kewajiban konstitusional warga negara.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -10583,6 +11273,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10623,8 +11314,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: pendidikan-pancasila/legendary-warga-negara/legendary-ppk-mk
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('f7f458cc-bb6f-498d-8cff-6e6e2a79c050', 'c0342b70-fc03-40e2-8357-a8f3ea8f9c1b', 'legendary-ppk-mk', 'fill_blank'::public.question_type, 'Konstitusi', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lembaga yang berwenang menguji undang-undang terhadap UUD 1945 adalah Mahkamah __.', 'Mahkamah Konstitusi menguji undang-undang terhadap UUD 1945, sedangkan Mahkamah Agung menguji peraturan di bawah undang-undang.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('f7f458cc-bb6f-498d-8cff-6e6e2a79c050', 'c0342b70-fc03-40e2-8357-a8f3ea8f9c1b', 'legendary-ppk-mk', 'fill_blank'::public.question_type, 'Konstitusi', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Lembaga yang berwenang menguji undang-undang terhadap UUD 1945 adalah Mahkamah __.', 'Mahkamah Konstitusi menguji undang-undang terhadap UUD 1945, sedangkan Mahkamah Agung menguji peraturan di bawah undang-undang.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -10636,6 +11327,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10728,8 +11420,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: matematika/operasi-bilangan/mtk-penjumlahan
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('9901846a-bc86-4251-879e-ecb035ac61be', '226e2b73-f60f-4b4f-8e92-f3b2f2fb6f9b', 'mtk-penjumlahan', 'multiple_choice'::public.question_type, 'Aritmetika', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Hasil dari 7 + 5 adalah…', '7 + 5 = 12.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('9901846a-bc86-4251-879e-ecb035ac61be', '226e2b73-f60f-4b4f-8e92-f3b2f2fb6f9b', 'mtk-penjumlahan', 'multiple_choice'::public.question_type, 'Aritmetika', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Hasil dari 7 + 5 adalah…', '7 + 5 = 12.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -10741,6 +11433,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10781,8 +11474,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/operasi-bilangan/mtk-perkalian
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('dfe9001b-81b2-4f0b-8f98-74695ce31a66', '226e2b73-f60f-4b4f-8e92-f3b2f2fb6f9b', 'mtk-perkalian', 'multiple_choice'::public.question_type, 'Aritmetika', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Hasil dari 9 × 3 adalah…', '9 × 3 = 27, karena 9 + 9 + 9 = 27.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('dfe9001b-81b2-4f0b-8f98-74695ce31a66', '226e2b73-f60f-4b4f-8e92-f3b2f2fb6f9b', 'mtk-perkalian', 'multiple_choice'::public.question_type, 'Aritmetika', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Hasil dari 9 × 3 adalah…', '9 × 3 = 27, karena 9 + 9 + 9 = 27.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -10794,6 +11487,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10834,8 +11528,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/operasi-bilangan/mtk-pembagian
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('61c5cb09-5282-4bc0-856f-40e353175eb1', '226e2b73-f60f-4b4f-8e92-f3b2f2fb6f9b', 'mtk-pembagian', 'multiple_choice'::public.question_type, 'Aritmetika', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Hasil dari 24 ÷ 6 adalah…', '24 ÷ 6 = 4 karena 6 × 4 = 24.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('61c5cb09-5282-4bc0-856f-40e353175eb1', '226e2b73-f60f-4b4f-8e92-f3b2f2fb6f9b', 'mtk-pembagian', 'multiple_choice'::public.question_type, 'Aritmetika', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Hasil dari 24 ÷ 6 adalah…', '24 ÷ 6 = 4 karena 6 × 4 = 24.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -10847,6 +11541,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10887,8 +11582,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/operasi-bilangan/mtk-pengurangan
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('aa86750b-abe7-4566-84c1-fc060d03fc79', '226e2b73-f60f-4b4f-8e92-f3b2f2fb6f9b', 'mtk-pengurangan', 'fill_blank'::public.question_type, 'Aritmetika', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Hasil dari 15 − 8 adalah ___.', '15 − 8 = 7. Periksa dengan 8 + 7 = 15.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('aa86750b-abe7-4566-84c1-fc060d03fc79', '226e2b73-f60f-4b4f-8e92-f3b2f2fb6f9b', 'mtk-pengurangan', 'fill_blank'::public.question_type, 'Aritmetika', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Hasil dari 15 − 8 adalah ___.', '15 − 8 = 7. Periksa dengan 8 + 7 = 15.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -10900,6 +11595,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10912,8 +11608,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: matematika/operasi-bilangan/mtk-nilai-tempat
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('0cf858e5-7317-4f04-8394-4ac25e4d61c2', '226e2b73-f60f-4b4f-8e92-f3b2f2fb6f9b', 'mtk-nilai-tempat', 'multiple_choice'::public.question_type, 'Nilai Tempat', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Nilai tempat angka 4 pada bilangan 3.482 adalah…', '3.482 terbaca tiga ribu empat ratus delapan puluh dua, sehingga angka 4 berada di tempat ratusan.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('0cf858e5-7317-4f04-8394-4ac25e4d61c2', '226e2b73-f60f-4b4f-8e92-f3b2f2fb6f9b', 'mtk-nilai-tempat', 'multiple_choice'::public.question_type, 'Nilai Tempat', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Nilai tempat angka 4 pada bilangan 3.482 adalah…', '3.482 terbaca tiga ribu empat ratus delapan puluh dua, sehingga angka 4 berada di tempat ratusan.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -10925,6 +11621,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -10993,8 +11690,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: matematika/math-review/review-math-multiply
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('877a70ab-31cb-487c-8f7f-a1ded6dde381', '17e40bad-0f63-42f1-8628-95c76d6e0073', 'review-math-multiply', 'multiple_choice'::public.question_type, 'Operasi Bilangan', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Hasil dari 12 × 8 adalah…', '12 × 8 = 96. Periksa dengan 10 × 8 = 80 ditambah 2 × 8 = 16.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('877a70ab-31cb-487c-8f7f-a1ded6dde381', '17e40bad-0f63-42f1-8628-95c76d6e0073', 'review-math-multiply', 'multiple_choice'::public.question_type, 'Operasi Bilangan', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Hasil dari 12 × 8 adalah…', '12 × 8 = 96. Periksa dengan 10 × 8 = 80 ditambah 2 × 8 = 16.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11006,6 +11703,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11046,8 +11744,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/math-review/review-math-algebra
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('c4ab564f-033d-40d0-8cf6-3a5c4c818080', '17e40bad-0f63-42f1-8628-95c76d6e0073', 'review-math-algebra', 'multiple_choice'::public.question_type, 'Aljabar', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk sederhana dari 2x + 3x adalah…', 'Suku sejenis dapat dijumlahkan koefisiennya: 2 + 3 = 5, sehingga hasilnya 5x.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('c4ab564f-033d-40d0-8cf6-3a5c4c818080', '17e40bad-0f63-42f1-8628-95c76d6e0073', 'review-math-algebra', 'multiple_choice'::public.question_type, 'Aljabar', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk sederhana dari 2x + 3x adalah…', 'Suku sejenis dapat dijumlahkan koefisiennya: 2 + 3 = 5, sehingga hasilnya 5x.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11059,6 +11757,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11099,8 +11798,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/math-review/review-math-add
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('b775ccd3-f153-46d1-8dcd-bfd6223226f4', '17e40bad-0f63-42f1-8628-95c76d6e0073', 'review-math-add', 'typing'::public.question_type, 'Operasi Bilangan', 'beginner'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Berapa hasil dari 15 + 27?', '15 + 27 = 42.', null, 15, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('b775ccd3-f153-46d1-8dcd-bfd6223226f4', '17e40bad-0f63-42f1-8628-95c76d6e0073', 'review-math-add', 'typing'::public.question_type, 'Operasi Bilangan', 'beginner'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Berapa hasil dari 15 + 27?', '15 + 27 = 42.', null, 15, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11112,6 +11811,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11152,8 +11852,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: matematika/math-challenge/challenge-math-linear
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('438e0bd5-bbfe-42ff-8a83-63efd6f98292', '6b17f7b2-cb36-44cd-856d-8248a2f1c24d', 'challenge-math-linear', 'multiple_choice'::public.question_type, 'Persamaan', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Jika 2x + 4 = 12, maka nilai x adalah…', 'Kurangi kedua ruas dengan 4: 2x = 8. Bagi dengan 2: x = 4.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('438e0bd5-bbfe-42ff-8a83-63efd6f98292', '6b17f7b2-cb36-44cd-856d-8248a2f1c24d', 'challenge-math-linear', 'multiple_choice'::public.question_type, 'Persamaan', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Jika 2x + 4 = 12, maka nilai x adalah…', 'Kurangi kedua ruas dengan 4: 2x = 8. Bagi dengan 2: x = 4.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11165,6 +11865,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11205,8 +11906,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/math-challenge/challenge-math-mean
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('dbad7bb6-23ca-4aca-80b7-ee85d73bcfe4', '6b17f7b2-cb36-44cd-856d-8248a2f1c24d', 'challenge-math-mean', 'multiple_choice'::public.question_type, 'Statistik', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Rata-rata dari 4, 6, 8, dan 10 adalah…', 'Jumlah data 4 + 6 + 8 + 10 = 28. Dibagi 4 data menghasilkan 7.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('dbad7bb6-23ca-4aca-80b7-ee85d73bcfe4', '6b17f7b2-cb36-44cd-856d-8248a2f1c24d', 'challenge-math-mean', 'multiple_choice'::public.question_type, 'Statistik', 'beginner'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Rata-rata dari 4, 6, 8, dan 10 adalah…', 'Jumlah data 4 + 6 + 8 + 10 = 28. Dibagi 4 data menghasilkan 7.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11218,6 +11919,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11258,8 +11960,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/math-challenge/challenge-math-area
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('f5739af9-3bd5-4320-8df6-92896ef90f19', '6b17f7b2-cb36-44cd-856d-8248a2f1c24d', 'challenge-math-area', 'fill_blank'::public.question_type, 'Geometri', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Luas persegi panjang dengan panjang 8 cm dan lebar 5 cm adalah ___ cm².', 'Luas persegi panjang = panjang × lebar = 8 × 5 = 40 cm².', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('f5739af9-3bd5-4320-8df6-92896ef90f19', '6b17f7b2-cb36-44cd-856d-8248a2f1c24d', 'challenge-math-area', 'fill_blank'::public.question_type, 'Geometri', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Luas persegi panjang dengan panjang 8 cm dan lebar 5 cm adalah ___ cm².', 'Luas persegi panjang = panjang × lebar = 8 × 5 = 40 cm².', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11271,6 +11973,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11335,8 +12038,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: matematika/pecahan-persen/mtk-pecahan-jumlah
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('b881bd57-4637-4bc1-87d3-443ce0ff5f88', '0050d0c3-291a-40da-86e9-e6ea7a1e131d', 'mtk-pecahan-jumlah', 'multiple_choice'::public.question_type, 'Pecahan', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Hasil dari 1/2 + 1/4 adalah…', 'Samakan penyebut menjadi 4: 1/2 = 2/4, lalu 2/4 + 1/4 = 3/4.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('b881bd57-4637-4bc1-87d3-443ce0ff5f88', '0050d0c3-291a-40da-86e9-e6ea7a1e131d', 'mtk-pecahan-jumlah', 'multiple_choice'::public.question_type, 'Pecahan', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Hasil dari 1/2 + 1/4 adalah…', 'Samakan penyebut menjadi 4: 1/2 = 2/4, lalu 2/4 + 1/4 = 3/4.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11348,6 +12051,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11388,8 +12092,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/pecahan-persen/mtk-persen-desimal
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('52790d8c-5392-4430-8170-065c9eaca110', '0050d0c3-291a-40da-86e9-e6ea7a1e131d', 'mtk-persen-desimal', 'multiple_choice'::public.question_type, 'Persen', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk desimal dari 25% adalah…', '25% berarti 25 per 100, sehingga sama dengan 0,25.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('52790d8c-5392-4430-8170-065c9eaca110', '0050d0c3-291a-40da-86e9-e6ea7a1e131d', 'mtk-persen-desimal', 'multiple_choice'::public.question_type, 'Persen', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk desimal dari 25% adalah…', '25% berarti 25 per 100, sehingga sama dengan 0,25.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11401,6 +12105,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11441,8 +12146,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/pecahan-persen/mtk-pecahan-desimal
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('39cdeeb5-eddc-4b62-8956-68a9645f2d94', '0050d0c3-291a-40da-86e9-e6ea7a1e131d', 'mtk-pecahan-desimal', 'multiple_choice'::public.question_type, 'Desimal', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk desimal dari 1/5 adalah…', '1/5 = 2/10 = 0,2.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('39cdeeb5-eddc-4b62-8956-68a9645f2d94', '0050d0c3-291a-40da-86e9-e6ea7a1e131d', 'mtk-pecahan-desimal', 'multiple_choice'::public.question_type, 'Desimal', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk desimal dari 1/5 adalah…', '1/5 = 2/10 = 0,2.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11454,6 +12159,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11494,8 +12200,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/pecahan-persen/mtk-bagian-dari-jumlah
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('d7f95274-b63e-4f9f-883b-42bcb4139068', '0050d0c3-291a-40da-86e9-e6ea7a1e131d', 'mtk-bagian-dari-jumlah', 'fill_blank'::public.question_type, 'Pecahan', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Nilai dari 3/4 dari 20 adalah ___.', '20 ÷ 4 = 5, lalu 5 × 3 = 15. Jadi 3/4 dari 20 adalah 15.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('d7f95274-b63e-4f9f-883b-42bcb4139068', '0050d0c3-291a-40da-86e9-e6ea7a1e131d', 'mtk-bagian-dari-jumlah', 'fill_blank'::public.question_type, 'Pecahan', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Nilai dari 3/4 dari 20 adalah ___.', '20 ÷ 4 = 5, lalu 5 × 3 = 15. Jadi 3/4 dari 20 adalah 15.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11507,6 +12213,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11519,8 +12226,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: matematika/pecahan-persen/mtk-banding-desimal
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('9aa0b133-fabf-4a81-8ce4-499196e8068d', '0050d0c3-291a-40da-86e9-e6ea7a1e131d', 'mtk-banding-desimal', 'multiple_choice'::public.question_type, 'Perbandingan', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bilangan yang lebih besar antara 0,7 dan 0,65 adalah…', '0,7 sama dengan 0,70, sehingga lebih besar daripada 0,65.', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('9aa0b133-fabf-4a81-8ce4-499196e8068d', '0050d0c3-291a-40da-86e9-e6ea7a1e131d', 'mtk-banding-desimal', 'multiple_choice'::public.question_type, 'Perbandingan', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bilangan yang lebih besar antara 0,7 dan 0,65 adalah…', '0,7 sama dengan 0,70, sehingga lebih besar daripada 0,65.', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11532,6 +12239,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11600,8 +12308,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: matematika/latihan-pecahan-persen/practice-math-suma
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('4cd4ba08-2169-4265-8812-d577accd1361', '9a855116-7e1b-413d-8114-e2ff87bde029', 'practice-math-suma', 'multiple_choice'::public.question_type, 'Pecahan', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Hasil dari 1/2 + 1/4 adalah…', 'Samakan penyebut menjadi 4: 1/2 = 2/4, lalu 2/4 + 1/4 = 3/4.', 'Penyebut terkecil yang sama adalah 4.', 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('4cd4ba08-2169-4265-8812-d577accd1361', '9a855116-7e1b-413d-8114-e2ff87bde029', 'practice-math-suma', 'multiple_choice'::public.question_type, 'Pecahan', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Hasil dari 1/2 + 1/4 adalah…', 'Samakan penyebut menjadi 4: 1/2 = 2/4, lalu 2/4 + 1/4 = 3/4.', 'Penyebut terkecil yang sama adalah 4.', 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11613,6 +12321,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11653,8 +12362,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/latihan-pecahan-persen/practice-math-persen
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('7fb3288d-6a9c-40b4-8556-14cdeeab1449', '9a855116-7e1b-413d-8114-e2ff87bde029', 'practice-math-persen', 'multiple_choice'::public.question_type, 'Persen', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', '25% dari 80 adalah…', '25% = 1/4, sehingga 80 : 4 = 20.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('7fb3288d-6a9c-40b4-8556-14cdeeab1449', '9a855116-7e1b-413d-8114-e2ff87bde029', 'practice-math-persen', 'multiple_choice'::public.question_type, 'Persen', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', '25% dari 80 adalah…', '25% = 1/4, sehingga 80 : 4 = 20.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11666,6 +12375,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11706,8 +12416,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/latihan-pecahan-persen/practice-math-desimal
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('7f1f8ef8-2e73-42d2-80fc-268001365fb0', '9a855116-7e1b-413d-8114-e2ff87bde029', 'practice-math-desimal', 'fill_blank'::public.question_type, 'Desimal', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Ubah 0,6 menjadi persen: __%', 'Kalikan desimal dengan 100: 0,6 × 100 = 60%.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('7f1f8ef8-2e73-42d2-80fc-268001365fb0', '9a855116-7e1b-413d-8114-e2ff87bde029', 'practice-math-desimal', 'fill_blank'::public.question_type, 'Desimal', 'elementary'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Ubah 0,6 menjadi persen: __%', 'Kalikan desimal dengan 100: 0,6 × 100 = 60%.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11719,6 +12429,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11759,8 +12470,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: matematika/checkpoint-pecahan-persen/checkpoint-math-desimal
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('490e1ba2-48c1-4bec-8117-5cf07871ee29', 'd191006d-1e8f-4af1-80c7-ef5478382954', 'checkpoint-math-desimal', 'multiple_choice'::public.question_type, 'Pecahan', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk desimal dari 3/5 adalah…', '3 : 5 = 0,6. Pembilang dibagi penyebut menghasilkan desimal.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('490e1ba2-48c1-4bec-8117-5cf07871ee29', 'd191006d-1e8f-4af1-80c7-ef5478382954', 'checkpoint-math-desimal', 'multiple_choice'::public.question_type, 'Pecahan', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk desimal dari 3/5 adalah…', '3 : 5 = 0,6. Pembilang dibagi penyebut menghasilkan desimal.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11772,6 +12483,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11812,8 +12524,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/checkpoint-pecahan-persen/checkpoint-math-banding
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('1d0e9920-d1ec-4c21-8db5-7a3c293df0b6', 'd191006d-1e8f-4af1-80c7-ef5478382954', 'checkpoint-math-banding', 'multiple_choice'::public.question_type, 'Perbandingan', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Perbandingan yang benar antara 2/3 dan 3/5 adalah…', '2/3 ≈ 0,667 dan 3/5 = 0,6, sehingga 2/3 lebih besar.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('1d0e9920-d1ec-4c21-8db5-7a3c293df0b6', 'd191006d-1e8f-4af1-80c7-ef5478382954', 'checkpoint-math-banding', 'multiple_choice'::public.question_type, 'Perbandingan', 'elementary'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Perbandingan yang benar antara 2/3 dan 3/5 adalah…', '2/3 ≈ 0,667 dan 3/5 = 0,6, sehingga 2/3 lebih besar.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11825,6 +12537,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11865,8 +12578,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/checkpoint-pecahan-persen/checkpoint-math-persen
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('6297cf5b-8cbc-41b1-844d-522eb247e6b3', 'd191006d-1e8f-4af1-80c7-ef5478382954', 'checkpoint-math-persen', 'typing'::public.question_type, 'Persen', 'elementary'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Hitung 15% dari 200.', '15% = 0,15; 0,15 × 200 = 30.', null, 15, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('6297cf5b-8cbc-41b1-844d-522eb247e6b3', 'd191006d-1e8f-4af1-80c7-ef5478382954', 'checkpoint-math-persen', 'typing'::public.question_type, 'Persen', 'elementary'::public.difficulty_band, 'Tulis jawaban pada kolom yang tersedia.', 'Hitung 15% dari 200.', '15% = 0,15; 0,15 × 200 = 30.', null, 15, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11878,6 +12591,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11942,8 +12656,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: matematika/aljabar-dasar/mtk-persamaan-linear
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('3bc66a03-77e3-407a-8ba6-0ddde4978a10', '3c7a1294-0ee7-48ea-84dd-001fb3fead29', 'mtk-persamaan-linear', 'multiple_choice'::public.question_type, 'Persamaan', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Jika 2x + 3 = 11, maka nilai x adalah…', 'Kurangi 3 dari kedua ruas: 2x = 8. Bagi 2: x = 4.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('3bc66a03-77e3-407a-8ba6-0ddde4978a10', '3c7a1294-0ee7-48ea-84dd-001fb3fead29', 'mtk-persamaan-linear', 'multiple_choice'::public.question_type, 'Persamaan', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Jika 2x + 3 = 11, maka nilai x adalah…', 'Kurangi 3 dari kedua ruas: 2x = 8. Bagi 2: x = 4.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -11955,6 +12669,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -11995,8 +12710,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/aljabar-dasar/mtk-ekspansi
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('05ce2718-31ad-437f-83f5-671d67fc7ddf', '3c7a1294-0ee7-48ea-84dd-001fb3fead29', 'mtk-ekspansi', 'multiple_choice'::public.question_type, 'Bentuk Aljabar', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk sederhana dari 3(x + 2) adalah…', 'Gunakan sifat distributif: 3 × x + 3 × 2 = 3x + 6.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('05ce2718-31ad-437f-83f5-671d67fc7ddf', '3c7a1294-0ee7-48ea-84dd-001fb3fead29', 'mtk-ekspansi', 'multiple_choice'::public.question_type, 'Bentuk Aljabar', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk sederhana dari 3(x + 2) adalah…', 'Gunakan sifat distributif: 3 × x + 3 × 2 = 3x + 6.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -12008,6 +12723,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -12048,8 +12764,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/aljabar-dasar/mtk-gradien
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('a6b4f8e5-5a21-44bd-856d-435c311fba6d', '3c7a1294-0ee7-48ea-84dd-001fb3fead29', 'mtk-gradien', 'multiple_choice'::public.question_type, 'Gradien', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Gradien garis y = 2x + 1 adalah…', 'Pada bentuk y = mx + c, m adalah gradien. Di sini m = 2.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('a6b4f8e5-5a21-44bd-856d-435c311fba6d', '3c7a1294-0ee7-48ea-84dd-001fb3fead29', 'mtk-gradien', 'multiple_choice'::public.question_type, 'Gradien', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Gradien garis y = 2x + 1 adalah…', 'Pada bentuk y = mx + c, m adalah gradien. Di sini m = 2.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -12061,6 +12777,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -12101,8 +12818,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/aljabar-dasar/mtk-substitusi
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('db5e542a-b389-4dba-89ab-072a5193ffdb', '3c7a1294-0ee7-48ea-84dd-001fb3fead29', 'mtk-substitusi', 'fill_blank'::public.question_type, 'Aljabar', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Jika x = 5, nilai dari 2x − 3 adalah ___.', 'Substitusi x = 5: 2(5) − 3 = 10 − 3 = 7.', null, 10, 3, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('db5e542a-b389-4dba-89ab-072a5193ffdb', '3c7a1294-0ee7-48ea-84dd-001fb3fead29', 'mtk-substitusi', 'fill_blank'::public.question_type, 'Aljabar', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Jika x = 5, nilai dari 2x − 3 adalah ___.', 'Substitusi x = 5: 2(5) − 3 = 10 − 3 = 7.', null, 10, '{}'::jsonb, 3, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -12114,6 +12831,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -12126,8 +12844,8 @@ on conflict (id) do update set
   is_case_sensitive = excluded.is_case_sensitive;
 
 -- questions: matematika/aljabar-dasar/mtk-faktor
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('51d3dc0a-4b8d-42bc-8b23-d6fc9c12cfbc', '3c7a1294-0ee7-48ea-84dd-001fb3fead29', 'mtk-faktor', 'multiple_choice'::public.question_type, 'Faktorisasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Faktor dari x² − 9 adalah…', 'Bentuk a² − b² = (a − b)(a + b). Dengan a = x dan b = 3 diperoleh (x − 3)(x + 3).', null, 10, 4, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('51d3dc0a-4b8d-42bc-8b23-d6fc9c12cfbc', '3c7a1294-0ee7-48ea-84dd-001fb3fead29', 'mtk-faktor', 'multiple_choice'::public.question_type, 'Faktorisasi', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Faktor dari x² − 9 adalah…', 'Bentuk a² − b² = (a − b)(a + b). Dengan a = x dan b = 3 diperoleh (x − 3)(x + 3).', null, 10, '{}'::jsonb, 4, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -12139,6 +12857,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -12207,8 +12926,8 @@ on conflict (id) do update set
   is_active = excluded.is_active;
 
 -- questions: matematika/legendary-aljabar/legendary-math-linear
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('790bf680-0806-480b-8d48-dd7cfac3367d', '35e2b008-3fe1-48d2-836d-b33466bc4373', 'legendary-math-linear', 'multiple_choice'::public.question_type, 'Persamaan', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Jika 2x + 6 = 18, nilai x adalah…', 'Kurangi 6 dari kedua sisi: 2x = 12, lalu bagi 2: x = 6.', null, 10, 0, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('790bf680-0806-480b-8d48-dd7cfac3367d', '35e2b008-3fe1-48d2-836d-b33466bc4373', 'legendary-math-linear', 'multiple_choice'::public.question_type, 'Persamaan', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Jika 2x + 6 = 18, nilai x adalah…', 'Kurangi 6 dari kedua sisi: 2x = 12, lalu bagi 2: x = 6.', null, 10, '{}'::jsonb, 0, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -12220,6 +12939,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -12260,8 +12980,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/legendary-aljabar/legendary-math-distribusi
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('0d561779-7b15-480d-8272-7044b9daf9a4', '35e2b008-3fe1-48d2-836d-b33466bc4373', 'legendary-math-distribusi', 'multiple_choice'::public.question_type, 'Aljabar', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk sederhana dari 3(x + 2) adalah…', 'Kalikan 3 dengan setiap suku di dalam kurung: 3x + 6.', null, 10, 1, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('0d561779-7b15-480d-8272-7044b9daf9a4', '35e2b008-3fe1-48d2-836d-b33466bc4373', 'legendary-math-distribusi', 'multiple_choice'::public.question_type, 'Aljabar', 'intermediate'::public.difficulty_band, 'Pilih satu jawaban yang paling tepat.', 'Bentuk sederhana dari 3(x + 2) adalah…', 'Kalikan 3 dengan setiap suku di dalam kurung: 3x + 6.', null, 10, '{}'::jsonb, 1, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -12273,6 +12993,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 
@@ -12313,8 +13034,8 @@ on conflict (id) do update set
   sort_order = excluded.sort_order;
 
 -- questions: matematika/legendary-aljabar/legendary-math-substitusi
-insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
-values ('b6cd7dc5-f633-4f68-8b90-272d430f52f6', '35e2b008-3fe1-48d2-836d-b33466bc4373', 'legendary-math-substitusi', 'fill_blank'::public.question_type, 'Substitusi', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Jika x = 4, nilai 2x + 5 adalah __.', 'Substitusi x = 4: 2(4) + 5 = 8 + 5 = 13.', null, 10, 2, true)
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('b6cd7dc5-f633-4f68-8b90-272d430f52f6', '35e2b008-3fe1-48d2-836d-b33466bc4373', 'legendary-math-substitusi', 'fill_blank'::public.question_type, 'Substitusi', 'intermediate'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Jika x = 4, nilai 2x + 5 adalah __.', 'Substitusi x = 4: 2(4) + 5 = 8 + 5 = 13.', null, 10, '{}'::jsonb, 2, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -12326,6 +13047,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;
 

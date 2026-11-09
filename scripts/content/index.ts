@@ -1,6 +1,7 @@
 import { applyStageThreeNodes } from './extensions';
 import { applyMiniGameQuestions } from './minigames';
 import { applyReviewLessons } from './reviews';
+import { applyStageFourQuestions } from './stage4';
 import { languageSubjects } from './subjects/bahasa';
 import { regionalSubjects } from './subjects/daerah';
 import { scienceSubjects } from './subjects/sains';
@@ -19,6 +20,7 @@ export const curriculumSubjects: SeedSubject[] = [
 applyReviewLessons(curriculumSubjects);
 applyStageThreeNodes(curriculumSubjects);
 applyMiniGameQuestions(curriculumSubjects);
+applyStageFourQuestions(curriculumSubjects);
 
 export interface CurriculumIssue {
   level: 'error' | 'warning';
@@ -167,7 +169,15 @@ function validateQuestion(
     issues.push({ level: 'error', message: `Soal tanpa prompt/penjelasan/topik: ${location}` });
   }
 
-  if (question.type === 'multiple_choice' || question.type === 'picture_identification') {
+  const choiceTypes = [
+    'multiple_choice',
+    'picture_identification',
+    'listening',
+    'conversation',
+    'story',
+  ];
+
+  if (choiceTypes.includes(question.type)) {
     const options = question.options ?? [];
     if (options.length < 2) {
       issues.push({ level: 'error', message: `Soal pilihan butuh minimal 2 opsi: ${location}` });
@@ -189,6 +199,26 @@ function validateQuestion(
       issues.push({
         level: 'error',
         message: `Identifikasi gambar wajib punya media gambar: ${location}`,
+      });
+    }
+    if (question.type === 'listening' && !question.scene?.speech?.trim()) {
+      issues.push({
+        level: 'error',
+        message: `Listening wajib punya teks audio (scene.speech): ${location}`,
+      });
+    }
+    if (question.type === 'conversation') {
+      if (!question.scene?.npc?.name?.trim() || !(question.scene.screens?.length ?? 0)) {
+        issues.push({
+          level: 'error',
+          message: `Conversation wajib punya NPC dan minimal satu baris dialog: ${location}`,
+        });
+      }
+    }
+    if (question.type === 'story' && !(question.scene?.screens?.length ?? 0)) {
+      issues.push({
+        level: 'error',
+        message: `Story wajib punya minimal satu layar cerita: ${location}`,
       });
     }
     return;
@@ -233,6 +263,26 @@ function validateQuestion(
     }
     if (tokens.some((token) => !token.text.trim())) {
       issues.push({ level: 'error', message: `Ada token kosong: ${location}` });
+    }
+    return;
+  }
+
+  if (question.type === 'translation') {
+    if (question.options?.some((token) => !token.text.trim())) {
+      issues.push({ level: 'error', message: `Ada token terjemahan kosong: ${location}` });
+    }
+    return;
+  }
+
+  if (question.type === 'speaking') {
+    if (!question.scene?.speech?.trim()) {
+      issues.push({
+        level: 'error',
+        message: `Speaking wajib punya audio contoh (scene.speech): ${location}`,
+      });
+    }
+    if (question.options && question.options.length > 0) {
+      issues.push({ level: 'error', message: `Speaking tidak memakai opsi: ${location}` });
     }
     return;
   }

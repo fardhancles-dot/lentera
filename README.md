@@ -7,12 +7,12 @@ Developer Dashboard.
 Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand terpusat di
 `src/config/brand.ts` dan dapat ditimpa lewat environment variable.
 
-> **Status proyek: Tahap 1–3 selesai untuk alur inti; Tahap 4 dimulai; Tahap 5 sebagian.**
-> Lesson sudah dapat dimainkan dan dinilai di server, dengan XP/Koin tercatat di database.
-> Tujuh tipe soal punya layar bermain, termasuk lima mini-game prioritas (Word Bank,
-> Sentence Builder, Matching Pairs, Fill in the Blank, Picture Identification).
-> 13 dari 20 mini-game belum dibangun. Rincian bukti dan sisa pekerjaan:
-> **[docs/AUDIT.md](docs/AUDIT.md)**.
+> **Status proyek: Tahap 1–3 selesai; Tahap 4 selesai kecuali Friends Quest.**
+> Lesson, latihan, dan 19 dari 20 mini-game punya mekanik bermain nyata. Dua belas tipe
+> soal dinilai di server (termasuk Listening, Speaking, Translation, Conversation, Story),
+> dan tujuh mode latihan berjalan di atas sesi practice dengan XP idempoten.
+> **Friends Quest belum dibuat** karena membutuhkan graf pertemanan Tahap 7.
+> Rincian bukti, batasan, dan sisa pekerjaan: **[docs/AUDIT.md](docs/AUDIT.md)**.
 
 ---
 
@@ -28,10 +28,11 @@ Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand ter
 | Onboarding profil | **Implemented · Belum E2E** | Username, avatar, nama, target harian, zona waktu. Atomik via RPC. |
 | Profil & pengaturan cloud | **Implemented · Belum E2E** | Disimpan di PostgreSQL dengan RLS + column-level grants. |
 | Database & RLS | **Implemented · Tested di PGlite, belum di Supabase nyata** | 6 migration; 68 SQL smoke check lulus. |
-| Kurikulum & bank soal | **Implemented · Tested (SQL smoke)** | 10 mapel, 22 level, 57 lesson, 217 soal, 7 tipe soal, 6 jenis node; 7 mapel inti + Bahasa Sambas. |
+| Kurikulum & bank soal | **Implemented · Tested (SQL smoke)** | 10 mapel, 22 level, 57 lesson, 225 soal, 12 tipe soal, 6 jenis node; 7 mapel inti + Bahasa Sambas. |
 | Learning path & progres per mapel | **Implemented · Tested (SQL smoke)** | Node selesai/aktif/terkunci, unlock ditegakkan server, progres per course/node. |
 | Lesson engine & halaman hasil | **Implemented · Tested (SQL smoke)** | Kunci jawaban tidak dikirim ke browser; XP/Koin idempoten per attempt. |
-| Gameplay 20 mini-game | **Sebagian** | 7 punya layar: pilihan ganda, word bank, sentence builder, matching pairs, fill blank inline, picture identification, dan input teks. 13 mini-game belum. |
+| Gameplay 20 mini-game | **19/20 implemented · Tested (SQL)** | 12 tipe soal punya layar; 7 mode latihan (Match Madness, Ramp Up, Timed, Mistakes, Personalized, Unit Review, Legendary). Friends Quest belum (Tahap 7). |
+| Practice Hub & sesi latihan | **Implemented · Tested (SQL)** | Sesi server, timer, combo, bonus kecepatan, XP idempoten, unit chooser. UI belum diuji browser dengan sesi nyata. |
 | XP & Koin | **Sebagian** | Ledger, wallet, dan reward lesson sudah bekerja; UI saldo dan level akun belum. |
 | Hearts, Streak, Quest, Achievement, Shop | **Not implemented** | Tahap 5. |
 | Leaderboard, Liga, Teman, Event | **Not implemented** | Tahap 7. |
@@ -100,13 +101,15 @@ Panduan lengkap Supabase, migrasi, dan deployment: **[docs/SETUP.md](docs/SETUP.
 │   ├── config/                  # brand, env, katalog avatar
 │   ├── game/
 │   │   ├── mascot/              # scene Phaser Kiko (lazy loaded)
+│   │   ├── audio/               # text-to-speech untuk model audio
+│   │   ├── practice/            # helper tampilan timer & combo
 │   │   └── minigames/           # renderer DOM per tipe soal + registry
 │   ├── layouts/                 # auth layout, app shell
-│   ├── pages/                   # auth, onboarding, beranda, belajar, lesson, profil
+│   ├── pages/                   # auth, onboarding, beranda, belajar, lesson, latihan, profil
 │   ├── repositories/            # akses data Supabase
 │   ├── services/                # aturan bisnis, lesson engine client, pemetaan error
 │   ├── stores/                  # session store observable
-│   ├── styles/                  # tokens, base, components, layout, pages
+│   ├── styles/                  # tokens, base, components, layout, pages, practice
 │   ├── types/                   # tipe database & sesi
 │   ├── utils/                   # DOM, validasi
 │   └── main.ts
@@ -116,8 +119,10 @@ Panduan lengkap Supabase, migrasi, dan deployment: **[docs/SETUP.md](docs/SETUP.
 │       ├── 20261108100000_curriculum.sql
 │       ├── 20261108105000_curriculum_overview.sql
 │       ├── 20261108107000_question_pairs.sql
+│       ├── 20261108109000_question_scenes.sql
 │       ├── 20261108110000_curriculum_seed.sql
-│       └── 20261108120000_lesson_engine.sql
+│       ├── 20261108120000_lesson_engine.sql
+│       └── 20261109100000_practice_engine.sql
 ├── scripts/                     # generator + validasi seed kurikulum, SQL smoke test
 ├── tests/                       # unit test Vitest
 ├── docs/                        # dokumentasi teknis + laporan audit

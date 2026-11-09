@@ -82,6 +82,16 @@ const routes: RouteDefinition[] = [
     load: () => import('../pages/lesson-play.page'),
   },
   {
+    pattern: '/practice',
+    access: 'onboarded',
+    load: () => import('../pages/practice.page'),
+  },
+  {
+    pattern: '/practice/play',
+    access: 'onboarded',
+    load: () => import('../pages/practice-play.page'),
+  },
+  {
     pattern: '/profile',
     access: 'onboarded',
     load: () => import('../pages/profile.page'),

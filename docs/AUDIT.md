@@ -3,22 +3,29 @@
 Laporan ini dibuat dengan membaca kode aktual, bukan hanya nama file atau catatan lama.
 Semua angka diambil dari migration seed dan eksekusi test pada tanggal tersebut.
 
-> **Pembaruan sesi 5:** lima mini-game prioritas sudah dibangun dengan soal nyata:
+> **Pembaruan sesi 6 — Tahap 4 hampir tuntas:** 19 dari 20 mini-game punya mekanik nyata.
+> Lima tipe soal baru ditambahkan (Listening, Speaking, Translation, Conversation, Story)
+> beserta scene dialog di database, dan tujuh mode latihan berjalan lewat sesi server
+> (`Match Madness`, `Ramp Up`, `Timed Challenge`, `Mistakes Review`, `Personalized Practice`,
+> `Unit Review`, `Legendary Challenge`). Seed kini 225 soal dan 12 tipe soal. Hanya
+> **Friends Quest** yang belum dibuat karena bergantung pada graf teman Tahap 7.
+>
+> **Pembaruan sesi 5 (historis):** lima mini-game prioritas dibangun dengan soal nyata:
 > Word Bank, Sentence Builder, Matching Pairs, Fill in the Blank, dan Picture
-> Identification. Angka terkini: 57 lesson, 217 soal, 645 opsi, 62 jawaban isian,
+> Identification. Angka saat itu: 57 lesson, 217 soal, 645 opsi, 62 jawaban isian,
 > 4 pasangan matching, 3 media gambar, 7 tipe soal, 6 jenis node playable. Node `reward`
-> tetap menunggu Tahap 5.
+> tetap menunggu Tahap 5. Angka terbaru ada di bagian G.
 
 ## Metode dan bukti eksekusi
 
 | Pemeriksaan | Perintah | Hasil |
 | --- | --- | --- |
 | TypeScript strict | `npm run typecheck` | Lulus, 0 error. |
-| Unit test | `npm test` | 30 test lulus (2 file). |
-| Migration + RPC + RLS | `npm run test:sql` | 68 smoke check lulus di PGlite. |
+| Unit test | `npm test` | 34 test lulus (3 file). |
+| Migration + RPC + RLS + practice | `npm run test:sql` | 106 smoke check lulus di PGlite. |
 | Build produksi | `npm run build` | Lulus; Phaser tetap chunk terpisah. |
 | Supabase nyata | — | **Belum diuji**; kredensial belum tersedia. |
-| Git | `git status` | Folder ini bukan repository Git, jadi tidak ada riwayat untuk diperiksa. |
+| Git | `git status` | Repository Git lokal sudah ada; riwayat singkat dan commit masih lokal. |
 
 PGlite adalah PostgreSQL yang berjalan di Node. Hasilnya membuktikan SQL, RPC, dan policy
 konsisten secara logika, tetapi **bukan** bukti bahwa migration sudah diterapkan ke project
@@ -31,7 +38,7 @@ Supabase milik pemilik produk.
 | 1 | Fondasi HTML5, Phaser, TypeScript, Supabase | **Selesai** (kecuali kredensial Supabase belum diisi). |
 | 2 | Registrasi, login, profil, penyimpanan progres | **Selesai di kode**; penyimpanan progres menyusul di Tahap 3 dan sudah ada. Belum E2E. |
 | 3 | Mapel, level, unit, learning path, bank soal | **Inti selesai**; 6 dari 7 jenis node dan 3 dari 6 tingkat kesulitan terisi. |
-| 4 | Gameplay dan 20 mini-game | **Sebagian**: lesson engine + 7 tipe soal dapat dimainkan, termasuk 5 mini-game prioritas. 13 mini-game belum. |
+| 4 | Gameplay dan 20 mini-game | **Hampir selesai**: 12 tipe soal + 7 mode latihan = 19 mini-game. Friends Quest belum (butuh Tahap 7). |
 | 5 | XP, Koin, Hearts, Streak, reward | **Fondasi XP/Koin selesai** (ledger, wallet, reward idempoten). Hearts, streak, level akun, quest belum. |
 | 6 | Karakter, animasi, audio, adventure map | **Sebagian**: maskot Kiko vector + animasi dasar; peta berbasis DOM, bukan Phaser; audio belum. |
 | 7 | Leaderboard, teman, Quest, sosial | **Belum dikerjakan.** |
@@ -83,7 +90,7 @@ Isi seed yang benar-benar tersimpan:
 | Pemrograman Web | aktif | 3 | 8 | 30 |
 | Basis Data | aktif | 3 | 8 | 30 |
 | PPB — Flutter & Dart | aktif | 3 | 8 | 30 |
-| Bahasa Inggris | aktif | 3 | 8 | 37 |
+| Bahasa Inggris | aktif | 3 | 8 | 45 |
 | Bahasa Indonesia | aktif | 3 | 8 | 30 |
 | Pendidikan Pancasila (PPK) | aktif | 3 | 8 | 30 |
 | Matematika | aktif | 3 | 8 | 30 |
@@ -91,9 +98,10 @@ Isi seed yang benar-benar tersimpan:
 | Bahasa Jawa | development | 0 | 0 | 0 |
 | Bahasa Sunda | development | 0 | 0 | 0 |
 
-Total: 22 level, 22 unit, 57 lesson, 217 soal, 645 opsi, 62 jawaban isian, 4 pasangan
+Total: 22 level, 22 unit, 57 lesson, 225 soal, 669 opsi, 65 jawaban isian, 15 pasangan
 matching, 3 media gambar. Komposisi tipe soal: 155 pilihan ganda, 45 melengkapi rumpang,
-11 mengetik, 1 word bank, 1 sentence builder, 1 matching pairs, 3 picture identification.
+11 mengetik, 3 matching pairs, 3 picture identification, 2 listening, 1 speaking,
+1 translation, 1 conversation, 1 story, 1 word bank, 1 sentence builder.
 Node: 22 `lesson`, 7 `review`, 7 `challenge`, 7 `practice`, 7 `checkpoint`,
 7 `legendary`.
 
@@ -128,11 +136,11 @@ RLS menyembunyikan attempt dan wallet pemain lain; pemain tidak bisa mengubah wa
 
 ## B. Sedang dikerjakan (implementasi sudah dimulai, belum selesai)
 
-1. **Gameplay per tipe soal.** Tujuh tipe punya layar: pilihan ganda, input teks,
-   word bank, sentence builder, matching pairs, fill blank inline, dan picture
-   identification. Tipe tanpa renderer kini jatuh ke layar `unsupported` dengan tombol
-   lewati, bukan input teks yang menyamar sebagai mekanik lain. Tiga belas mini-game lain
-   belum dibangun.
+1. **Gameplay per tipe soal.** Kedua belas tipe pada enum `question_type` punya layar:
+   pilihan ganda, input teks, word bank, sentence builder, matching pairs, fill blank
+   inline, picture identification, listening, speaking, translation, conversation, dan
+   story. Layar `unsupported` tetap tersedia sebagai jaring pengaman jika data soal tidak
+   valid, bukan sebagai mekanik palsu. Mode latihan berwaktu berada di halaman terpisah.
 2. **Jenis node learning path.** Sudah 6 dari 7: `lesson`, `review`, `challenge`,
    `practice`, `checkpoint`, `legendary`. `reward` masih menunggu Tahap 5.
 3. **Level kesulitan materi.** Baru `beginner`, `elementary`, `intermediate`.
@@ -159,11 +167,12 @@ RLS menyembunyikan attempt dan wallet pemain lain; pemain tidak bisa mengubah wa
 
 ### Prioritas 4 — mini-game
 
-13 mini-game belum ada: Listening, Speaking, Translation (masih fallback input teks),
-Conversation bercabang, Story Mode, Match Madness, Ramp Up, Timed Challenge, Mistakes
-Review, Personalized Practice, Unit Review, Legendary Challenge, Friends Quest.
-(Lima prioritas — Word Bank, Sentence Builder, Matching Pairs, Fill in the Blank, Picture
-Identification — sudah selesai; pilihan ganda dan input teks sudah ada sebelumnya.)
+Satu mini-game belum ada: **Friends Quest**. Fitur ini membutuhkan graf pertemanan,
+undangan, dan quest bersama yang baru masuk Tahap 7; membuatnya sekarang akan menjadi
+tombol mati atau data palsu. Sembilan belas mini-game lain sudah punya mekanik nyata:
+seluruh tipe soal (termasuk Listening, Speaking, Translation, Conversation, Story) dan
+tujuh mode latihan (Match Madness, Ramp Up, Timed Challenge, Mistakes Review, Personalized
+Practice, Unit Review, Legendary Challenge).
 
 ### Prioritas 5 — ekonomi dan retensi
 
@@ -264,10 +273,9 @@ dukungan multi-course.
    - Tambah halaman pemilihan course/unit dan halaman bahasa daerah.
    - Tambah UI riwayat attempt dan skor terbaik per lesson.
    - Node `reward` menunggu sistem reward Tahap 5 agar tidak menjadi tombol mati.
-2. **Tahap 4** — lanjutkan 13 mini-game tersisa (Listening, Speaking, Translation,
-   Conversation, Story Mode, Match Madness, Ramp Up, Timed Challenge, Mistakes Review,
-   Personalized Practice, Unit Review, Legendary Challenge, Friends Quest). Registry dan
-   lima prioritas sudah selesai; tambahkan renderer + konten nyata per mekanik.
+2. **Tahap 4** — selesai kecuali Friends Quest. Sisa pekerjaan: uji browser/Supabase
+   nyata, sebarkan konten tipe baru ke mapel lain, dan perdalam Conversation menjadi
+   dialog bercabang. Friends Quest menunggu Tahap 7 (graf teman + quest bersama).
 3. **Tahap 5** — Hearts, streak, player level, wallet UI, mastery, quest, achievement,
    shop, inventory. Semua penulisan lewat RPC dengan idempotensi.
 4. **Tahap 6** — sprite/animasi karakter, adventure map Phaser, audio, efek.
@@ -277,3 +285,67 @@ dukungan multi-course.
 
 Aturan kerja yang dipertahankan: jangan menulis ulang fondasi, jangan mengganti stack,
 jangan menghapus progres, dan jangan menyatakan fitur selesai tanpa bukti eksekusi.
+
+---
+
+## G. Status Tahap 4 secara rinci (sesi 6)
+
+Legenda: **COMPLETED** sudah berfungsi dan diuji, **IN PROGRESS** sebagian, **NOT
+STARTED** belum, **NEEDS FIX** ada tetapi bermasalah.
+
+| Pekerjaan Tahap 4 | Status | Bukti / catatan |
+| --- | --- | --- |
+| Database soal, kunci, opsi, jawaban, media, pasangan | COMPLETED | 5 migration kurikulum + scene; 106 smoke check. |
+| Question Engine & Answer Validator | COMPLETED | `grade_question` menilai opsi, teks, dan pasangan; kunci tidak dikirim. |
+| Penjelasan, hint, poin, bobot | COMPLETED | Kolom database + feedback UI. |
+| Bank soal semua mapel utama | COMPLETED | 225 soal; 7 mapel inti + Sambas (kosong sesuai keputusan pemilik). |
+| Pengelolaan soal via Admin Panel | NOT STARTED | Tahap 8. Saat ini konten lewat seed tervalidasi. |
+| Multiple Choice, Typing | COMPLETED | Sejak Tahap 3. |
+| Word Bank, Sentence Builder, Matching Pairs, Fill in the Blank, Picture ID | COMPLETED | Sesi 5. |
+| Listening Challenge | COMPLETED | Renderer + scene speech + TTS/media + grading opsi. |
+| Speaking Challenge | COMPLETED | Web Speech Recognition, fallback menulis, tanpa skor palsu. |
+| Translation Challenge | COMPLETED | Token + mode menulis; dinilai sebagai teks. |
+| Conversation Challenge | IN PROGRESS | NPC, bubble, audio, pilihan respons dinilai; belum pohon cabang. |
+| Story Mode | COMPLETED | Layar berurutan + audio + pertanyaan pemahaman. |
+| Match Madness | COMPLETED | Sesi 90 detik, combo, poin kecepatan, server-authoritative. |
+| Ramp Up | COMPLETED | 10 soal urut kesulitan, 20 detik per soal. |
+| Timed Challenge | COMPLETED | Countdown total 120 detik, 10 soal. |
+| Mistakes Review | COMPLETED | RPC memilih soal salah dari lesson + latihan. |
+| Personalized Practice | COMPLETED | Topik sering salah, fallback soal belum dicoba. |
+| Unit Review | COMPLETED | Unit chooser + maksimal 12 soal satu unit. |
+| Legendary Challenge | COMPLETED | Soal legendary + XP hingga 30. |
+| Friends Quest | NOT STARTED | Butuh teman/quest Tahap 7. |
+| Practice Hub | COMPLETED | Route `/practice`, 7 mode, subject selector, unit chooser. |
+| Sesi latihan server + anti-reward ganda | COMPLETED | Tabel sesi/jawaban + XP unik per sesi. |
+
+### File utama Tahap 4
+
+- Migration: `20261108109000_question_scenes.sql`, `20261109100000_practice_engine.sql`;
+  `20261108120000_lesson_engine.sql` mengirim `scene` pada payload.
+- Konten: `scripts/content/stage4.ts`, `types.ts`, `helpers.ts`, `index.ts`, generator,
+  seed diregenerasi.
+- Renderer: `listening.ts`, `speaking.ts`, `translation.ts`, `conversation.ts`, `story.ts`,
+  `index.ts`, `src/game/audio/speech.ts`.
+- Latihan: `practice.repository.ts`, `practice.service.ts`, `practice.page.ts`,
+  `practice-play.page.ts`, `src/game/practice/scoring.ts`, `src/styles/practice.css`.
+- Navigasi: route `/practice` dan `/practice/play`, item nav “Latihan”.
+- Test: `scripts/test-sql.mjs` (106 check), `tests/practice.test.ts`.
+
+### Bukti eksekusi sesi 6
+
+| Perintah | Hasil |
+| --- | --- |
+| `npm run seed:build` | Lulus; 57 lesson, 225 soal; warning Sambas kosong disengaja. |
+| `npm run test:sql` | 106 smoke check lulus. |
+| `npm test` | 34 test lulus (3 file). |
+| `npm run typecheck` | Lulus, 0 error. |
+| `npm run build` | Lulus; Phaser tetap chunk terpisah. |
+
+### Batasan yang belum ditutup
+
+1. Supabase nyata dan browser E2E belum diuji; belum ada kredensial.
+2. Konten lima mekanik baru baru ada di satu lesson Bahasa Inggris.
+3. Belum ada aset audio rekaman; model audio memakai TTS browser.
+4. Conversation belum bercabang multi-langkah.
+5. Admin Panel pengelolaan soal belum ada (Tahap 8).
+6. Friends Quest menunggu Tahap 7.

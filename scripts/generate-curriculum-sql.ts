@@ -32,6 +32,10 @@ function nullable(value: string | undefined): string {
   return value ? text(value) : 'null';
 }
 
+function json(value: unknown): string {
+  return `${text(JSON.stringify(value))}::jsonb`;
+}
+
 function id(parts: string[]): string {
   return text(uuid(parts.join(':')));
 }
@@ -190,7 +194,7 @@ on conflict (id) do update set
             statements.push({
               table: 'questions',
               key: `${subject.slug}/${lessonItem.slug}/${question.slug}`,
-              sql: `insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, sort_order, is_active)
+              sql: `insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
 values (${id(questionKey)}, ${id(lessonKey)}, ${text(question.slug)}, ${text(
                 question.type,
               )}::public.question_type, ${text(question.topic)}, ${text(
@@ -199,7 +203,7 @@ values (${id(questionKey)}, ${id(lessonKey)}, ${text(question.slug)}, ${text(
                 question.prompt,
               )}, ${text(question.explanation)}, ${nullable(question.hint)}, ${
                 question.points
-              }, ${questionIndex}, true)
+              }, ${json(question.scene ?? {})}, ${questionIndex}, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -211,6 +215,7 @@ on conflict (id) do update set
   explanation = excluded.explanation,
   hint = excluded.hint,
   points = excluded.points,
+  scene = excluded.scene,
   sort_order = excluded.sort_order,
   is_active = excluded.is_active;`,
             });

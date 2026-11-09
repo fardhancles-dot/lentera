@@ -1,10 +1,12 @@
 # Gameplay
 
-> **Status: lesson engine berjalan; 7 tipe soal punya layar bermain.**
-> Lima mini-game prioritas — Word Bank, Sentence Builder, Matching Pairs, Fill in the
-> Blank, dan Picture Identification — sudah implemented dengan soal nyata. Pilihan ganda
-> dan input teks tetap tersedia. 13 mini-game lain belum dibangun. Data XP/Koin sudah
-> tercatat di database, tetapi Hearts, Streak, level akun, dan quest belum ada.
+> **Status: lesson engine dan Practice Hub berjalan; 12 tipe soal punya layar bermain.**
+> Sembilan belas dari 20 mini-game sudah punya mekanik nyata. Listening memakai audio
+> tersimpan atau text-to-speech browser; Speaking memakai Web Speech Recognition dengan
+> alternatif menulis dan tanpa skor pengucapan palsu. Conversation dan Story memakai scene
+> dialog dari database. Tujuh mode latihan memakai sesi server dengan timer, combo, dan XP
+> idempoten. **Friends Quest belum dibuat** karena membutuhkan sistem teman Tahap 7.
+> Hearts, Streak, level akun, dan quest belum ada.
 
 ## Yang benar-benar ada sekarang
 
@@ -50,26 +52,26 @@ Aturan yang sudah ditegakkan:
 
 | # | Mini-game | Mekanik inti | Status |
 | --- | --- | --- | --- |
-| 1 | Multiple Choice | Pilih satu dari 2–4 opsi. | **Implemented** (ada soal) |
+| 1 | Multiple Choice | Pilih satu dari 2–4 opsi. | **Implemented · Tested (SQL)** |
 | 2 | Word Bank | Susun jawaban dari kata yang disediakan dengan mengetuk kata. | **Implemented · Tested (SQL)** |
 | 3 | Sentence Builder | Acak kata, susun urutan kalimat. | **Implemented · Tested (SQL)** |
-| 4 | Listening Challenge | Audio + replay/slow, pilih atau ketik jawaban. | Not implemented |
-| 5 | Speaking Challenge | Rekaman mikrofon + Speech Recognition bila tersedia. | Not implemented |
-| 6 | Typing Challenge | Input teks, validasi ejaan/format. | **Implemented** (input teks) |
+| 4 | Listening Challenge | Putar audio, ulangi, versi lambat, volume, lalu pilih jawaban. | **Implemented · Tested (SQL)** · audio = media atau TTS browser |
+| 5 | Speaking Challenge | Rekaman mikrofon + Speech Recognition + alternatif menulis. | **Implemented · Tested (SQL)** · tanpa skor pengucapan palsu |
+| 6 | Typing Challenge | Input teks, validasi ejaan/format. | **Implemented · Tested (SQL)** |
 | 7 | Matching Pairs | Cocokkan dua kolom, animasi benar/salah. | **Implemented · Tested (SQL)** |
 | 8 | Picture Identification | Pilih nama objek dari gambar. | **Implemented · Tested (SQL)** (3 soal + media) |
 | 9 | Fill in the Blank | Isi satu rumpang pada kalimat. | **Implemented · Tested (SQL)** (input inline `__`/`___`) |
-| 10 | Translation Challenge | Dua arah terjemahan, word bank/input. | Not implemented (fallback input teks, belum mekanik khusus) |
-| 11 | Conversation Challenge | Dialog bercabang dengan NPC. | Not implemented |
-| 12 | Story Mode | Cerita, audio, pilihan, pertanyaan pemahaman. | Not implemented |
-| 13 | Match Madness | Dua kolom + timer + combo + multiplier. | Not implemented |
-| 14 | Ramp Up | Kesulitan meningkat, batas waktu per soal. | Not implemented |
-| 15 | Timed Challenge | Countdown total, skor, bonus waktu. | Not implemented |
-| 16 | Mistakes Review | Ulangi jawaban salah dari riwayat. | Not implemented |
-| 17 | Personalized Practice | Latihan dari mastery + error tracking. | Not implemented |
-| 18 | Unit Review | Campuran tipe soal satu unit. | Not implemented |
-| 19 | Legendary Challenge | Soal sulit, multi tipe, reward khusus. | Not implemented |
-| 20 | Friends Quest | Target gabungan, kontribusi tiap anggota. | Not implemented |
+| 10 | Translation Challenge | Dua arah; susun token atau tulis sendiri, dinilai sebagai teks. | **Implemented · Tested (SQL)** |
+| 11 | Conversation Challenge | NPC, bubble dialog, audio per baris, pilihan respons dinilai server. | **Implemented · Tested (SQL)** · satu keputusan per soal, belum pohon cabang |
+| 12 | Story Mode | Layar cerita berurutan, audio, lalu pertanyaan pemahaman. | **Implemented · Tested (SQL)** |
+| 13 | Match Madness | Ronde matching berbatas 90 detik + combo + poin kecepatan. | **Implemented · Tested (SQL)** (mode latihan) |
+| 14 | Ramp Up | Soal makin sulit; 20 detik per soal; combo. | **Implemented · Tested (SQL)** (mode latihan) |
+| 15 | Timed Challenge | Countdown total 120 detik, 10 soal, bonus waktu. | **Implemented · Tested (SQL)** (mode latihan) |
+| 16 | Mistakes Review | Ulangi soal yang pernah dijawab salah. | **Implemented · Tested (SQL)** (riwayat lesson + latihan) |
+| 17 | Personalized Practice | Soal dari topik yang sering salah, fallback soal belum dicoba. | **Implemented · Tested (SQL)** |
+| 18 | Unit Review | Campuran soal satu unit, maksimal 12 soal. | **Implemented · Tested (SQL)** + unit chooser |
+| 19 | Legendary Challenge | Soal dari lesson legendary, XP hingga 30. | **Implemented · Tested (SQL)** |
+| 20 | Friends Quest | Target gabungan, kontribusi tiap anggota. | **Not implemented** — butuh graf teman & quest (Tahap 7) |
 
 Catatan implementasi: lima mini-game baru berada di `src/game/minigames/` dan dipilih
 lewat registry `createMiniGame`. Halaman lesson tidak lagi memilih renderer berdasarkan
@@ -81,12 +83,49 @@ Konten contoh kelima mini-game ada di lesson `bahasa-inggris/greetings-vocabular
 1 word bank, 1 sentence builder, 1 fill in the blank, 1 matching (4 pasangan), dan
 3 picture identification dengan SVG di `public/assets/pictures/`.
 
-Perbedaan wajib saat dibangun:
+Perbedaan implementasi yang ditegakkan:
 
-- **Ramp Up** menaikkan kesulitan per jawaban benar dan memberi bonus waktu;
-  **Timed Challenge** memakai satu countdown total dengan komposisi soal tetap.
+- **Ramp Up** mengurutkan soal dari mudah ke sulit dan memberi 20 detik per soal;
+  **Timed Challenge** memakai satu countdown total 120 detik dengan 10 soal acak.
+- **Match Madness** hanya memakai soal `matching_pairs` (maksimal 3 ronde) dan berbatas
+  90 detik; jika mapel tidak punya cukup soal matching, server menolak dengan pesan jelas.
 - **Matching Pairs** bukan pilihan ganda: dua kolom, seleksi berpasangan.
-- **Speaking** tanpa dukungan browser harus menampilkan alternatif jujur, bukan skor palsu.
+- **Listening** memakai `question_media` audio bila ada; jika tidak, transkrip di
+  `scene.speech` dibacakan browser. Jika browser tidak mendukung TTS, transkrip ditampilkan
+  agar soal tetap jujur, bukan audio palsu.
+- **Speaking** memakai Web Speech Recognition. Penilaian hanya memeriksa apakah ucapan
+  dikenali, bukan memberi skor pengucapan buatan. Tanpa dukungan browser, pemain memakai
+  input alternatif; server tetap menilai teksnya.
+- **Conversation** menyimpan NPC dan baris dialog di `scene`; percakapan saat ini satu
+  keputusan respons yang dinilai, belum pohon cabang multi-langkah.
+
+## Practice Hub
+
+Route `/practice` menampilkan tujuh mode. Setiap sesi dibuat oleh RPC `start_practice`,
+soal dikirim tanpa kunci, dan penyelesaian dihitung server:
+
+| Mode | Seleksi soal | Batas waktu | XP maksimum |
+| --- | --- | --- | --- |
+| Timed Challenge | 10 soal acak satu course | 120 detik total | 20 |
+| Ramp Up | 10 soal urut kesulitan | 20 detik per soal | 20 |
+| Match Madness | hingga 3 soal matching | 90 detik total | 20 |
+| Mistakes Review | soal yang pernah salah | — | 20 |
+| Personalized Practice | topik sering salah / soal belum dicoba | — | 20 |
+| Unit Review | maksimal 12 soal satu unit | — | 20 |
+| Legendary Challenge | soal lesson legendary (fallback tersulit) | — | 30 |
+
+Aturan practice:
+
+1. Skor dasar berasal dari poin soal; mode berwaktu menambah bonus kecepatan (maksimal 2
+   poin bila dijawab ≤ 6 detik) dan bonus combo (maksimal 5). Semua dihitung ulang oleh
+   database dari jawaban tersimpan, bukan dari angka kiriman browser.
+2. Timeout saat feedback menampilkan tombol lanjut; Ramp Up mengirim jawaban kosong yang
+   dinilai salah oleh server.
+3. Sesi boleh diselesaikan dengan sebagian jawaban bila waktu habis. Akurasi dihitung dari
+   total soal sesi, bukan hanya yang terjawab.
+4. XP hanya diberikan bila akurasi ≥ 60% dan ditulis satu kali per sesi di
+   `user_xp_ledger` (`practice_session_id` unik). Koin, Hearts, dan mastery belum diberikan
+   oleh practice.
 
 ## Pemetaan mini-game per mata pelajaran
 
@@ -128,7 +167,18 @@ belum ada mekanisme pemberian hadiah khusus; membuatnya sekarang akan menjadi to
 ## Yang belum ada di scoring
 
 - Hearts dan pengurangan nyawa.
-- Combo, multiplier, timer, bonus kecepatan.
-- XP bonus akurasi dan level akun.
-- Quest, achievement, mastery, dan reward khusus legendary (saat ini legendary memberi
-  XP/Koin standar lesson).
+- Level akun, kurva XP, dan reward level.
+- Koin dari practice (practice hanya memberi XP).
+- Quest, achievement, dan mastery.
+- Reward khusus legendary di luar XP latihan.
+- Friends Quest (butuh sistem teman Tahap 7).
+
+## Batasan konten yang perlu diketahui
+
+- Delapan soal baru (listening, speaking, translation, conversation, story, dua matching)
+  hanya ada di lesson `bahasa-inggris/greetings-vocabulary`. Mata pelajaran lain masih
+  dominan pilihan ganda dan isian.
+- Belum ada aset audio rekaman; model audio memakai text-to-speech browser.
+- Conversation belum punya cabang dialog bertingkat; baru satu respons yang dinilai.
+- Match Madness bergantung pada jumlah soal matching per course (saat ini 3 di Bahasa
+  Inggris). Mapel tanpa cukup soal matching akan menampilkan pesan bahwa soal belum cukup.

@@ -328,3 +328,96 @@ membaca `question_pairs`.
 1. Terapkan migration ke Supabase nyata lalu uji kelima mini-game di browser.
 2. Lanjutkan mini-game tersisa sesuai prioritas pemilik produk.
 3. Tahap 5: Hearts, streak, player level, wallet UI, mastery, quest, achievement, shop.
+
+---
+
+## Sesi 6 — 9 November 2026 — Menyelesaikan Tahap 4
+
+**Fokus:** audit kondisi nyata, lalu menyelesaikan sisa gameplay Tahap 4 tanpa mengubah
+fondasi Tahap 1–3.
+
+### Audit singkat
+
+- Tahap 1–3 terverifikasi ada dan berfungsi sesuai catatan: fondasi, akun/RLS, kurikulum,
+  learning path, bank soal, lesson engine, dan 7 tipe soal.
+- Tahap 4 yang sudah ada: pilihan ganda, input teks, word bank, sentence builder, matching
+  pairs, fill in the blank, picture identification.
+- Tahap 4 yang belum: listening, speaking, translation, conversation, story, serta mode
+  berwaktu/targeted (match madness, ramp up, timed, mistakes, personalized, unit review,
+  legendary) dan friends quest.
+
+### Hasil
+
+#### Tipe soal dan scene
+
+- Migration `20261108109000_question_scenes.sql`: kolom `scene jsonb` pada `questions`
+  untuk dialog, narasi, dan transkrip audio. `start_lesson` mengirim `scene` pada payload.
+- Renderer baru: `listening.ts`, `speaking.ts`, `translation.ts`, `conversation.ts`,
+  `story.ts`, dengan helper `src/game/audio/speech.ts` untuk text-to-speech.
+- Registry kini memetakan seluruh 12 tipe `question_type`.
+- `grade_question` diperluas: jawaban `optionId` berlaku untuk listening, conversation,
+  dan story; teks tetap dinormalisasi untuk speaking/translation.
+- Konten baru di `scripts/content/stage4.ts`: 2 listening, 1 speaking, 1 translation,
+  1 conversation, 1 story, dan 2 matching (6 dan 5 pasangan). Seed menjadi 225 soal,
+  12 tipe soal, 15 pasangan matching.
+
+#### Practice engine
+
+- Migration `20261109100000_practice_engine.sql`: enum `practice_mode`, tabel
+  `practice_sessions`, `practice_session_questions`, `practice_answers`, kolom
+  `accuracy`, dan `practice_session_id` unik pada `user_xp_ledger`.
+- RPC `start_practice(mode, course, unit)`: timed (10 soal/120 detik), ramp up (urut
+  kesulitan), match madness (matching, 90 detik), unit review (maks 12 soal), legendary
+  (soal legendary), mistakes (riwayat salah), personalized (topik sering salah).
+- `submit_practice_answer`: grading server, combo deterministik, bonus kecepatan ≤ 2,
+  bonus combo ≤ 5, idempoten per soal.
+- `complete_practice_session`: akurasi dari total soal, XP ≤ 20 (legendary ≤ 30) hanya bila
+  akurasi ≥ 60%, ditulis sekali per sesi.
+- RLS: sesi dan jawaban hanya terbaca pemilik; tidak ada grant tulis; soal sesi tidak
+  dapat dibaca pemain.
+
+#### UI
+
+- `src/pages/practice.page.ts` — Practice Hub dengan selector mata pelajaran dan 7 kartu mode.
+- `src/pages/practice-play.page.ts` — layar bermain: progress, timer total/per soal, combo,
+  feedback, ringkasan, unit chooser untuk Unit Review.
+- Route `/practice` dan `/practice/play`; item navigasi “Latihan”.
+- `src/styles/practice.css` untuk audio, dialog, story, translation, speaking, dan hub.
+
+#### Test dan dokumentasi
+
+- `scripts/test-sql.mjs` diperluas menjadi 106 smoke check: scene, grading tipe baru,
+  sesi latihan, combo/kecepatan, XP idempoten, unit review, mistakes, dan RLS practice.
+- `tests/practice.test.ts` untuk helper tampilan timer/combo.
+- README, AUDIT, GAMEPLAY, DATABASE, TESTING, dan SETUP diperbarui.
+
+### Pengujian yang dijalankan
+
+| Perintah | Hasil |
+| --- | --- |
+| `npm run seed:build` | Lulus; 57 lesson, 225 soal. |
+| `npm run test:sql` | 106 smoke check lulus. |
+| `npm test` | 34 test lulus (3 file). |
+| `npm run typecheck` | Lulus. |
+| `npm run build` | Lulus. |
+
+### Status mini-game
+
+19 dari 20 selesai. Friends Quest belum karena membutuhkan graf teman dan quest bersama
+(Tahap 7); tidak dibuat sebagai tombol atau data palsu.
+
+### Belum selesai / batasan
+
+- Belum ada Supabase nyata sehingga auth dan gameplay belum E2E di browser.
+- Konten tipe baru baru ada di satu lesson Bahasa Inggris.
+- Conversation belum bercabang multi-langkah.
+- Belum ada audio rekaman; model audio memakai TTS browser.
+- Admin Panel soal belum ada (Tahap 8).
+- Practice hanya memberi XP, belum Koin/Hearts/mastery.
+
+### Langkah berikutnya
+
+1. Terapkan 8 migration ke Supabase nyata, jalankan `npm run verify:supabase`, lalu uji
+   `/practice` dan tipe soal baru di browser.
+2. Sebarkan konten listening/speaking/translation/conversation/story ke mapel inti lain.
+3. Tahap 5: Hearts, streak, player level, wallet UI, mastery, quest, achievement, shop.

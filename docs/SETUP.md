@@ -87,6 +87,52 @@ Restart dev server setiap kali `.env` berubah.
 
 ## 7. Jalankan migration
 
+### Cara otomatis (satu perintah)
+
+Jika Anda punya akun Supabase, seluruh langkah berikut bisa dijalankan otomatis: buat
+project, tunggu aktif, dorong 8 migration, ambil API key, buat akun QA terverifikasi,
+jadikan developer, tulis `.env`, lalu jalankan verifikasi lesson + Practice Hub.
+
+Prasyarat:
+
+- Personal Access Token dari **Dashboard Supabase → Account → Access Tokens**.
+- Kuota project paket gratis masih tersedia.
+
+Halaman Access Tokens bersifat **akun**, bukan project. Project tidak perlu dibuat dulu —
+script yang membuatnya. Jika akun belum punya organization, script membuat satu otomatis
+(nama default `Lentera`, bisa diganti lewat `SUPABASE_ORG_NAME`).
+
+Tambahkan ke `.env` (file ini di-ignore Git):
+
+```env
+SUPABASE_ACCESS_TOKEN=sbp_...
+# opsional, otomatis bila akun hanya punya satu organisasi
+SUPABASE_ORG_ID=
+SUPABASE_REGION=ap-southeast-1
+SUPABASE_PROJECT_NAME=lentera
+# opsional; dipakai hanya bila akun belum punya organization
+SUPABASE_ORG_NAME=Lentera
+# opsional; bila kosong, password database dibuat otomatis
+SUPABASE_DB_PASSWORD=
+```
+
+Lalu:
+
+```bash
+npm run setup:supabase -- --dry-run   # lihat rencana tanpa mengubah apa pun
+npm run setup:supabase                # jalankan sungguhan
+```
+
+Perintah ini membuat project **nyata** (paket gratis, region default Singapura). Gunakan
+`--skip-verify` bila hanya ingin menyiapkan project. Untuk memakai project yang sudah ada,
+isi `SUPABASE_PROJECT_REF` dan `SUPABASE_DB_PASSWORD`, lalu jalankan perintah yang sama.
+Token dan password tidak ditampilkan di output; `.env` ditulis dengan permission terbatas.
+
+Tanpa token, otomasi tidak dapat membuat project karena pembuatan akun/project memerlukan
+identitas pemilik akun.
+
+### Cara manual
+
 Buka **SQL Editor** di Supabase, lalu jalankan file berikut **berurutan**. Jangan melewati
 `question_pairs`, karena seed matching membutuhkannya.
 
@@ -94,8 +140,10 @@ Buka **SQL Editor** di Supabase, lalu jalankan file berikut **berurutan**. Janga
 2. `20261108100000_curriculum.sql`
 3. `20261108105000_curriculum_overview.sql`
 4. `20261108107000_question_pairs.sql`
-5. `20261108110000_curriculum_seed.sql`
-6. `20261108120000_lesson_engine.sql`
+5. `20261108109000_question_scenes.sql`
+6. `20261108110000_curriculum_seed.sql`
+7. `20261108120000_lesson_engine.sql`
+8. `20261109100000_practice_engine.sql`
 
 Migration identity membuat enum `app_role`, tabel `profiles`, `user_roles`,
 `user_settings`, trigger profil otomatis, fungsi onboarding/role/bootstrap developer, serta
@@ -106,17 +154,27 @@ Verifikasi di **Table Editor** bahwa tabel utama muncul dan **RLS enabled**, lal
 
 ```sql
 select count(*) from public.lessons;   -- 57
-select count(*) from public.questions; -- 217
+select count(*) from public.questions; -- 225
+select count(*) from public.practice_sessions; -- 0 (tabel siap)
+select count(*) from public.user_roles where role = 'developer'; -- 1 setelah setup otomatis
 ```
 
-Alternatif CLI:
+Alternatif CLI (mendorong seluruh 8 migration tanpa membuka SQL Editor):
 
 ```bash
-npm install -g supabase
-supabase login
-supabase link --project-ref <project-ref>
-supabase db push
+npx supabase login
+npx supabase link --project-ref <project-ref>
+npx supabase db push --include-all --yes
 ```
+
+Untuk mesin CI tanpa login interaktif, isi `SUPABASE_ACCESS_TOKEN` lalu:
+
+```bash
+npx supabase db push --remote <project-ref> --password <db-password> --include-all --yes
+```
+
+Jangan menaruh token atau password database di frontend; `VITE_*` hanya untuk URL dan
+anon key publik. Periksa dulu dengan `npx supabase db push --dry-run --include-all`.
 
 ## 8. Uji registrasi
 
@@ -171,6 +229,11 @@ Lalu jalankan:
 ```bash
 npm run verify:supabase
 ```
+
+Skrip ini login sebagai akun uji, memverifikasi lesson 20 soal (termasuk scene listening,
+speaking, conversation, story dan kebocoran kunci), lalu memulai Practice Hub mode match
+madness, menjawab semua soal, menyelesaikan sesi, dan memastikan penyelesaian ulang tidak
+menambah XP. Tanpa `.env` skrip berhenti dengan pesan konfigurasi, bukan lulus palsu.
 
 Perintah ini menguji login, payload soal, grading 12 soal contoh, penyelesaian lesson, dan
 penolakan akses `question_pairs` tanpa sesi. Tampilan browser tetap perlu diuji manual

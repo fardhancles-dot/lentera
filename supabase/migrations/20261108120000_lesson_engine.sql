@@ -351,7 +351,8 @@ begin
         ) order by m.sort_order)
         from public.question_media m
         where m.question_id = q.id
-      ), '[]'::jsonb)
+      ), '[]'::jsonb),
+      'scene', coalesce(q.scene, '{}'::jsonb)
     ) order by q.sort_order, q.id
   ), '[]'::jsonb) into v_questions
   from public.questions q

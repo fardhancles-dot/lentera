@@ -188,5 +188,9 @@ mengubah `lesson-play.page.ts`.
 - Belum ada Edge Function; operasi istimewa saat ini cukup lewat RPC. Reward Center dan
   broadcast nanti wajib lewat Edge Function/RPC dengan verifikasi role.
 - Satu course per mapel; UI memakai `courses[0]`.
-- 13 mini-game belum punya renderer; tipe tanpa renderer tampil sebagai `unsupported`.
+- Seluruh 12 tipe soal punya renderer; `unsupported` hanya jaring pengaman data rusak.
+- Friends Quest belum ada karena menunggu graf teman Tahap 7.
+- Audio model memakai text-to-speech browser; belum ada aset rekaman.
+- Timer latihan berjalan di client untuk tampilan; skor, combo, dan XP dihitung ulang
+  server dari jawaban tersimpan (durasi menjawab dibatasi 0–600 detik).
 - Belum ada E2E Playwright; lihat `docs/TESTING.md`.

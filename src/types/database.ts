@@ -462,6 +462,23 @@ export type Database = {
         Args: { p_attempt_id: string };
         Returns: Json;
       };
+      start_practice: {
+        Args: { p_mode: string; p_course_id: string; p_unit_id?: string | null };
+        Returns: Json;
+      };
+      submit_practice_answer: {
+        Args: {
+          p_session_id: string;
+          p_question_id: string;
+          p_answer: Json;
+          p_elapsed_ms?: number;
+        };
+        Returns: Json;
+      };
+      complete_practice_session: {
+        Args: { p_session_id: string };
+        Returns: Json;
+      };
     };
     Enums: {
       app_role: AppRole;

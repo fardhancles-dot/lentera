@@ -18,7 +18,32 @@ export type SeedQuestionType =
   | 'word_bank'
   | 'sentence_builder'
   | 'matching_pairs'
-  | 'picture_identification';
+  | 'picture_identification'
+  | 'listening'
+  | 'speaking'
+  | 'translation'
+  | 'conversation'
+  | 'story';
+
+export interface SeedSceneScreen {
+  /** Character name shown above the bubble. */
+  speaker?: string;
+  /** Spoken line, also used by browser text-to-speech. */
+  line: string;
+  /** Optional narration rendered instead of a speech bubble. */
+  narration?: string;
+}
+
+/**
+ * Dialogue script and speech data for listening, conversation, and story
+ * questions. It never contains the graded answer; grading always uses
+ * question_options or question_answers.
+ */
+export interface SeedScene {
+  speech?: string;
+  npc?: { name: string; role?: string };
+  screens?: SeedSceneScreen[];
+}
 
 export type SeedLessonKind = 'lesson' | 'practice' | 'review' | 'challenge' | 'legendary';
 
@@ -51,6 +76,7 @@ export interface SeedQuestion {
   answers?: string[];
   pairs?: SeedPair[];
   media?: SeedMedia[];
+  scene?: SeedScene;
 }
 
 export interface SeedLesson {

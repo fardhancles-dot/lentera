@@ -174,6 +174,137 @@ export function picture(
   };
 }
 
+export function listening(
+  slug: string,
+  topic: string,
+  prompt: string,
+  speech: string,
+  options: string[],
+  correctIndex: number,
+  explanation: string,
+  hint?: string,
+): SeedQuestion {
+  if (correctIndex < 0 || correctIndex >= options.length) {
+    throw new Error(`Question ${slug} has an invalid correct option index.`);
+  }
+
+  return {
+    slug,
+    type: 'listening',
+    topic,
+    instruction: 'Dengarkan audio, lalu pilih jawaban yang sesuai.',
+    prompt,
+    explanation,
+    hint,
+    points: 15,
+    options: options.map((text, index) => ({ text, correct: index === correctIndex })),
+    scene: { speech },
+  };
+}
+
+export function speaking(
+  slug: string,
+  topic: string,
+  prompt: string,
+  spokenText: string,
+  answers: string[],
+  explanation: string,
+  hint?: string,
+): SeedQuestion {
+  return {
+    slug,
+    type: 'speaking',
+    topic,
+    instruction: 'Ucapkan kalimat berikut, lalu periksa apakah ucapanmu dikenali.',
+    prompt,
+    explanation,
+    hint,
+    points: 15,
+    answers,
+    scene: { speech: spokenText },
+  };
+}
+
+export function translation(
+  slug: string,
+  topic: string,
+  prompt: string,
+  tokens: string[],
+  answers: string[],
+  explanation: string,
+  hint?: string,
+): SeedQuestion {
+  return {
+    slug,
+    type: 'translation',
+    topic,
+    instruction: 'Susun terjemahan dari kata yang tersedia atau ketik jawabanmu sendiri.',
+    prompt,
+    explanation,
+    hint,
+    points: 15,
+    options: tokens.map((text) => ({ text, correct: false })),
+    answers,
+  };
+}
+
+export function conversation(
+  slug: string,
+  topic: string,
+  prompt: string,
+  npc: { name: string; role?: string },
+  screens: Array<{ speaker?: string; line: string }>,
+  options: string[],
+  correctIndex: number,
+  explanation: string,
+  hint?: string,
+): SeedQuestion {
+  if (correctIndex < 0 || correctIndex >= options.length) {
+    throw new Error(`Question ${slug} has an invalid correct option index.`);
+  }
+
+  return {
+    slug,
+    type: 'conversation',
+    topic,
+    instruction: 'Baca percakapan, lalu pilih respons yang paling tepat.',
+    prompt,
+    explanation,
+    hint,
+    points: 15,
+    options: options.map((text, index) => ({ text, correct: index === correctIndex })),
+    scene: { npc, screens },
+  };
+}
+
+export function story(
+  slug: string,
+  topic: string,
+  prompt: string,
+  screens: Array<{ line: string; narration?: string }>,
+  options: string[],
+  correctIndex: number,
+  explanation: string,
+  hint?: string,
+): SeedQuestion {
+  if (correctIndex < 0 || correctIndex >= options.length) {
+    throw new Error(`Question ${slug} has an invalid correct option index.`);
+  }
+
+  return {
+    slug,
+    type: 'story',
+    topic,
+    instruction: 'Baca cerita sampai selesai, lalu jawab pertanyaan pemahaman.',
+    prompt,
+    explanation,
+    hint,
+    points: 20,
+    options: options.map((text, index) => ({ text, correct: index === correctIndex })),
+    scene: { screens },
+  };
+}
+
 export function lesson(
   slug: string,
   title: string,

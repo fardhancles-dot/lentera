@@ -1,10 +1,15 @@
 import type { LessonQuestion } from '../../services/lesson.service';
 import type { QuestionType } from '../../types/database';
 import { createFillBlank } from './fillBlank';
+import { createConversation } from './conversation';
+import { createListening } from './listening';
 import { createMatchingPairs } from './matchingPairs';
 import { createMultipleChoice } from './multipleChoice';
 import { createPictureIdentification } from './pictureIdentification';
 import { createSentenceBuilder } from './sentenceBuilder';
+import { createSpeaking } from './speaking';
+import { createStory } from './story';
+import { createTranslation } from './translation';
 import { createTyping } from './typing';
 import type { MiniGameRenderer, MiniGameView } from './types';
 import { createUnsupported } from './unsupported';
@@ -18,7 +23,11 @@ const RENDERERS: Partial<Record<QuestionType, MiniGameRenderer>> = {
   matching_pairs: createMatchingPairs,
   fill_blank: createFillBlank,
   typing: createTyping,
-  translation: createTyping,
+  translation: createTranslation,
+  listening: createListening,
+  speaking: createSpeaking,
+  conversation: createConversation,
+  story: createStory,
 };
 
 const fallback: MiniGameRenderer = () => createUnsupported();

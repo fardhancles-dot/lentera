@@ -14,8 +14,10 @@ Database: PostgreSQL di Supabase. Migration ada di `supabase/migrations/`.
 | `20261108100000_curriculum.sql` | Mapel → course → level → unit → lesson/node → soal; progres baca-saja. |
 | `20261108105000_curriculum_overview.sql` | View `subject_overview` untuk katalog mapel. |
 | `20261108107000_question_pairs.sql` | Tabel pasangan kiri/kanan untuk soal `matching_pairs`; tanpa grant ke pemain. |
-| `20261108110000_curriculum_seed.sql` | Seed generated: 10 mapel, 22 level, 22 unit, 57 lesson, 217 soal, 57 node. |
-| `20261108120000_lesson_engine.sql` | Attempt, grading server, XP/Koin ledger, wallet, progres. |
+| `20261108109000_question_scenes.sql` | Kolom `scene` untuk dialog, narasi, dan transkrip audio soal. |
+| `20261108110000_curriculum_seed.sql` | Seed generated: 10 mapel, 22 level, 22 unit, 57 lesson, 225 soal, 57 node. |
+| `20261108120000_lesson_engine.sql` | Attempt, grading server, XP/Koin ledger, wallet, progres; payload menyertakan `scene`. |
+| `20261109100000_practice_engine.sql` | Sesi latihan, jawaban latihan, 7 mode, combo/timer scoring, XP latihan idempoten. |
 
 Seed dihasilkan dari `scripts/content/**/*.ts` dengan `npm run seed:build`. Jangan mengedit
 file seed secara manual; ubah sumber TypeScript lalu regenerasi. UUID bersifat deterministik
@@ -42,7 +44,7 @@ Email tidak disimpan di `profiles`; email hidup di `auth.users` dan hanya dibaca
 | `units` | Tujuan pembelajaran (`text[]`), reward koin, unique `(course_level_id, slug)`. |
 | `lessons` | `kind`, estimasi menit, XP/Koin, `hearts_enabled`, unique `(unit_id, slug)`. |
 | `learning_nodes` | `node_type` 7 jenis (6 terisi: lesson, review, challenge, practice, checkpoint, legendary), opsional `lesson_id`, urutan dalam unit. |
-| `questions` | Tipe, topik, kesulitan, instruksi, prompt, penjelasan, hint, poin. |
+| `questions` | Tipe, topik, kesulitan, instruksi, prompt, penjelasan, hint, poin, `scene` (dialog/narasi/transkrip). |
 | `question_options` | Pilihan + `is_correct`; hanya dibaca server. |
 | `question_answers` | Jawaban alternatif untuk tipe isian; `is_case_sensitive`. |
 | `question_media` | Gambar/audio/video per soal. |
@@ -55,10 +57,17 @@ Email tidak disimpan di `profiles`; email hidup di `auth.users` dan hanya dibaca
 - `lesson_attempts` — satu attempt per pengerjaan; unique index menjaga hanya satu attempt
   `in_progress` per pemain dan lesson.
 - `answer_attempts` — jawaban per soal; unique `(attempt_id, question_id)` mencegah hitung ganda.
+- `practice_sessions` — sesi latihan per pemain + course, mode, jumlah soal, skor, combo
+  terbaik, batas waktu, akurasi, status.
+- `practice_session_questions` — daftar soal yang sah untuk satu sesi; mencegah pemain
+  mengirim soal di luar sesi.
+- `practice_answers` — jawaban latihan, poin, combo, waktu menjawab; unique
+  `(session_id, question_id)`.
 
 ### Ekonomi
 
-- `user_xp_ledger` — setiap pemberian XP, unik per `lesson_attempt_id`.
+- `user_xp_ledger` — setiap pemberian XP, unik per `lesson_attempt_id` dan unik per
+  `practice_session_id` (partial unique index).
 - `coin_transactions` — mutasi Koin, unik per `lesson_attempt_id`.
 - `user_wallets` — saldo Koin, check `coins >= 0`.
 
@@ -87,6 +96,12 @@ Keduanya `security_invoker` dan hanya diberi grant ke `authenticated`.
 | `start_lesson(node_id)` | Validasi akses/unlock, buat attempt, kirim soal tanpa kunci. |
 | `submit_attempt_answer(attempt, question, answer)` | Nilai, simpan sekali, kembalikan feedback. |
 | `complete_lesson_attempt(attempt)` | Hitung hasil, tulis progres, XP, Koin tepat sekali. |
+| `difficulty_rank(difficulty)` | Urutan kesulitan untuk Ramp Up dan fallback legendary. |
+| `course_question_ids(course_id)` | Scope soal published untuk semua mode latihan; tidak dapat dipanggil pemain. |
+| `correct_answer_text(question_id)` | Teks jawaban benar untuk feedback; tidak pernah dikirim sebelum menjawab. |
+| `start_practice(mode, course_id, unit_id)` | Pilih soal sesuai mode, buat sesi, kirim soal tanpa kunci. |
+| `submit_practice_answer(session, question, answer, elapsed)` | Nilai, hitung combo + bonus kecepatan, simpan sekali. |
+| `complete_practice_session(session)` | Hitung akurasi/skor, tulis XP latihan tepat sekali. |
 
 Semua fungsi `security definer` memakai `set search_path` eksplisit. Fungsi engine di-revoke
 dari `public`/`anon` dan hanya dapat dieksekusi `authenticated`.
@@ -108,6 +123,23 @@ dari `public`/`anon` dan hanya dapat dieksekusi `authenticated`.
 6. Replay lesson yang sudah selesai menambah `attempts` dan skor terbaik, tetapi tidak
    menambah XP/Koin.
 
+## Alur latihan (practice)
+
+1. `start_practice` memvalidasi pemain, course published, mapel aktif, dan unit bila mode
+   `unit_review`. Soal dipilih dari `course_question_ids`, disimpan ke
+   `practice_session_questions`, lalu dikirim tanpa `is_correct`.
+2. Mode berwaktu menyimpan `time_limit_seconds` (120 timed, 90 match madness). Ramp Up
+   memakai batas 20 detik per soal di UI; server tetap menilai jawaban kosong sebagai salah.
+3. `submit_practice_answer` menilai lewat `grade_question`, menyimpan satu jawaban per soal,
+   menghitung combo dari jawaban sebelumnya, menambah bonus kecepatan (≤ 2 poin bila
+   dijawab ≤ 6 detik) dan bonus combo (≤ 5).
+4. `complete_practice_session` menghitung akurasi dari jumlah soal sesi (bukan hanya yang
+   terjawab), lalu memberi XP bila akurasi ≥ 60%: maksimal 20 untuk mode biasa, 30 untuk
+   legendary. XP ditulis ke `user_xp_ledger` dengan `practice_session_id` unik sehingga
+   penyelesaian ulang tidak menambah XP.
+5. Sesi boleh selesai dengan sebagian jawaban (timeout), tetapi sesi tanpa jawaban sama
+   sekali ditolak.
+
 ## RLS dan grant
 
 | Tabel | SELECT | Tulis |
@@ -118,6 +150,8 @@ dari `public`/`anon` dan hanya dapat dieksekusi `authenticated`.
 | Tabel kurikulum | authenticated, hanya baris published/active | tidak ada. |
 | `questions`, opsi, jawaban, media, pairs | **tidak ada** grant ke pemain | server-side RPC saja. |
 | Progres & attempt | baris sendiri | tidak ada; hanya RPC. |
+| `practice_sessions` / `practice_answers` | baris sendiri | tidak ada; hanya RPC. |
+| `practice_session_questions` | **tidak ada** grant | server-side RPC saja. |
 | Wallet & ledger | baris sendiri | tidak ada; hanya RPC. |
 
 `anon` tidak punya akses ke tabel kurikulum, progres, atau ekonomi.
@@ -133,11 +167,13 @@ Jalankan berurutan sesuai nama file di `supabase/migrations/`:
 2. `20261108100000_curriculum.sql`
 3. `20261108105000_curriculum_overview.sql`
 4. `20261108107000_question_pairs.sql`
-5. `20261108110000_curriculum_seed.sql`
-6. `20261108120000_lesson_engine.sql`
+5. `20261108109000_question_scenes.sql`
+6. `20261108110000_curriculum_seed.sql`
+7. `20261108120000_lesson_engine.sql`
+8. `20261109100000_practice_engine.sql`
 
 Pastikan tidak ada error, lalu cek Table Editor: `subjects`, `lessons`, `questions`,
-`lesson_attempts`, `user_wallets`.
+`lesson_attempts`, `user_wallets`, `practice_sessions`.
 
 ### Opsi B — Supabase CLI
 

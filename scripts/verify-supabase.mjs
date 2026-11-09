@@ -65,12 +65,54 @@ function answerFor(question) {
     return { optionId: option.id };
   }
 
+  if (question.type === 'listening') {
+    const label = question.prompt.includes('instruksi')
+      ? 'Tolong buka bukumu ke halaman sepuluh.'
+      : 'Selamat pagi, apa kabar hari ini?';
+    const option = question.options.find((item) => item.label === label);
+    if (!option) throw new Error(`Opsi "${label}" tidak ditemukan.`);
+    return { optionId: option.id };
+  }
+
+  if (question.type === 'conversation') {
+    const label = "Good morning, Ma'am. We are fine, thank you.";
+    const option = question.options.find((item) => item.label === label);
+    if (!option) throw new Error(`Opsi "${label}" tidak ditemukan.`);
+    return { optionId: option.id };
+  }
+
+  if (question.type === 'story') {
+    const label = 'Karena lampu taman mati dan taman menjadi gelap.';
+    const option = question.options.find((item) => item.label === label);
+    if (!option) throw new Error(`Opsi "${label}" tidak ditemukan.`);
+    return { optionId: option.id };
+  }
+
+  if (question.type === 'speaking') {
+    return { text: 'Good morning, how are you?' };
+  }
+
+  if (question.type === 'translation') {
+    return { text: 'I read a book in the library' };
+  }
+
   if (question.type === 'matching_pairs') {
     const meanings = new Map([
       ['apple', 'apel'],
       ['book', 'buku'],
       ['house', 'rumah'],
       ['water', 'air'],
+      ['pencil', 'pensil'],
+      ['teacher', 'guru'],
+      ['classroom', 'ruang kelas'],
+      ['homework', 'pekerjaan rumah'],
+      ['library', 'perpustakaan'],
+      ['chair', 'kursi'],
+      ['read', 'membaca'],
+      ['write', 'menulis'],
+      ['listen', 'mendengarkan'],
+      ['speak', 'berbicara'],
+      ['study', 'belajar'],
     ]);
     const matches = question.leftItems.map((left) => {
       const rightLabel = meanings.get(left.label);
@@ -172,10 +214,10 @@ try {
   ok('start_lesson membuat attempt');
 
   const payloadText = JSON.stringify(start);
-  if (Array.isArray(start.questions) && start.questions.length === 12) {
-    ok('payload berisi 12 soal');
+  if (Array.isArray(start.questions) && start.questions.length === 20) {
+    ok('payload berisi 20 soal');
   } else {
-    fail('payload berisi 12 soal', String(start.questions?.length));
+    fail('payload berisi 20 soal', String(start.questions?.length));
   }
   if (!payloadText.includes('is_correct')) ok('payload tidak membocorkan is_correct');
   else fail('payload tidak membocorkan is_correct');
@@ -208,6 +250,16 @@ try {
   if (/_{2,}/.test(fill?.prompt ?? '')) ok('fill blank menyimpan penanda rumpang');
   else fail('fill blank menyimpan penanda rumpang');
 
+  for (const type of ['listening', 'speaking', 'conversation', 'story']) {
+    const sceneQuestion = start.questions.find((question) => question.type === type);
+    const hasScene =
+      sceneQuestion?.scene &&
+      typeof sceneQuestion.scene === 'object' &&
+      Object.keys(sceneQuestion.scene).length > 0;
+    if (hasScene) ok(`scene ${type} terkirim`);
+    else fail(`scene ${type} terkirim`);
+  }
+
   let correct = 0;
   for (const question of start.questions) {
     let answer;
@@ -234,8 +286,8 @@ try {
     else fail(`nilai soal ${question.type}`, 'jawaban uji dinilai salah');
   }
 
-  if (correct === 12) ok('12 jawaban uji dinilai benar di server');
-  else fail('12 jawaban uji dinilai benar di server', `${correct}/12`);
+  if (correct === 20) ok('20 jawaban uji dinilai benar di server');
+  else fail('20 jawaban uji dinilai benar di server', `${correct}/20`);
 
   const { data: summary, error: summaryError } = await supabase.rpc(
     'complete_lesson_attempt',
@@ -244,16 +296,139 @@ try {
   if (summaryError) {
     fail('complete_lesson_attempt', summaryError.message);
   } else {
-    if (summary.totalCount === 12 && summary.correctCount === 12) {
-      ok('hasil lesson menghitung 12/12');
+    if (summary.totalCount === 20 && summary.correctCount === 20) {
+      ok('hasil lesson menghitung 20/20');
     } else {
       fail(
-        'hasil lesson menghitung 12/12',
+        'hasil lesson menghitung 20/20',
         `${summary.correctCount}/${summary.totalCount}`,
       );
     }
     if (summary.accuracy === 100) ok('akurasi hasil 100%');
     else fail('akurasi hasil 100%', String(summary.accuracy));
+  }
+
+  const { data: courses, error: courseError } = await supabase
+    .from('courses')
+    .select('id, slug')
+    .eq('slug', 'bahasa-inggris')
+    .limit(1);
+  if (courseError || !courses?.[0]) {
+    fail('cari course bahasa-inggris', courseError?.message ?? 'tidak ditemukan');
+    throw new Error('course tidak ditemukan');
+  }
+
+  const { data: practice, error: practiceError } = await supabase.rpc('start_practice', {
+    p_mode: 'match_madness',
+    p_course_id: courses[0].id,
+  });
+  if (practiceError || !practice?.sessionId) {
+    fail('start_practice match madness', practiceError?.message ?? 'payload kosong');
+    throw new Error('start_practice gagal');
+  }
+  ok('start_practice membuat sesi latihan');
+  if (practice.questionCount === 3) ok('match madness memilih 3 soal');
+  else fail('match madness memilih 3 soal', String(practice.questionCount));
+  if (practice.timeLimitSeconds === 90) ok('match madness memakai batas 90 detik');
+  else fail('match madness memakai batas 90 detik', String(practice.timeLimitSeconds));
+  if (
+    Array.isArray(practice.questions) &&
+    practice.questions.length > 0 &&
+    practice.questions.every((question) => question.type === 'matching_pairs')
+  ) {
+    ok('match madness hanya memakai soal matching');
+  } else {
+    fail('match madness hanya memakai soal matching');
+  }
+  if (!JSON.stringify(practice).includes('is_correct')) {
+    ok('payload latihan tidak membocorkan is_correct');
+  } else {
+    fail('payload latihan tidak membocorkan is_correct');
+  }
+
+  const practiceMeanings = new Map([
+    ['apple', 'apel'],
+    ['book', 'buku'],
+    ['house', 'rumah'],
+    ['water', 'air'],
+    ['pencil', 'pensil'],
+    ['teacher', 'guru'],
+    ['classroom', 'ruang kelas'],
+    ['homework', 'pekerjaan rumah'],
+    ['library', 'perpustakaan'],
+    ['chair', 'kursi'],
+    ['read', 'membaca'],
+    ['write', 'menulis'],
+    ['listen', 'mendengarkan'],
+    ['speak', 'berbicara'],
+    ['study', 'belajar'],
+  ]);
+
+  let practiceCorrect = 0;
+  for (const question of practice.questions) {
+    const matches = question.leftItems.map((left) => {
+      const right = question.rightItems.find(
+        (item) => item.label === practiceMeanings.get(left.label),
+      );
+      if (!right) throw new Error(`Pasangan untuk "${left.label}" tidak ditemukan.`);
+      return { leftId: left.id, rightId: right.id };
+    });
+
+    const { data: result, error: answerError } = await supabase.rpc(
+      'submit_practice_answer',
+      {
+        p_session_id: practice.sessionId,
+        p_question_id: question.id,
+        p_answer: { matches },
+        p_elapsed_ms: 1200,
+      },
+    );
+    if (answerError) {
+      fail('nilai jawaban latihan', answerError.message);
+      continue;
+    }
+    if (result?.isCorrect) practiceCorrect += 1;
+    else fail('nilai jawaban latihan', 'jawaban uji dinilai salah');
+  }
+
+  if (practiceCorrect === practice.questionCount) {
+    ok(`semua ${practiceCorrect} jawaban latihan dinilai benar`);
+  } else {
+    fail('semua jawaban latihan dinilai benar', `${practiceCorrect}/${practice.questionCount}`);
+  }
+
+  const { data: practiceSummary, error: completeError } = await supabase.rpc(
+    'complete_practice_session',
+    { p_session_id: practice.sessionId },
+  );
+  if (completeError) {
+    fail('complete_practice_session', completeError.message);
+  } else {
+    if (practiceSummary.accuracy === 100) ok('akurasi latihan 100%');
+    else fail('akurasi latihan 100%', String(practiceSummary.accuracy));
+    if (practiceSummary.xpAwarded > 0) ok('latihan memberi XP');
+    else fail('latihan memberi XP', String(practiceSummary.xpAwarded));
+    if (practiceSummary.score > practiceSummary.totalCount) {
+      ok('skor latihan memuat bonus kecepatan/combo');
+    } else {
+      fail('skor latihan memuat bonus kecepatan/combo', String(practiceSummary.score));
+    }
+
+    const { data: repeatSummary, error: repeatError } = await supabase.rpc(
+      'complete_practice_session',
+      { p_session_id: practice.sessionId },
+    );
+    if (repeatError) {
+      fail('penyelesaian latihan ulang', repeatError.message);
+    } else if (
+      repeatSummary.alreadyCompleted === true &&
+      repeatSummary.xpAwarded === 0 &&
+      repeatSummary.totalXp === practiceSummary.totalXp
+    ) {
+      ok('penyelesaian ulang tidak menambah XP');
+    } else {
+      fail('penyelesaian ulang tidak menambah XP');
+    }
   }
 
   const anon = createClient(url, anonKey, {
@@ -262,6 +437,13 @@ try {
   const { error: pairError } = await anon.from('question_pairs').select('id').limit(1);
   if (pairError) ok('question_pairs tidak bisa dibaca tanpa sesi');
   else fail('question_pairs tidak bisa dibaca tanpa sesi');
+
+  const { error: practiceRlsError } = await anon
+    .from('practice_sessions')
+    .select('id')
+    .limit(1);
+  if (practiceRlsError) ok('practice_sessions tidak bisa dibaca tanpa sesi');
+  else fail('practice_sessions tidak bisa dibaca tanpa sesi');
 } catch (error) {
   if (failures.length === 0) fail('verifikasi berhenti', error.message);
 } finally {

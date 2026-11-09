@@ -17,6 +17,18 @@ export interface LessonMatchItem {
   label: string;
 }
 
+export interface LessonSceneScreen {
+  speaker?: string;
+  line: string;
+  narration?: string;
+}
+
+export interface LessonScene {
+  speech?: string;
+  npc?: { name: string; role?: string };
+  screens: LessonSceneScreen[];
+}
+
 export interface LessonQuestion {
   id: string;
   type: QuestionType;
@@ -30,6 +42,7 @@ export interface LessonQuestion {
   leftItems: LessonMatchItem[];
   rightItems: LessonMatchItem[];
   media: LessonQuestionMedia[];
+  scene: LessonScene;
 }
 
 export interface LessonStart {
@@ -132,10 +145,72 @@ function parseMatchItems(value: unknown): LessonMatchItem[] {
     : [];
 }
 
+function parseScene(value: unknown): LessonScene {
+  const record = asRecord(value);
+  const npc = asRecord(record.npc);
+  const screens = Array.isArray(record.screens)
+    ? record.screens
+        .map((item) => {
+          const screen = asRecord(item);
+          return {
+            speaker: asString(screen.speaker) || undefined,
+            line: asString(screen.line),
+            narration: asString(screen.narration) || undefined,
+          };
+        })
+        .filter((screen) => Boolean(screen.line || screen.narration))
+    : [];
+
+  return {
+    ...(asString(record.speech) ? { speech: asString(record.speech) } : {}),
+    ...(asString(npc.name)
+      ? { npc: { name: asString(npc.name), role: asString(npc.role) || undefined } }
+      : {}),
+    screens,
+  };
+}
+
+/** Shared by the lesson and practice pages so both read the same payload. */
+export function parseLessonQuestions(value: unknown): LessonQuestion[] {
+  const questions = Array.isArray(value) ? value : [];
+
+  return questions.map((item) => {
+    const question = asRecord(item);
+    return {
+      id: asString(question.id),
+      type: asString(question.type, 'multiple_choice') as QuestionType,
+      topic: asString(question.topic),
+      difficulty: asString(question.difficulty, 'beginner') as DifficultyBand,
+      instruction: asString(question.instruction),
+      prompt: asString(question.prompt),
+      hint: typeof question.hint === 'string' ? question.hint : null,
+      points: asNumber(question.points, 10),
+      options: Array.isArray(question.options)
+        ? question.options.map((option) => {
+            const record = asRecord(option);
+            return { id: asString(record.id), label: asString(record.label) };
+          })
+        : [],
+      leftItems: parseMatchItems(question.leftItems),
+      rightItems: parseMatchItems(question.rightItems),
+      media: Array.isArray(question.media)
+        ? question.media.map((media) => {
+            const record = asRecord(media);
+            return {
+              kind: asString(record.kind, 'image') as LessonQuestionMedia['kind'],
+              url: asString(record.url),
+              alt: asString(record.alt),
+            };
+          })
+        : [],
+      scene: parseScene(question.scene),
+    };
+  });
+}
+
 function parseStart(payload: Json): LessonStart {
   const root = asRecord(payload);
   const lesson = asRecord(root.lesson);
-  const questions = Array.isArray(root.questions) ? root.questions : [];
 
   return {
     attemptId: asString(root.attemptId),
@@ -150,37 +225,7 @@ function parseStart(payload: Json): LessonStart {
       coinReward: asNumber(lesson.coinReward),
       heartsEnabled: asBoolean(lesson.heartsEnabled),
     },
-    questions: questions.map((item) => {
-      const question = asRecord(item);
-      return {
-        id: asString(question.id),
-        type: asString(question.type, 'multiple_choice') as QuestionType,
-        topic: asString(question.topic),
-        difficulty: asString(question.difficulty, 'beginner') as DifficultyBand,
-        instruction: asString(question.instruction),
-        prompt: asString(question.prompt),
-        hint: typeof question.hint === 'string' ? question.hint : null,
-        points: asNumber(question.points, 10),
-        options: Array.isArray(question.options)
-          ? question.options.map((option) => {
-              const record = asRecord(option);
-              return { id: asString(record.id), label: asString(record.label) };
-            })
-          : [],
-        leftItems: parseMatchItems(question.leftItems),
-        rightItems: parseMatchItems(question.rightItems),
-        media: Array.isArray(question.media)
-          ? question.media.map((media) => {
-              const record = asRecord(media);
-              return {
-                kind: asString(record.kind, 'image') as LessonQuestionMedia['kind'],
-                url: asString(record.url),
-                alt: asString(record.alt),
-              };
-            })
-          : [],
-      };
-    }),
+    questions: parseLessonQuestions(root.questions),
   };
 }
 

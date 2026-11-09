@@ -14,9 +14,11 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "node --env-file=.env node_modules/@playwright/test/cli.js test",
     "test:sql": "node scripts/test-sql.mjs",
     "verify:supabase": "node scripts/verify-supabase.mjs",
     "setup:supabase": "node scripts/setup-supabase.mjs",
+    "db:apply-catalog-fix": "node scripts/apply-catalog-fix.mjs",
     "seed:build": "tsx scripts/generate-curriculum-sql.ts"
   },
   "dependencies": {
@@ -26,6 +28,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.15",
+    "@playwright/test": "^1.65.0",
     "@types/node": "^26.6.6",
     "tsx": "^4.23.15",
     "typescript": "5.9.3",

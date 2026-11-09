@@ -177,6 +177,8 @@ export type LearningNodeRow = {
   lesson_id: string | null;
   sort_order: number;
   is_active: boolean;
+  reward_coins: number;
+  reward_xp: number;
   created_at: string;
 };
 
@@ -203,6 +205,28 @@ export type UserNodeProgressRow = {
   attempts: number;
   completed_at: string | null;
   updated_at: string;
+};
+
+export type UserQuestionMasteryRow = {
+  user_id: string;
+  question_id: string;
+  attempts: number;
+  correct_count: number;
+  correct_streak: number;
+  mastery_level: number;
+  interval_days: number;
+  last_answered_at: string;
+  next_review_at: string;
+  updated_at: string;
+};
+
+export type UserRewardClaimRow = {
+  id: string;
+  user_id: string;
+  node_id: string;
+  coins: number;
+  xp: number;
+  claimed_at: string;
 };
 
 export type AttemptStatus = 'in_progress' | 'completed' | 'abandoned';
@@ -245,6 +269,7 @@ export type UserXpLedgerRow = {
   amount: number;
   source: string;
   lesson_attempt_id: string | null;
+  reward_claim_id: string | null;
   created_at: string;
 };
 
@@ -255,6 +280,7 @@ export type CoinTransactionRow = {
   source: string;
   lesson_attempt_id: string | null;
   reference_id: string | null;
+  reward_claim_id: string | null;
   created_at: string;
 };
 
@@ -516,6 +542,18 @@ export type Database = {
         Update: Record<string, unknown>;
         Relationships: [];
       };
+      user_question_mastery: {
+        Row: UserQuestionMasteryRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      user_reward_claims: {
+        Row: UserRewardClaimRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
       lesson_attempts: {
         Row: LessonAttemptRow;
         Insert: Record<string, unknown>;
@@ -738,6 +776,18 @@ export type Database = {
       };
       use_inventory_item: {
         Args: { p_item_id: string };
+        Returns: Json;
+      };
+      get_my_mastery: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      start_scheduled_review: {
+        Args: { p_course_id: string };
+        Returns: Json;
+      };
+      claim_reward_node: {
+        Args: { p_node_id: string };
         Returns: Json;
       };
     };

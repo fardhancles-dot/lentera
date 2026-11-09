@@ -1,6 +1,7 @@
 import type { PageModule } from '../app/router';
 import { kikoMarkup } from '../components/brandArt';
 import { icon } from '../components/icons';
+import { audioEngine } from '../game/audio/audioEngine';
 import { createMiniGame, isMiniGameSupported } from '../game/minigames';
 import type { MiniGameView } from '../game/minigames/types';
 import { curriculumService } from '../services/curriculum.service';
@@ -79,6 +80,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
   let busy = false;
   let summary: LessonSummary | null = null;
   let heartsSlot: HTMLElement | null = null;
+  let resultStage: { destroy: () => void } | null = null;
 
   const paintHearts = (state: PlayerStoreState) => {
     if (!heartsSlot) return;
@@ -105,6 +107,8 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
   ctx.onCleanup(playerStore.subscribe(paintHearts));
   ctx.onCleanup(() => {
     disposed = true;
+    resultStage?.destroy();
+    resultStage = null;
   });
   void playerStore.load();
 
@@ -329,6 +333,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
           busy = false;
           answeredCount = result.answeredCount;
           setProgress(progressBar, progress, answeredCount, start!.questions.length);
+          audioEngine.play(result.isCorrect ? 'correct' : 'wrong');
           if (!result.isCorrect) void playerStore.load(true);
           showFeedback(result, view!, live, footer, progressBar, progress);
         } catch (error) {
@@ -474,6 +479,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
   const renderResult = () => {
     if (!start || !summary || disposed) return;
     const passed = summary.passed;
+    audioEngine.play(passed ? 'complete' : 'wrong');
 
     const stats = [
       ['Akurasi', `${summary.accuracy}%`],
@@ -520,9 +526,13 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
     ]);
     retry.addEventListener('click', () => window.location.reload());
 
+    const art = el('div', { class: 'play-result__art' }, [
+      el('div', { class: 'play-result__art-fallback', html: kikoMarkup(150) }),
+    ]);
+
     const screen = el('div', { class: 'play-result-shell' }, [
       el('div', { class: 'play-result', dataset: { passed: String(passed) } }, [
-        el('div', { class: 'play-result__art', html: kikoMarkup(150) }),
+        art,
         el('span', { class: `play-result__badge ${passed ? '' : 'play-result__badge--retry'}` }, [
           icon(passed ? 'check' : 'refresh', 18),
           passed ? 'Lesson selesai' : 'Belum lulus',
@@ -558,6 +568,21 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
     ]);
 
     ctx.outlet.replaceChildren(screen);
+
+    void (async () => {
+      try {
+        const { createMascotStage } = await import('../game/mascot/createMascotStage');
+        if (disposed || !art.isConnected) return;
+        art.replaceChildren();
+        resultStage?.destroy();
+        resultStage = createMascotStage(art, {
+          reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+          animation: passed ? 'celebrating' : 'sad',
+        });
+      } catch (error) {
+        console.error('[lesson] result mascot failed to start', error);
+      }
+    })();
   };
 
   load();

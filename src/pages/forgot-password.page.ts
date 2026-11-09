@@ -46,8 +46,6 @@ async function render(ctx: Parameters<PageModule['render']>[0]): Promise<void> {
     ]),
   ]);
 
-  await renderAuthLayout(ctx, card);
-
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     emailField.setError();
@@ -91,6 +89,8 @@ async function render(ctx: Parameters<PageModule['render']>[0]): Promise<void> {
       );
     })();
   });
+
+  await renderAuthLayout(ctx, card);
 }
 
 export { meta, render };

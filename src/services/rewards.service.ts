@@ -7,6 +7,7 @@ import type {
   InventoryItem,
   PurchaseOutcome,
   Quest,
+  RewardNodeClaim,
   QuestBoard,
   QuestCadence,
   QuestClaim,
@@ -28,6 +29,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   not_enough_coins: 'Koin kamu belum cukup untuk membeli item ini.',
   hearts_full: 'Hearts kamu sudah penuh. Ramuan tidak perlu dipakai.',
   freeze_limit: 'Perisai Streak sudah maksimal dua. Gunakan salah satu dulu.',
+  reward_not_found: 'Hadiah level ini tidak ditemukan atau sudah tidak aktif.',
+  reward_locked: 'Selesaikan semua lesson di level ini sebelum mengambil hadiah.',
 };
 
 function messageFor(error: unknown): Error {
@@ -225,6 +228,20 @@ export function parsePurchase(value: unknown): PurchaseOutcome {
   };
 }
 
+export function parseRewardNodeClaim(value: unknown): RewardNodeClaim {
+  const record = asRecord(value);
+
+  return {
+    nodeId: asString(record.nodeId),
+    alreadyClaimed: asBoolean(record.alreadyClaimed),
+    coinsAwarded: Math.max(0, asNumber(record.coinsAwarded)),
+    xpAwarded: Math.max(0, asNumber(record.xpAwarded)),
+    coinBalance: Math.max(0, asNumber(record.coinBalance)),
+    totalXp: Math.max(0, asNumber(record.totalXp)),
+    claimedAt: asNullableString(record.claimedAt),
+  };
+}
+
 export function parseUseItem(value: unknown): UseItemOutcome {
   const record = asRecord(value);
   const hearts = record.hearts ? asRecord(record.hearts) : null;
@@ -297,6 +314,14 @@ export const rewardsService = {
   async useItem(itemId: string): Promise<UseItemOutcome> {
     try {
       return parseUseItem(await rewardsRepository.useItem(itemId));
+    } catch (error) {
+      throw messageFor(error);
+    }
+  },
+
+  async claimRewardNode(nodeId: string): Promise<RewardNodeClaim> {
+    try {
+      return parseRewardNodeClaim(await rewardsRepository.claimRewardNode(nodeId));
     } catch (error) {
       throw messageFor(error);
     }

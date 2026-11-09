@@ -1,6 +1,14 @@
 import type { PageModule } from '../app/router';
 import { icon } from '../components/icons';
 import { subjectIconName } from '../components/subjectIcon';
+import { showToast } from '../components/toast';
+import {
+  MAP_VIEWPORTS,
+  type AdventureMapHandle,
+  type AdventureMapNode,
+  type AdventureNodeStatus,
+  type MapViewport,
+} from '../game/adventure/types';
 import { renderAppLayout } from '../layouts/appLayout';
 import {
   curriculumService,
@@ -40,8 +48,53 @@ const NODE_TYPE_LABEL: Record<string, string> = {
 };
 
 function nodeHref(subjectSlug: string, node: PathNode): string | null {
-  if (!node.playable || !node.lessonSlug || node.status === 'locked') return null;
+  if (node.status === 'locked') return null;
+  if (node.nodeType === 'reward') return `/learn/${subjectSlug}/reward/${node.slug}`;
+  if (!node.playable || !node.lessonSlug) return null;
   return `/learn/${subjectSlug}/lesson/${node.lessonSlug}`;
+}
+
+function nodeMetaLabel(node: PathNode): string {
+  if (node.nodeType === 'reward') {
+    return `Hadiah level · +${node.rewardCoins} Koin · +${node.rewardXp} XP${
+      node.rewardClaimed ? ' · sudah diklaim' : ''
+    }`;
+  }
+  if (!node.playable) return `${NODE_TYPE_LABEL[node.nodeType] ?? 'Milestone'} · belum dapat dimainkan`;
+  if (node.questionCount > 0) return `${node.questionCount} soal · ${node.estimatedMinutes} menit`;
+  return 'Bank soal belum tersedia';
+}
+
+function toMapNode(subjectSlug: string, node: PathNode): AdventureMapNode {
+  return {
+    id: node.id,
+    title: node.title,
+    nodeType: node.nodeType,
+    status: node.status,
+    meta: nodeMetaLabel(node),
+    href: nodeHref(subjectSlug, node),
+  };
+}
+
+/** The level the player should look at: the first one with a playable node. */
+function pickAdventureLevelIndex(levels: SubjectPath['levels']): number {
+  const index = levels.findIndex((level) =>
+    level.units.some((unit) =>
+      unit.nodes.some((node) => node.status === 'available' || node.status === 'preview'),
+    ),
+  );
+  return index >= 0 ? index : Math.max(levels.length - 1, 0);
+}
+
+function levelCountLabel(level: SubjectPath['levels'][number]): string {
+  return `${level.completedCount}/${level.nodeCount} selesai`;
+}
+
+function legendItem(status: AdventureNodeStatus, label: string): HTMLElement {
+  return el('li', { class: 'adventure-map__legend-item' }, [
+    el('span', { class: `adventure-map__dot adventure-map__dot--${status}` }),
+    el('span', { text: label }),
+  ]);
 }
 
 function nodeMarker(status: LearningNodeStatus, index: number): HTMLElement {
@@ -53,7 +106,14 @@ function nodeMarker(status: LearningNodeStatus, index: number): HTMLElement {
 
 function renderNode(subjectSlug: string, node: PathNode, index: number): HTMLElement {
   const href = nodeHref(subjectSlug, node);
-  const label = STATUS_LABEL[node.status];
+  const label =
+    node.nodeType === 'reward'
+      ? node.rewardClaimed
+        ? 'Hadiah diterima'
+        : node.status === 'locked'
+          ? 'Terkunci'
+          : 'Hadiah siap diambil'
+      : STATUS_LABEL[node.status];
 
   const card = href
     ? el('a', { class: `path-node path-node--${node.status}`, attrs: { href } })
@@ -62,11 +122,7 @@ function renderNode(subjectSlug: string, node: PathNode, index: number): HTMLEle
         attrs: { 'aria-disabled': 'true' },
       });
 
-  const questionLabel = !node.playable
-    ? `${NODE_TYPE_LABEL[node.nodeType] ?? 'Milestone'} · belum dapat dimainkan`
-    : node.questionCount > 0
-      ? `${node.questionCount} soal · ${node.estimatedMinutes} menit`
-      : 'Bank soal belum tersedia';
+  const questionLabel = nodeMetaLabel(node);
 
   card.append(
     nodeMarker(node.status, index),
@@ -92,13 +148,115 @@ function renderNode(subjectSlug: string, node: PathNode, index: number): HTMLEle
   );
 
   if (node.status === 'locked') {
-    card.setAttribute('title', 'Selesaikan lesson sebelumnya untuk membuka node ini.');
+    card.setAttribute(
+      'title',
+      node.nodeType === 'reward'
+        ? 'Selesaikan semua lesson di level ini untuk membuka hadiah.'
+        : 'Selesaikan lesson sebelumnya untuk membuka node ini.',
+    );
   }
 
   return card;
 }
 
-function renderPath(path: SubjectPath): HTMLElement {
+interface SubjectPathView {
+  element: HTMLElement;
+  map: {
+    host: HTMLElement;
+    subjectLabel: string;
+    subjectSlug: string;
+    levels: SubjectPath['levels'];
+    initialLevelIndex: number;
+    applyLevel: (index: number) => void;
+  } | null;
+}
+
+interface LevelPicker {
+  element: HTMLElement;
+  apply: (index: number) => void;
+}
+
+/**
+ * Level chips live in the DOM (not on the canvas) so they are real buttons:
+ * focusable, operable with Enter/Space, and announced with their pressed state.
+ */
+function renderLevelPicker(
+  levels: SubjectPath['levels'],
+  initialIndex: number,
+  onSelect: (index: number) => void,
+  titleEl: HTMLElement,
+  countEl: HTMLElement,
+  statusEl: HTMLElement,
+): LevelPicker {
+  const buttons = levels.map((level, index) =>
+    el('button', {
+      class: 'adventure-map__level',
+      text: level.title,
+      attrs: { type: 'button', 'aria-pressed': 'false' },
+      events: { click: () => onSelect(index) },
+    }),
+  );
+
+  const apply = (index: number): void => {
+    const level = levels[index];
+    if (!level) return;
+
+    buttons.forEach((button, buttonIndex) => {
+      button.setAttribute('aria-pressed', buttonIndex === index ? 'true' : 'false');
+    });
+    titleEl.textContent = level.title;
+    countEl.textContent = levelCountLabel(level);
+    statusEl.textContent = `Level ${level.title} dipilih, ${level.completedCount} dari ${level.nodeCount} lesson selesai.`;
+  };
+
+  apply(initialIndex);
+
+  return {
+    element: el(
+      'div',
+      { class: 'adventure-map__levels', attrs: { role: 'group', 'aria-label': 'Pilih level peta' } },
+      buttons,
+    ),
+    apply,
+  };
+}
+
+function renderAdventureCard(
+  host: HTMLElement,
+  picker: HTMLElement,
+  titleEl: HTMLElement,
+  countEl: HTMLElement,
+  statusEl: HTMLElement,
+): HTMLElement {
+  return el('section', { class: 'card adventure-map' }, [
+    el('div', { class: 'adventure-map__header' }, [
+      el('div', {}, [
+        el('span', { class: 'adventure-map__eyebrow', text: 'Peta petualangan' }),
+        titleEl,
+        el('p', {
+          class: 'adventure-map__subtitle',
+          text: 'Pilih level dengan tombol di bawah, lalu ketuk node untuk berjalan ke lesson.',
+        }),
+      ]),
+      countEl,
+    ]),
+    picker,
+    host,
+    statusEl,
+    el('ul', { class: 'adventure-map__legend' }, [
+      legendItem('completed', 'Selesai'),
+      legendItem('available', 'Siap dimainkan'),
+      legendItem('locked', 'Terkunci'),
+      legendItem('preview', 'Pratinjau'),
+    ]),
+    el('p', {
+      class: 'adventure-map__note small muted',
+      text: 'Gunakan daftar lesson di bawah peta untuk akses keyboard dan detail lengkap.',
+    }),
+  ]);
+}
+
+function renderPath(path: SubjectPath, onSelectLevel: (index: number) => void): SubjectPathView {
   const subject = path.subject;
   const percent =
     path.totalNodes > 0 ? Math.round((path.completedNodes / path.totalNodes) * 100) : 0;
@@ -208,6 +366,49 @@ function renderPath(path: SubjectPath): HTMLElement {
     );
   }
 
+  const mapLevels =
+    subject.status === 'development'
+      ? []
+      : path.levels.filter((level) => level.units.some((unit) => unit.nodes.length > 0));
+  const initialLevelIndex = pickAdventureLevelIndex(mapLevels);
+  const initialLevel = mapLevels[initialLevelIndex] ?? null;
+  const mapHost = initialLevel
+    ? el('div', {
+        class: 'adventure-map__frame',
+        attrs: { 'aria-hidden': 'true' },
+        text: 'Menyiapkan peta…',
+      })
+    : null;
+  const mapTitle = el('h2', { class: 'adventure-map__title' });
+  const mapCount = el('span', { class: 'badge badge--muted' });
+  const mapStatus = el('p', {
+    class: 'sr-only',
+    attrs: { role: 'status', 'aria-live': 'polite' },
+  });
+  const picker =
+    initialLevel && mapLevels.length > 1
+      ? renderLevelPicker(mapLevels, initialLevelIndex, onSelectLevel, mapTitle, mapCount, mapStatus)
+      : null;
+  if (picker) {
+    picker.apply(initialLevelIndex);
+  } else if (initialLevel) {
+    mapTitle.textContent = initialLevel.title;
+    mapCount.textContent = levelCountLabel(initialLevel);
+    mapStatus.textContent = `Level ${initialLevel.title} dipilih, ${initialLevel.completedCount} dari ${initialLevel.nodeCount} lesson selesai.`;
+  }
+
+  if (initialLevel && mapHost) {
+    blocks.push(
+      renderAdventureCard(
+        mapHost,
+        picker?.element ?? el('div'),
+        mapTitle,
+        mapCount,
+        mapStatus,
+      ),
+    );
+  }
+
   for (const level of path.levels) {
     let nodeIndex = 0;
 
@@ -286,7 +487,20 @@ function renderPath(path: SubjectPath): HTMLElement {
     ...blocks,
   ]);
 
-  return fragment;
+  return {
+    element: fragment,
+    map:
+      initialLevel && mapHost
+        ? {
+            host: mapHost,
+            subjectLabel: subject.name,
+            subjectSlug: subject.slug,
+            levels: mapLevels,
+            initialLevelIndex,
+            applyLevel: (index) => picker?.apply(index),
+          }
+        : null,
+  };
 }
 
 function render(ctx: Parameters<PageModule['render']>[0]): void {
@@ -302,7 +516,108 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
   const content = el('div', {}, [host]);
   renderAppLayout(ctx, { active: 'learn', title: 'Peta belajar', content });
 
+  let mapHandle: AdventureMapHandle | null = null;
+  let pendingLevelIndex: number | null = null;
+  let currentMapView: SubjectPathView | null = null;
+  let mountedViewport: MapViewport | null = null;
+  let resizeTimer: number | null = null;
+
+  const selectMapLevel = (index: number): void => {
+    if (mapHandle) mapHandle.setLevel(index);
+    else pendingLevelIndex = index;
+  };
+
+  const viewportFor = (host: HTMLElement): MapViewport =>
+    host.clientWidth > 0 && host.clientWidth < 560 ? MAP_VIEWPORTS.compact : MAP_VIEWPORTS.wide;
+
+  const mountMap = (target: NonNullable<SubjectPathView['map']>): void => {
+    const levels = target.levels.map((level) => ({
+      id: level.id,
+      title: level.title,
+      nodes: level.units
+        .flatMap((unit) => unit.nodes)
+        .map((node) => toMapNode(target.subjectSlug, node)),
+    }));
+
+    if (levels.every((level) => level.nodes.length === 0)) {
+      target.host.closest('.adventure-map')?.remove();
+      return;
+    }
+
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    const viewport = viewportFor(target.host);
+    target.host.style.aspectRatio = `${viewport.width} / ${viewport.height}`;
+
+    void import('../game/adventure/createAdventureMap')
+      .then(({ createAdventureMap }) => {
+        if (!target.host.isConnected) return;
+        const handle = createAdventureMap(target.host, {
+          subjectLabel: target.subjectLabel,
+          levels,
+          initialLevelIndex: target.initialLevelIndex,
+          viewport,
+          reducedMotion,
+          onSelect: (node) => {
+            if (node.href) ctx.navigate(node.href);
+          },
+          onLocked: () =>
+            showToast('Selesaikan lesson sebelumnya untuk membuka node ini.', 'default'),
+          onLevelChange: (_level, index) => target.applyLevel(index),
+        });
+        mapHandle = handle;
+        mountedViewport = viewport;
+
+        if (pendingLevelIndex !== null) {
+          handle.setLevel(pendingLevelIndex);
+          pendingLevelIndex = null;
+        }
+      })
+      .catch((error) => {
+        console.error('[learn] adventure map failed to load', error);
+        target.host.textContent =
+          'Peta 2D tidak tersedia. Daftar lesson di bawah tetap bisa dipakai.';
+      });
+  };
+
+  const remountMap = (target: NonNullable<SubjectPathView['map']>): void => {
+    mapHandle?.destroy();
+    mapHandle = null;
+    mountedViewport = null;
+    mountMap(target);
+  };
+
+  const handleResize = (): void => {
+    if (resizeTimer !== null) window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(() => {
+      resizeTimer = null;
+      const target = currentMapView?.map;
+      if (!target || !target.host.isConnected) return;
+
+      const next = viewportFor(target.host);
+      if (mountedViewport && mountedViewport.key === next.key) return;
+      remountMap(target);
+    }, 250);
+  };
+
+  window.addEventListener('resize', handleResize);
+
+  ctx.onCleanup(() => {
+    window.removeEventListener('resize', handleResize);
+    if (resizeTimer !== null) window.clearTimeout(resizeTimer);
+    resizeTimer = null;
+    mapHandle?.destroy();
+    mapHandle = null;
+    mountedViewport = null;
+    pendingLevelIndex = null;
+    currentMapView = null;
+  });
+
   const load = () => {
+    mapHandle?.destroy();
+    mapHandle = null;
+    mountedViewport = null;
+    currentMapView = null;
+    pendingLevelIndex = null;
     host.className = 'loading-screen';
     host.replaceChildren(el('span', { class: 'spinner' }), el('p', { text: 'Memuat peta belajar…' }));
 
@@ -333,7 +648,10 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
         }
 
         host.className = '';
-        host.replaceChildren(renderPath(path));
+        const view = renderPath(path, selectMapLevel);
+        host.replaceChildren(view.element);
+        currentMapView = view;
+        if (view.map) mountMap(view.map);
       } catch (error) {
         console.error('[learn] failed to load subject path', error);
         if (!host.isConnected) return;

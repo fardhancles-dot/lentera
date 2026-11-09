@@ -9,6 +9,7 @@ import './styles/practice.css';
 import { Router } from './app/router';
 import { kikoMarkup, lampMarkup } from './components/brandArt';
 import { brand } from './config/brand';
+import { installAudioUnlock } from './game/audio/audioEngine';
 import { sessionStore } from './stores/session.store';
 
 const rootElement = document.querySelector<HTMLElement>('#app');
@@ -28,6 +29,8 @@ root.innerHTML = `
 document.documentElement.dataset.reducedMotion = String(
   window.matchMedia('(prefers-reduced-motion: reduce)').matches,
 );
+
+installAudioUnlock();
 
 sessionStore.subscribe((state) => {
   if (state.user) {

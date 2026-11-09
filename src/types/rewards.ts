@@ -103,3 +103,13 @@ export interface UseItemOutcome {
   hearts: { current: number; max: number } | null;
   freezes: number;
 }
+
+export interface RewardNodeClaim {
+  nodeId: string;
+  alreadyClaimed: boolean;
+  coinsAwarded: number;
+  xpAwarded: number;
+  coinBalance: number;
+  totalXp: number;
+  claimedAt: string | null;
+}

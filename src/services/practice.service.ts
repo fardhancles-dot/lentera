@@ -14,7 +14,8 @@ export type PracticeMode =
   | 'mistakes'
   | 'personalized'
   | 'unit_review'
-  | 'legendary';
+  | 'legendary'
+  | 'scheduled_review';
 
 export interface PracticeModeInfo {
   mode: PracticeMode;
@@ -23,6 +24,7 @@ export interface PracticeModeInfo {
   icon: IconName;
   meta: string;
   needsUnit?: boolean;
+  needsDue?: boolean;
 }
 
 export const PRACTICE_MODES: PracticeModeInfo[] = [
@@ -56,6 +58,15 @@ export const PRACTICE_MODES: PracticeModeInfo[] = [
     description: 'Ulangi soal yang pernah kamu jawab salah, dari lesson maupun latihan.',
     icon: 'refresh',
     meta: 'Dari riwayat jawabanmu',
+  },
+  {
+    mode: 'scheduled_review',
+    title: 'Review Terjadwal',
+    description:
+      'Ulangi soal yang sudah jatuh tempo menurut jadwal penguasaanmu. Soal yang sering salah kembali lebih cepat.',
+    icon: 'clock',
+    meta: 'Hanya soal jatuh tempo · maksimal 10 soal',
+    needsDue: true,
   },
   {
     mode: 'personalized',
@@ -131,6 +142,8 @@ const ERROR_MESSAGES: Record<string, string> = {
     'Belum ada jawaban salah yang tercatat di mata pelajaran ini. Kerjakan lesson dulu, lalu kembali.',
   practice_not_enough_questions:
     'Soal untuk mode ini belum cukup di mata pelajaran tersebut. Pilih mata pelajaran lain.',
+  practice_no_due_reviews:
+    'Belum ada soal yang jatuh tempo di mata pelajaran ini. Selesaikan lesson atau latihan dulu.',
   practice_incomplete: 'Belum ada jawaban pada sesi ini, jadi belum bisa dinilai.',
   question_not_in_practice: 'Soal tidak cocok dengan sesi latihan ini.',
 };

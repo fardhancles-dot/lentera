@@ -62,6 +62,8 @@ try {
   await run('supabase/migrations/20261110100000_friends_quest.sql');
   await run('supabase/migrations/20261110120000_progression_economy.sql');
   await run('supabase/migrations/20261110130000_tahap5_rewards.sql');
+  await run('supabase/migrations/20261110140000_mastery_review_rewards.sql');
+  await run('supabase/migrations/20261110150000_subject_overview_owner.sql');
 
   const content = await db.query(`
     select
@@ -76,8 +78,8 @@ try {
   check(stats.lessons === 57, '57 lessons are seeded', String(stats.lessons));
   check(stats.questions === 231, '231 questions are seeded', String(stats.questions));
   check(
-    stats.node_kinds === 6,
-    'lesson, review, challenge, practice, checkpoint, and legendary nodes exist',
+    stats.node_kinds === 7,
+    'all seven node kinds, including reward, exist',
     String(stats.node_kinds),
   );
   check(stats.question_types === 12, 'all twelve question types are seeded', String(stats.question_types));
@@ -424,6 +426,23 @@ try {
     'subject overview aggregates the eight lessons and 30 questions',
     JSON.stringify(overview.rows[0] ?? null),
   );
+
+  // Regression guard: players may only read the aggregate view even though
+  // `questions` is revoked for them. This failed before the owner-rights fix.
+  await db.exec('set role authenticated');
+  try {
+    const playerOverview = await db.query(
+      `select lesson_count, question_count from public.subject_overview where slug = 'pemrograman-web'`,
+    );
+    check(
+      playerOverview.rows[0]?.lesson_count === 8 &&
+        playerOverview.rows[0]?.question_count === 30,
+      'signed-in player can read subject overview without question access',
+      JSON.stringify(playerOverview.rows[0] ?? null),
+    );
+  } finally {
+    await db.exec('reset role');
+  }
 
   const users = await db.query(`
     insert into auth.users (email) values
@@ -1340,6 +1359,264 @@ try {
     'players cannot edit inventory directly',
     'update public.user_inventory set quantity = 9 where user_id = $1',
     [user3],
+    'permission denied',
+  );
+  await db.exec('reset role');
+
+  // -------------------------------------------------------------------------
+  // Stage 5 remainder: per-question mastery, scheduled review, and level
+  // reward nodes. A fresh player keeps the assertions independent.
+  // -------------------------------------------------------------------------
+  await db.exec('reset role');
+  const masteryUser = await db.query(
+    `insert into auth.users (email) values ('player-four@example.com') returning id`,
+  );
+  const user4 = masteryUser.rows[0].id;
+  await asUser(user4);
+
+  const rewardNodes = await db.query(
+    `select count(*)::int as count,
+       count(*) filter (where reward_coins > 0 and reward_xp > 0)::int as rewarded,
+       (select count(*)::int from (
+          select u.course_level_id
+          from public.learning_nodes n
+          join public.units u on u.id = n.unit_id
+          where n.node_type = 'reward'
+          group by u.course_level_id
+          having count(*) <> 1
+        ) duplicate_levels) as duplicate_levels
+     from public.learning_nodes where node_type = 'reward'`,
+  );
+  check(
+    rewardNodes.rows[0].count === 22 && rewardNodes.rows[0].rewarded === 22,
+    'every course level has one reward node with Coins and XP',
+    JSON.stringify(rewardNodes.rows[0]),
+  );
+  check(
+    rewardNodes.rows[0].duplicate_levels === 0,
+    'no course level has more than one reward node',
+    String(rewardNodes.rows[0].duplicate_levels),
+  );
+
+  const firstEnglishNode = await db.query(
+    `select n.id as node_id, l.id as lesson_id, lv.id as level_id
+     from public.learning_nodes n
+     join public.lessons l on l.id = n.lesson_id
+     join public.units u on u.id = n.unit_id
+     join public.course_levels lv on lv.id = u.course_level_id
+     join public.courses c on c.id = lv.course_id
+     join public.subjects s on s.id = c.subject_id
+     where s.slug = 'bahasa-inggris' and n.is_active
+     order by lv.sort_order, u.sort_order, n.sort_order
+     limit 1`,
+  );
+  const firstEnglish = firstEnglishNode.rows[0];
+  const firstEnglishReward = await db.query(
+    `select n.id, n.reward_coins, n.reward_xp
+     from public.learning_nodes n
+     join public.units u on u.id = n.unit_id
+     where u.course_level_id = $1 and n.node_type = 'reward'
+     limit 1`,
+    [firstEnglish.level_id],
+  );
+  const rewardNode = firstEnglishReward.rows[0];
+
+  await expectError(
+    'scheduled review rejects a player without due questions',
+    'select public.start_scheduled_review($1)',
+    [englishCourse],
+    'practice_no_due_reviews',
+  );
+
+  const masteryLesson = await db.query('select public.start_lesson($1) as payload', [
+    firstEnglish.node_id,
+  ]);
+  const masteryQuestion = await db.query(
+    `select q.id, q.type,
+       (select id from public.question_options where question_id = q.id and not is_correct order by sort_order limit 1) as wrong_option
+     from public.questions q
+     where q.lesson_id = $1 and q.is_active
+     order by q.sort_order limit 1`,
+    [firstEnglish.lesson_id],
+  );
+  const masteryTarget = masteryQuestion.rows[0];
+  const wrongMasteryAnswer = masteryTarget.wrong_option
+    ? { optionId: masteryTarget.wrong_option }
+    : { text: 'jawaban-salah' };
+  await db.query(
+    'select public.submit_attempt_answer($1, $2, $3::jsonb)',
+    [masteryLesson.rows[0].payload.attemptId, masteryTarget.id, JSON.stringify(wrongMasteryAnswer)],
+  );
+
+  const masteryAfterWrong = await db.query(
+    `select mastery_level, interval_days, correct_count, attempts,
+       next_review_at > now() + interval '9 minutes' as due_soon,
+       next_review_at < now() + interval '11 minutes' as not_too_late
+     from public.user_question_mastery where user_id = $1 and question_id = $2`,
+    [user4, masteryTarget.id],
+  );
+  check(
+    masteryAfterWrong.rows[0]?.mastery_level === 0 &&
+      masteryAfterWrong.rows[0]?.interval_days === 0 &&
+      masteryAfterWrong.rows[0]?.due_soon &&
+      masteryAfterWrong.rows[0]?.not_too_late,
+    'wrong answer schedules the question again in about ten minutes',
+    JSON.stringify(masteryAfterWrong.rows[0] ?? null),
+  );
+
+  await db.query(
+    'update public.user_question_mastery set next_review_at = now() - interval \'1 minute\' where user_id = $1 and question_id = $2',
+    [user4, masteryTarget.id],
+  );
+
+  const correctMasteryAnswer = await correctAnswerFor(masteryTarget);
+  await db.exec('set role authenticated');
+  await asUser(user4);
+  const masteryBoard = await db.query('select public.get_my_mastery() as payload');
+  const masteryPayload = masteryBoard.rows[0].payload;
+  const englishMastery = masteryPayload.courses.find(
+    (course) => course.subjectSlug === 'bahasa-inggris',
+  );
+  check(
+    masteryPayload.summary.tracked === 1 &&
+      masteryPayload.summary.due === 1 &&
+      masteryPayload.summary.accuracy === 0,
+    'mastery RPC reports one tracked question and one due review',
+    JSON.stringify(masteryPayload.summary),
+  );
+  check(
+    englishMastery?.due === 1 && englishMastery?.tracked === 1,
+    'mastery RPC groups due questions by course',
+    JSON.stringify(englishMastery ?? null),
+  );
+
+  const scheduled = await db.query('select public.start_scheduled_review($1) as payload', [
+    englishCourse,
+  ]);
+  const scheduledPayload = scheduled.rows[0].payload;
+  check(
+    scheduledPayload.mode === 'scheduled_review' &&
+      scheduledPayload.questions.length === 1 &&
+      scheduledPayload.questions[0].id === masteryTarget.id,
+    'scheduled review returns only the due question',
+    JSON.stringify({
+      mode: scheduledPayload.mode,
+      count: scheduledPayload.questions?.length,
+      id: scheduledPayload.questions?.[0]?.id,
+    }),
+  );
+
+  await db.query('select public.submit_practice_answer($1, $2, $3::jsonb, $4)', [
+    scheduledPayload.sessionId,
+    masteryTarget.id,
+    JSON.stringify(correctMasteryAnswer),
+    2000,
+  ]);
+  await db.exec('reset role');
+  const masteryAfterReview = await db.query(
+    `select mastery_level, interval_days, correct_streak, correct_count, attempts
+     from public.user_question_mastery where user_id = $1 and question_id = $2`,
+    [user4, masteryTarget.id],
+  );
+  check(
+    masteryAfterReview.rows[0]?.mastery_level === 1 &&
+      masteryAfterReview.rows[0]?.interval_days === 1 &&
+      masteryAfterReview.rows[0]?.correct_count === 1 &&
+      masteryAfterReview.rows[0]?.attempts === 2,
+    'a correct review raises mastery and moves the next review one day out',
+    JSON.stringify(masteryAfterReview.rows[0] ?? null),
+  );
+
+  await db.exec('set role authenticated');
+  await asUser(user4);
+  await expectError(
+    'reward node is locked before the level is complete',
+    'select public.claim_reward_node($1)',
+    [rewardNode.id],
+    'reward_locked',
+  );
+  await db.exec('reset role');
+
+  await db.query(
+    `insert into public.user_node_progress (user_id, node_id, status, best_score, attempts, completed_at)
+     select $1, n.id, 'completed', 100, 1, now()
+     from public.learning_nodes n
+     join public.units u on u.id = n.unit_id
+     where u.course_level_id = $2 and n.is_active and n.lesson_id is not null
+     on conflict (user_id, node_id) do update set
+       status = 'completed', best_score = 100, completed_at = now()`,
+    [user4, firstEnglish.level_id],
+  );
+
+  await db.exec('set role authenticated');
+  await asUser(user4);
+  const rewardClaim = await db.query('select public.claim_reward_node($1) as payload', [
+    rewardNode.id,
+  ]);
+  const rewardPayload = rewardClaim.rows[0].payload;
+  check(
+    rewardPayload.alreadyClaimed === false &&
+      rewardPayload.coinsAwarded === rewardNode.reward_coins &&
+      rewardPayload.xpAwarded === rewardNode.reward_xp,
+    'claiming a reward node grants its configured Coins and XP',
+    JSON.stringify(rewardPayload),
+  );
+
+  const rewardRepeat = await db.query('select public.claim_reward_node($1) as payload', [
+    rewardNode.id,
+  ]);
+  check(
+    rewardRepeat.rows[0].payload.alreadyClaimed === true &&
+      rewardRepeat.rows[0].payload.coinsAwarded === 0 &&
+      rewardRepeat.rows[0].payload.xpAwarded === 0,
+    'reward node claim is idempotent',
+    JSON.stringify(rewardRepeat.rows[0].payload),
+  );
+
+  await db.exec('reset role');
+  const rewardWallet = await db.query(
+    'select coins from public.user_wallets where user_id = $1',
+    [user4],
+  );
+  const rewardLedger = await db.query(
+    `select count(*)::int as count, coalesce(sum(amount), 0)::int as total
+     from public.user_xp_ledger
+     where user_id = $1 and source = 'reward_node'`,
+    [user4],
+  );
+  const rewardCoinLedger = await db.query(
+    `select count(*)::int as count, coalesce(sum(amount), 0)::int as total
+     from public.coin_transactions
+     where user_id = $1 and source = 'reward_node'`,
+    [user4],
+  );
+  check(
+    rewardWallet.rows[0].coins === rewardNode.reward_coins,
+    'reward Coins are written to the wallet once',
+    String(rewardWallet.rows[0].coins),
+  );
+  check(
+    rewardLedger.rows[0].count === 1 && rewardLedger.rows[0].total === rewardNode.reward_xp,
+    'reward XP is written to the ledger once',
+    JSON.stringify(rewardLedger.rows[0]),
+  );
+  check(
+    rewardCoinLedger.rows[0].count === 1 &&
+      rewardCoinLedger.rows[0].total === rewardNode.reward_coins,
+    'reward Coins are written to the coin ledger once',
+    JSON.stringify(rewardCoinLedger.rows[0]),
+  );
+
+  await db.exec('set role authenticated');
+  await asUser(user2);
+  const hiddenRewardClaims = await db.query(
+    'select count(*)::int as count from public.user_reward_claims',
+  );
+  check(hiddenRewardClaims.rows[0].count === 0, 'RLS hides another player’s reward claims');
+  await expectError(
+    'players cannot edit mastery directly',
+    'update public.user_question_mastery set mastery_level = 5 where user_id = $1',
+    [user4],
     'permission denied',
   );
   await db.exec('reset role');

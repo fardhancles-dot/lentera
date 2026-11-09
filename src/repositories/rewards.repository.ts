@@ -55,4 +55,12 @@ export const rewardsRepository = {
     if (error) raise(error);
     return data ?? {};
   },
+
+  async claimRewardNode(nodeId: string): Promise<Json> {
+    const { data, error } = await requireSupabase().rpc('claim_reward_node', {
+      p_node_id: nodeId,
+    });
+    if (error) raise(error);
+    return data ?? {};
+  },
 };

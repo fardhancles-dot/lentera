@@ -4,6 +4,7 @@ import {
   parseInventory,
   parsePurchase,
   parseQuestBoard,
+  parseRewardNodeClaim,
   parseQuestClaim,
   parseShopCatalog,
   parseUseItem,
@@ -181,5 +182,40 @@ describe('reward payload parsing', () => {
     });
     expect(freeze.effect).toBe('freeze');
     expect(freeze.freezes).toBe(2);
+  });
+
+  it('parses reward node claims and keeps repeat claims at zero', () => {
+    const first = parseRewardNodeClaim({
+      nodeId: 'node-1',
+      alreadyClaimed: false,
+      coinsAwarded: 30,
+      xpAwarded: 10,
+      coinBalance: 130,
+      totalXp: 420,
+      claimedAt: '2026-11-10T02:00:00Z',
+    });
+    expect(first).toMatchObject({
+      nodeId: 'node-1',
+      alreadyClaimed: false,
+      coinsAwarded: 30,
+      xpAwarded: 10,
+      coinBalance: 130,
+      totalXp: 420,
+    });
+
+    const repeat = parseRewardNodeClaim({
+      nodeId: 'node-1',
+      alreadyClaimed: true,
+      coinsAwarded: 0,
+      xpAwarded: 0,
+      coinBalance: -5,
+      totalXp: 'rusak',
+    });
+    expect(repeat.alreadyClaimed).toBe(true);
+    expect(repeat.coinsAwarded).toBe(0);
+    expect(repeat.xpAwarded).toBe(0);
+    expect(repeat.coinBalance).toBe(0);
+    expect(repeat.totalXp).toBe(0);
+    expect(repeat.claimedAt).toBeNull();
   });
 });

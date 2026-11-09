@@ -77,6 +77,11 @@ const routes: RouteDefinition[] = [
     load: () => import('../pages/learn-lesson.page'),
   },
   {
+    pattern: '/learn/:subject/reward/:nodeSlug',
+    access: 'onboarded',
+    load: () => import('../pages/learn-reward.page'),
+  },
+  {
     pattern: '/learn/:subject/lesson/:lessonSlug/play',
     access: 'onboarded',
     load: () => import('../pages/lesson-play.page'),
@@ -85,6 +90,11 @@ const routes: RouteDefinition[] = [
     pattern: '/practice',
     access: 'onboarded',
     load: () => import('../pages/practice.page'),
+  },
+  {
+    pattern: '/mastery',
+    access: 'onboarded',
+    load: () => import('../pages/mastery.page'),
   },
   {
     pattern: '/practice/play',

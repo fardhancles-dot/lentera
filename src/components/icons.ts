@@ -32,6 +32,7 @@ const PATHS = {
   shield: '<path d="M12 3 4.5 6v5.5c0 4.5 3 8 7.5 9.5 4.5-1.5 7.5-5 7.5-9.5V6L12 3Z"/><path d="m9 12 2 2 4-4"/>',
   globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 4 5.6 4 9s-1.5 6.4-4 9c-2.5-2.6-4-5.6-4-9s1.5-6.4 4-9Z"/>',
   volume: '<path d="M4 9.5h3L12 5v14L7 14.5H4v-5Z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/>',
+  'volume-off': '<path d="M4 9.5h3L12 5v14L7 14.5H4v-5Z"/><path d="m16 9 5 6M21 9l-5 6"/>',
   bell: '<path d="M6 9a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 13 6 9Z"/><path d="M10 18a2 2 0 0 0 4 0"/>',
   'chevron-right': '<path d="m9 5 7 7-7 7"/>',
   'chevron-down': '<path d="m5 9 7 7 7-7"/>',

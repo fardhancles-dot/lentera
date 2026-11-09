@@ -105,7 +105,10 @@ Developer mendapat `developerPreview`: semua node tampil `preview`, tetapi statu
 asli tetap dihitung dari data pemain. Unlock tetap ditegakkan ulang di server.
 
 Katalog memakai view `subject_overview` (agregat level/unit/lesson/soal). Progres katalog
-diambil dari `user_course_progress` per course.
+diambil dari `user_course_progress` per course. Bila database masih menjalankan view itu
+dengan `security_invoker` sementara `questions` di-revoke, repository mendeteksi
+`permission denied` sekali per sesi lalu menghitung agregat yang sama dari tabel
+kurikulum terpublikasi + `lesson_question_stats` (tanpa membaca baris soal).
 
 ## Lesson engine
 

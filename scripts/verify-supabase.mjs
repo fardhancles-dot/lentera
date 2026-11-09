@@ -183,6 +183,22 @@ try {
     throw new Error('role tidak memadai');
   }
 
+  // Migration 20261110150000 makes the catalog view run with owner rights while
+  // `questions` stays revoked. Before it is applied this check fails with
+  // "permission denied for table questions", which is the expected signal.
+  const { data: catalog, error: catalogError } = await supabase
+    .from('subject_overview')
+    .select('slug, lesson_count, question_count')
+    .eq('slug', 'pemrograman-web')
+    .maybeSingle();
+  if (catalogError) {
+    fail('view katalog bisa dibaca pemain', catalogError.message);
+  } else if (catalog?.lesson_count !== 8 || catalog?.question_count !== 30) {
+    fail('view katalog bisa dibaca pemain', JSON.stringify(catalog));
+  } else {
+    ok('view katalog bisa dibaca pemain (8 lesson, 30 soal)');
+  }
+
   const { data: lessons, error: lessonError } = await supabase
     .from('lessons')
     .select('id, slug')
@@ -707,6 +723,79 @@ try {
   } else {
     fail('use_inventory_item menolak item yang tidak dimiliki', JSON.stringify(invalidUse));
   }
+
+  const { data: masteryRpc, error: masteryRpcError } = await supabase.rpc('get_my_mastery');
+  const masterySummary = masteryRpc?.summary;
+  if (masteryRpcError) {
+    fail('get_my_mastery', masteryRpcError.message);
+  } else if (
+    typeof masterySummary?.tracked === 'number' &&
+    typeof masterySummary?.due === 'number' &&
+    typeof masterySummary?.accuracy === 'number' &&
+    Array.isArray(masteryRpc?.courses) &&
+    masterySummary.tracked >= 1 &&
+    masterySummary.accuracy >= 0
+  ) {
+    ok('get_my_mastery mengembalikan ringkasan dan progres soal terlacak');
+  } else {
+    fail('get_my_mastery mengembalikan ringkasan dan progres soal terlacak', JSON.stringify(masteryRpc));
+  }
+
+  const { data: scheduledReview, error: scheduledReviewError } = await supabase.rpc(
+    'start_scheduled_review',
+    { p_course_id: courses[0].id },
+  );
+  if (scheduledReview?.sessionId) {
+    ok('start_scheduled_review membuat sesi dari soal jatuh tempo');
+  } else if (scheduledReviewError?.message.includes('practice_no_due_reviews')) {
+    ok('start_scheduled_review menolak dengan benar saat belum ada soal jatuh tempo');
+  } else {
+    fail(
+      'start_scheduled_review membuat sesi atau menolak dengan practice_no_due_reviews',
+      scheduledReviewError?.message ?? JSON.stringify(scheduledReview),
+    );
+  }
+
+  const { data: rewardNodes, error: rewardNodesError } = await supabase
+    .from('learning_nodes')
+    .select('id, slug, reward_coins, reward_xp')
+    .eq('node_type', 'reward')
+    .eq('is_active', true);
+  if (
+    !rewardNodesError &&
+    rewardNodes?.length === 22 &&
+    rewardNodes.every((node) => node.reward_coins > 0 && node.reward_xp > 0)
+  ) {
+    ok('tabel learning_nodes berisi 22 node hadiah dengan Koin dan XP');
+  } else {
+    fail(
+      'tabel learning_nodes berisi 22 node hadiah dengan Koin dan XP',
+      rewardNodesError?.message ?? String(rewardNodes?.length),
+    );
+  }
+
+  const { data: unknownReward, error: unknownRewardError } = await supabase.rpc(
+    'claim_reward_node',
+    { p_node_id: '00000000-0000-4000-8000-000000000000' },
+  );
+  if (unknownRewardError?.message.includes('reward_not_found') || !unknownReward) {
+    ok('claim_reward_node menolak node yang tidak ada');
+  } else {
+    fail('claim_reward_node menolak node yang tidak ada', JSON.stringify(unknownReward));
+  }
+
+  const { error: masteryWriteError } = await supabase
+    .from('user_question_mastery')
+    .update({ mastery_level: 5 })
+    .eq('user_id', auth.user.id);
+  if (masteryWriteError) ok('pemain tidak bisa mengubah mastery langsung');
+  else fail('pemain tidak bisa mengubah mastery langsung');
+
+  const { error: rewardClaimWriteError } = await supabase
+    .from('user_reward_claims')
+    .insert({ user_id: auth.user.id, coins: 9999, xp: 9999 });
+  if (rewardClaimWriteError) ok('pemain tidak bisa menulis klaim hadiah langsung');
+  else fail('pemain tidak bisa menulis klaim hadiah langsung');
 
   const { data: questDefinitions, error: questDefinitionsError } = await supabase
     .from('quest_definitions')

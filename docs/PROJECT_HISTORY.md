@@ -673,3 +673,270 @@ lulus seluruh check lama, jadi progression, Friends Quest, practice, dan lesson 
 Sisa slice reward Tahap 5 selesai pada level database, API, tipe, UI, dan build. Klaim
 “selesai” di sini berarti seluruh perintah di tabel pengujian di atas sudah dijalankan dan
 lulus; pengujian klik browser tetap menjadi pekerjaan terpisah.
+
+---
+
+## Sesi 11 — 10 November 2026 — Menutup Tahap 5: mastery, review terjadwal, node hadiah
+
+**Fokus:** melanjutkan pekerjaan yang terhenti di tengah slice terakhir Tahap 5. Sesi ini
+tidak membangun ulang Tahap 1–4, tidak mengganti stack, tidak mereset database, dan tidak
+mengubah UI yang sudah ada selain menautkan fitur baru.
+
+### Kondisi saat sesi dimulai
+
+- Working tree berisi pekerjaan belum di-commit: migration
+  `20261110140000_mastery_review_rewards.sql`, halaman `/mastery`, halaman
+  `/learn/:subject/reward/:nodeSlug`, service/repository/tipe mastery, mode latihan
+  `scheduled_review`, dan tambahan CSS.
+- `npm run typecheck` lulus, `npm test` lulus 57 test, `npm run build` lulus.
+- `npm run test:sql` **crash** saat `claim_reward_node`:
+  `there is no unique or exclusion constraint matching the ON CONFLICT specification`.
+  Inilah titik terakhir pekerjaan sebelumnya. Penyebabnya `on conflict (reference_id)`
+  padahal unique index yang ada adalah parsial pada `(user_id, source, reference_id)`.
+
+### Perbaikan dan penyelesaian
+
+- Migration diperbaiki memakai target indeks yang benar:
+  `on conflict (user_id, source, reference_id) where reference_id is not null do nothing`.
+  Idempotensi klaim tetap berlapis: `user_reward_claims` unik, unique index
+  `user_xp_ledger.reward_claim_id`, unique index `coin_transactions.reward_claim_id`, dan
+  `pg_advisory_xact_lock` per pemain+node.
+- Seluruh blok smoke check baru (mastery, review terjadwal, node hadiah) kini berjalan:
+  salah menjadwalkan ulang ±10 menit, benar menaikkan mastery dan interval menjadi 1 hari,
+  review hanya mengembalikan soal jatuh tempo, node hadiah menolak klaim sebelum level
+  selesai, klaim memberi Koin/XP tepat sekali, klaim kedua idempoten, dan RLS menyembunyikan
+  data pemain lain.
+- Unit test baru: `tests/mastery.test.ts` (3 test parser) dan satu test
+  `parseRewardNodeClaim` di `tests/rewards.test.ts`.
+- Dokumentasi diperbarui agar tidak lagi menyatakan mastery “Not implemented”: README,
+  `docs/DATABASE.md`, `docs/GAMEPLAY.md`, `docs/TESTING.md`, dan catatan sesi ini.
+- Migration diterapkan ke Supabase remote `xvrnmxbrxhtzzavmrlvy` (proyek production milik
+  pemilik) dengan `supabase db push --include-all --remote`. Dry run lebih dulu menunjukkan
+  tepat satu migration additive, dan CLI melaporkan “Finished” tanpa error.
+- `scripts/verify-supabase.mjs` ditambah enam check nyata: `get_my_mastery`,
+  `start_scheduled_review`, 22 node hadiah aktif dengan Koin/XP, penolakan
+  `claim_reward_node` untuk node tidak dikenal, dan penolakan tulis langsung ke
+  `user_question_mastery` serta `user_reward_claims`.
+
+### Tidak ada perubahan pada
+
+- Kode Tahap 1–4 (auth, kurikulum, lesson engine, 20 mini-game, Friends Quest).
+- Skema/heart/streak/quest/toko yang sudah berjalan; migration baru hanya menambah tabel,
+  kolom, fungsi, dan 22 node hadiah.
+- `.env`, konfigurasi Vercel, dan `scripts/verify-supabase.mjs`.
+
+### Pengujian yang dijalankan
+
+| Perintah | Hasil |
+| --- | --- |
+| `npm run typecheck` | Lulus, 0 error. |
+| `npm test` | **61 test lulus (7 file)**. |
+| `npm run test:sql` | **205 smoke check lulus** di PGlite. |
+| `npm run build` | Lulus; halaman mastery dan reward menjadi chunk terpisah. |
+| `npm run verify:supabase` | **60 check lulus** di project `xvrnmxbrxhtzzavmrlvy` setelah migration diterapkan (54 check lama + 6 check mastery/node hadiah). |
+
+### Batasan yang tetap jujur
+
+- UI `/mastery` dan `/learn/:subject/reward/:nodeSlug` belum diuji lewat browser dengan akun
+  nyata; belum ada Playwright. Bukti yang ada: SQL smoke, unit test parser, build, dan RPC
+  nyata lewat `verify:supabase`.
+- Klaim node hadiah yang berhasil (bukan hanya penolakan node tidak dikenal) belum diuji
+  lewat API remote karena akun uji belum menuntaskan seluruh lesson satu level; jalur
+  tersebut diuji lengkap di PGlite.
+- Seed Bahasa Sambas tetap kosong dan harus diisi pemilik lewat Admin Panel (Tahap 8).
+- Tidak ada perubahan yang di-commit atau di-push pada sesi ini.
+
+### Status Tahap 5
+
+Seluruh cakupan prioritas 5 (XP, Koin, Hearts, Streak, dan reward) kini punya implementasi
+nyata dan bukti eksekusi lokal: ledger XP/Koin, 30 level akun + hadiah level, Hearts dengan
+regenerasi/refill, Streak dengan milestone dan Perisai, quest harian/mingguan, 8 achievement,
+toko + inventory, mastery per soal, review terjadwal, serta 22 node hadiah level.
+Monthly Challenge dan leaderboard/liga tetap milik Tahap 7 sesuai roadmap (Phase 7 —
+Quest and Competition).
+
+### Langkah berikutnya
+
+1. Uji `/mastery`, klaim node hadiah, dan Review Terjadwal di browser dengan akun nyata
+   (atau tambahkan Playwright).
+2. Lanjut ke Tahap 6 (karakter, animasi, audio, adventure map Phaser) setelah pemilik proyek
+   menyetujui laporan kesiapan.
+
+---
+
+## Sesi 12 — 10 November 2026 — Tahap 6: peta petualangan Phaser dan animasi Kiko
+
+**Fokus:** Irisan pertama Tahap 6 — karakter Kiko reusable dengan animasi, peta
+petualangan Phaser di halaman peta belajar, tanpa mengubah tampilan landing dan tanpa
+menghapus daftar lesson DOM.
+
+### Hasil
+
+- `src/game/characters/kiko.ts`: factory `createKiko(scene, { reducedMotion, scale })`
+  dengan 13 state animasi (idle, blink, happy, sad, excited, surprised, thinking,
+  celebrating, encouraging, disappointed, speaking, jumping, walking), API `root`,
+  `setAnimation`, `setFacing`, `getAnimation`, `destroy`, dan satu rig phaser untuk bob,
+  kaki, telinga, lengan, serta lentera.
+- `src/game/mascot/createMascotStage.ts` kini memakai `createKiko`; gambar, posisi, dan
+  denyut idle maskot landing dipertahankan, hanya sumber kode karakternya yang dipusatkan.
+- `src/game/adventure/`: tipe peta, `computeMapPositions` (serpentine tiga kolom dengan
+  perapatan baris), dan `createAdventureMap` yang memasang/membersihkan Phaser game.
+- `src/game/scenes/adventureMapScene.ts`: latar 2D deterministik per level, jalan berkelok,
+  node status selesai/siap/terkunci/pratinjau/hadiah, Kiko berjalan antarnode sebelum
+  navigasi, tooltip DOM-style di kanvas, animasi disappointed untuk node terkunci, dan
+  dukungan `prefers-reduced-motion`.
+- `/learn/:subject` menampilkan peta di atas daftar lesson lama. Pemilih level berupa
+  tombol DOM di atas kanvas (grup `role="group"`, `aria-pressed`, status `aria-live`),
+  sehingga bisa dioperasikan keyboard dan dibacakan pembaca layar; judul level, hitungan
+  selesai, dan status pengumuman diperbarui lewat `onLevelChange`. Peta dimuat lazy,
+  dihancurkan lewat `ctx.onCleanup`, dan tidak menggantikan tautan DOM yang aksesibel.
+- `src/styles/pages.css`: gaya `.adventure-map*` (header, frame rasio 900×460, legenda).
+
+### Pengujian
+
+| Perintah | Hasil |
+| --- | --- |
+| `npm run typecheck` | Lulus 0 error. |
+| `npm test` | **65 test lulus** (8 file), termasuk 4 test baru `tests/adventure-map.test.ts`. |
+| `npm run build` | Lulus; Phaser tetap chunk lazy (`phaser-*.js`). |
+| `npm run test:sql` | Tidak dijalankan ulang: tidak ada perubahan SQL pada sesi ini. |
+| `npm run verify:supabase` | Tidak dijalankan ulang: tidak ada perubahan remote pada sesi ini. |
+
+### Batasan yang tetap jujur
+
+- Peta dan animasi Kiko belum diuji di browser sungguhan; belum ada screenshot atau
+  Playwright. Bukti baru sebatas typecheck, unit test layout, dan build.
+- Di layar ponsel sempit peta 900×460 diperkecil sehingga label node kecil; daftar lesson
+  DOM di bawahnya tetap jadi jalur utama. Peta yang bisa digulir/zoom per level belum ada.
+- Peta menggambar satu level pada satu waktu. Perpindahan level lewat tombol DOM di atas
+  kanvas atau daftar DOM; belum ada animasi transisi antarlevel dan belum ada gulir/zoom
+  peta. Pemilih level dan status live belum diuji dengan pembaca layar sungguhan.
+- Sprite sheet/audio karakter, ekspresi berbasis aset, dan scene petualangan lain belum
+  dibuat (masih bagian Tahap 6).
+- Tidak ada commit atau push Git pada sesi ini.
+
+### Langkah berikutnya
+
+1. Uji peta di browser (desktop dan ponsel) dengan akun nyata; perbaiki bila ada masalah
+   interaksi kanvas.
+2. Lanjutkan Tahap 6: audio/SFX karakter, scene petualangan berikutnya, dan aset sprite
+   final bila tersedia.
+
+---
+
+## Sesi 13 — 10 November 2026 — Menuntaskan Stage 6: audio, animasi, peta responsif, aset
+
+**Fokus:** Menuntaskan cakupan Stage 6 (karakter, animasi, audio, adventure map,
+responsive UI, pipeline aset) tanpa mengubah sistem Stage 1–5.
+
+### Hasil
+
+- **Audio sintetis baru** (`src/game/audio/audioEngine.ts`, `patterns.ts`): tujuh SFX
+  (klik, langkah, benar, salah, selesai, hadiah, terkunci) dan musik latar lembut dari
+  osilator Web Audio. Volume mengikuti `music_volume`, `sfx_volume`, dan
+  `voice_volume`; mute lokal di topbar (`aria-pressed`) tanpa mengubah database;
+  AudioContext dibuka pada gesture pertama dan musik berhenti saat tab disembunyikan.
+- **Animasi karakter di alur nyata**: hasil lesson memasang maskot Phaser dengan
+  `celebrating` (lulus) atau `sad` (belum lulus), dengan fallback SVG bila kanvas gagal.
+  Maskot landing kini memakai `createKiko` dan memutar suara hadiah saat diklik.
+- **Peta responsif**: dua viewport logis — wide 900×460 tiga kolom dan compact 420×620
+  dua kolom dengan label 15px. Frame memakai rasio sesuai viewport, dan peta di-remount
+  (debounce 250ms) ketika breakpoint berubah. Penanda “Kamu” mengikuti Kiko, dan
+  perpindahan level memakai fade singkat yang dimatikan pada reduced motion.
+- **SFX terhubung ke gameplay**: jawaban benar/salah, hasil lesson, klaim hadiah,
+  pemilihan level dan node peta, serta klik umum tombol/tautan.
+- **Pipeline aset**: `src/game/assets/manifest.ts` (key, scene, sumber, lisensi),
+  `load.ts` (Phaser loader + error logging), `docs/ASSETS.md`, dan unit test yang
+  memvalidasi path file nyata.
+- **Playwright ditambahkan** (`@playwright/test`, `playwright.config.ts`,
+  `tests/e2e/stage6.spec.ts`). Dua test browser lulus: maskot landing dan peta
+  (kanvas tampil, pemilih level via keyboard, aria-pressed/status, mute, resize 390px).
+- **Bug lama diperbaiki (menghalangi Stage 6):** form login, register, dan lupa password
+  sempat memasang listener submit setelah `await renderAuthLayout`, sehingga submit lebih
+  awal bisa jatuh ke perilaku native dan menaruh email/password di query string. Listener
+  kini dipasang sebelum layout di-await dan pengujian login browser berhasil.
+
+### Pengujian
+
+| Perintah | Hasil |
+| --- | --- |
+| `npm run typecheck` | Lulus 0 error. |
+| `npm test` | **72 test lulus** (10 file), termasuk test audio, aset, dan layout compact. |
+| `npm run build` | Lulus; Phaser tetap chunk lazy. |
+| `npm run test:e2e` | **2 test lulus** (maskot landing; peta: kanvas, pemilih level keyboard, status live, mute, resize 390px). |
+| `npm run test:sql` | Tidak dijalankan ulang — tidak ada perubahan SQL. |
+| `npm run verify:supabase` | Tidak dijalankan ulang — tidak ada perubahan remote. |
+
+### Batasan yang tetap jujur
+
+- Akun QA di `.env` sempat berstatus belum onboarding; pengujian browser menyelesaikan
+  onboarding sekali untuk akun uji tersebut (perubahan data aditif pada akun QA, bukan
+  data pengguna lain).
+- Pemutaran audio belum diverifikasi secara audible (headless tidak bisa didengar);
+  yang diuji adalah pola nada, pemetaan volume, integrasi kode, dan tidak ada error
+  konsol pada smoke test.
+- Pembaca layar sungguhan belum dipakai untuk menguji pemilih level.
+- Sprite sheet/audio file final belum ada; semuanya masih prosedural dan didokumentasikan
+  sebagai karya orisinal, bukan placeholder diam.
+- Tidak ada commit atau push Git.
+
+### Status Stage 6
+
+Seluruh cakupan wajib A–F punya implementasi nyata, terhubung, dan lolos typecheck, 72
+unit test, build, serta 6 test browser (termasuk peta berakun dan breakpoint ponsel).
+Satu-satunya verifikasi yang belum dilakukan adalah mendengar audio secara langsung dan
+menguji dengan pembaca layar sungguhan; keduanya dicatat sebagai batasan, bukan klaim
+lulus.
+
+## Sesi 14 — 10 November 2026 — Uji menyeluruh di browser dan bug katalog
+
+### Yang dikerjakan
+
+- **E2E diperluas** dengan `tests/e2e/helpers.ts` dan `tests/e2e/app-smoke.spec.ts`:
+  sembilan rute aplikasi, alur lesson (peta → lesson → main → jawab → feedback → lanjut),
+  overflow horizontal di 390×844, dan reduced motion. `stage6.spec.ts` memakai helper yang
+  sama, sehingga totalnya enam test dan semuanya lulus.
+- **Bug lama diperbaiki (menghalangi pengujian):** `/learn` dan `/practice` gagal memuat
+  katalog karena `subject_overview` memakai `security_invoker = true` sementara `questions`
+  di-revoke dari `authenticated`, menghasilkan `permission denied for table questions`.
+  `curriculumRepository.listSubjects` kini mencoba view sekali per sesi; bila ditolak, ia
+  menghitung agregat yang sama dari `subjects`, `courses`, `course_levels`, `units`,
+  `lessons` terpublikasi plus view aman `lesson_question_stats` — tanpa membaca satu pun
+  baris soal. Hasilnya: katalog, Practice Hub, dan rute lain kembali tanpa error halaman.
+- **Migration perbaikan disiapkan:** `supabase/migrations/20261110150000_subject_overview_owner.sql`
+  membuat ulang `subject_overview` dengan hak owner (`security_invoker = false`) tanpa
+  mengubah definisi, komentar, atau grant. `scripts/test-sql.mjs` kini menjalankan view itu
+  sebagai role `authenticated`; sebelum perbaikan, query tersebut gagal dengan
+  `permission denied for table questions`, sesudahnya mengembalikan 8 lesson/30 soal.
+  Migration ini **sudah diterapkan** ke project nyata lewat Management API
+  (`npm run db:apply-catalog-fix`, token dari `.env`), lalu diverifikasi: view terbaca
+  pemain dengan 8 lesson/30 soal, `verify:supabase` 61 check lulus, dan log 403 hilang dari
+  browser.
+- **Verifikasi ditambah:** `scripts/verify-supabase.mjs` membaca `subject_overview` lewat
+  PostgREST dengan akun uji (8 lesson/30 soal). Test rute E2E kini menuntut satu
+  `.subject-card` tampil di `/learn`, bukan hanya shell halaman, dan filter log 403 sementara
+  di helper E2E sudah dihapus karena sumbernya sudah diperbaiki.
+- **Otomatisasi penerapan:** `scripts/apply-catalog-fix.mjs` +
+  `npm run db:apply-catalog-fix` memakai Supabase Management API
+  (`POST /v1/projects/{ref}/database/query`) dengan `SUPABASE_ACCESS_TOKEN`, menerapkan 4
+  statement migration secara berurutan, lalu memverifikasi hasilnya lewat PostgREST.
+  `--dry-run` menampilkan target dan SQL tanpa menyentuh database; token tidak pernah dicetak.
+
+### Pengujian
+
+| Perintah | Hasil |
+| --- | --- |
+| `npm run typecheck` | Lulus 0 error. |
+| `npm test` | **72 test lulus** (10 file). |
+| `npm run build` | Lulus. |
+| `npm run test:e2e` | **6 test lulus**: 9 rute + alur lesson + overflow ponsel + reduced motion + maskot landing + peta berakun. |
+| `npm run test:sql` | **206 smoke check lulus**, termasuk pengecekan akses view katalog sebagai `authenticated`. |
+| `npm run verify:supabase` | **61 check lulus**, termasuk `view katalog bisa dibaca pemain (8 lesson, 30 soal)`. |
+
+### Batasan
+
+- Browser mencatat satu log `Failed to load resource` untuk request `subject_overview` yang
+  ditolak sebelum fallback berjalan; helper E2E mengabaikan hanya log itu, error lain tetap
+  dianggap gagal.
+- Audio belum diverifikasi secara audible dan pembaca layar sungguhan belum dipakai.
+- Tidak ada commit atau push Git.

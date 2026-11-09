@@ -8,13 +8,25 @@
 > latihan memakai sesi server dengan timer, combo, dan XP idempoten. **Friends Quest**
 > tersedia sebagai co-op berbasis kode undangan; graf teman penuh tetap Tahap 7.
 > **Hearts, Streak, level akun, wallet, reward level, milestone Streak, quest,
-> achievement, toko, dan inventory** sudah aktif dan dihitung di server. Mastery belum
-> dibuat.
+> achievement, toko, dan inventory** sudah aktif dan dihitung di server. **Mastery per
+> soal dan review terjadwal** juga sudah aktif. Tahap 6 menambahkan **peta petualangan
+> Phaser responsif**, **karakter Kiko beranimasi** di landing, hasil lesson, dan peta,
+> serta **audio sintetis** (SFX + musik) dengan kontrol volume dan mute.
 
 ## Yang benar-benar ada sekarang
 
 - Maskot Kiko di landing, halaman auth, hasil lesson, dan sidebar: vector Phaser dengan
-  idle, blink, wave, celebrate.
+  idle, blink, celebrate.
+- Peta petualangan 2D di `/learn/:subject` dengan chip pemilih level: jalan
+  berkelok, node selesai/siap/terkunci, Kiko berjalan ke node sebelum navigasi, dan
+  tooltip status. Daftar lesson DOM di bawah peta tetap lengkap dan bisa dipakai keyboard.
+- Karakter Kiko reusable (`src/game/characters/kiko.ts`) dengan 13 state animasi: idle,
+  blink, happy, sad, excited, surprised, thinking, celebrating, encouraging,
+  disappointed, speaking, jumping, walking. Kiko tampil di landing/auth (idle, blink,
+  celebrate saat diklik) dan di hasil lesson (celebrating bila lulus, sad bila belum).
+- Audio sintetis: musik latar lembut, klik tombol, langkah di peta, jawaban benar/salah,
+  penyelesaian lesson, klaim hadiah, dan node terkunci. Volume musik/SFX/voice mengikuti
+  pengaturan pemain; tombol mute ada di topbar dan disimpan lokal.
 - Katalog mapel dari database, termasuk status pengembangan bahasa daerah.
 - Learning path per mapel: level → unit → node, dengan status selesai/aktif/terkunci.
 - Detail lesson: topik, jenis soal, tujuan unit, XP/Koin, syarat mulai.
@@ -51,6 +63,57 @@ Aturan yang sudah ditegakkan:
 4. **Progres per mata pelajaran.** `user_course_progress` dan `user_node_progress` terpisah.
 5. **Replay.** Lesson selesai boleh dimainkan lagi, tetapi tidak memberi XP/Koin tambahan.
 6. **Lulus.** Akurasi minimal 60% dari jumlah soal; gagal tetap menyimpan attempt.
+
+## Audio
+
+Seluruh audio dibuat dengan Web Audio API; tidak ada file sampel atau musik pihak
+ketiga. Karena browser memblokir audio sebelum interaksi, `installAudioUnlock()` di
+`main.ts` membuka AudioContext pada gesture pertama (klik/ketikan), lalu musik mulai
+untuk pemain yang sudah login.
+
+- **Musik** hanya berjalan untuk pengguna login, berhenti saat tab disembunyikan, dan
+  gain-nya mengikuti `music_volume` (0–100).
+- **SFX** mengikuti `sfx_volume`; pola nada ada di `src/game/audio/patterns.ts`.
+- **Suara karakter/model** memakai `speechSynthesis` dan menghormati `voice_volume`
+  bila pemanggil tidak memberi volume eksplisit.
+- **Mute** adalah preferensi perangkat (localStorage), bukan perubahan database;
+  tombolnya ada di topbar dengan `aria-pressed`.
+
+## Peta petualangan 2D
+
+Peta Phaser menampilkan satu level pada satu waktu. Saat dibuka, level yang dipilih adalah
+level pertama yang punya node `available`, atau level terakhir bila semua level sudah
+selesai. Tombol level di atas kanvas bisa dipakai untuk berpindah level tanpa meninggalkan
+halaman; setiap level punya jumlah node dan tata letak sendiri.
+
+Perilaku yang sudah berjalan:
+
+1. **Pemilih level yang aksesibel.** Semua level yang punya node tampil sebagai tombol DOM
+   di atas kanvas (bukan digambar di kanvas), sehingga bisa difokuskan, diaktifkan dengan
+   Enter/Space, dan dibacakan pembaca layar. Tombol aktif memakai `aria-pressed="true"` dan
+   berwarna hijau; judul level, hitungan selesai, serta pengumuman `role="status"` ikut
+   diperbarui setiap kali level berganti. Daftar lesson DOM di bawah tetap menampilkan
+   seluruh level sekaligus.
+2. **Layout serpentine.** `computeMapPositions(count)` menata maksimal tiga node per baris,
+   naik dari kiri bawah lalu berbalik arah. Baris otomatis dirapatkan bila satu level punya
+   lebih dari sembilan node sehingga semua node tetap di dalam kanvas 900×460.
+3. **Status node.** Selesai (centang hijau), siap dimainkan (kuning berdenyut), terkunci
+   (gembok abu-abu), pratinjau developer (mata biru), dan node hadiah dengan badge bintang.
+4. **Penanda posisi.** Label “Kamu” mengikuti Kiko di atas kepalanya, sehingga pemain
+   selalu tahu node mana yang menjadi posisinya saat ini.
+5. **Responsif.** Lebar frame ≥ 560px memakai kanvas 900×460 (tiga kolom); layar sempit
+   memakai kanvas 420×620 dua kolom dengan label 15px, bukan mengecilkan peta lebar.
+   Peta di-remount otomatis saat breakpoint berubah (debounce 250ms).
+6. **Kiko berjalan dulu, baru berpindah.** Mengetuk node yang bisa dimainkan membuat Kiko
+   berjalan menyusuri node di antaranya, lalu animasi excited/celebrating sebelum navigasi.
+   Node terkunci memicu animasi disappointed dan toast penjelasan tanpa berpindah halaman.
+7. **Reduced motion.** Bila `prefers-reduced-motion: reduce` aktif, Kiko langsung berpindah
+   tanpa tween, denyut node dan sparkle dimatikan.
+8. **Aksesibilitas.** Pemilih level adalah tombol DOM sungguhan dengan grup berlabel dan
+   status langsung; kanvas peta ditandai `aria-hidden` karena isinya dekoratif dan
+   duplikatif. Node tetap dipilih lewat daftar lesson DOM, yang menjadi jalur keyboard dan
+   pembaca layar. Bila WebGL/Canvas gagal, peta menampilkan pesan dan daftar lesson tetap
+   berfungsi.
 
 ## Dua puluh mini-game
 
@@ -114,8 +177,9 @@ Perbedaan implementasi yang ditegakkan:
 
 ## Practice Hub
 
-Route `/practice` menampilkan tujuh mode. Setiap sesi dibuat oleh RPC `start_practice`,
-soal dikirim tanpa kunci, dan penyelesaian dihitung server:
+Route `/practice` menampilkan delapan mode. Setiap sesi dibuat oleh RPC `start_practice`
+(kecuali Review Terjadwal yang memakai `start_scheduled_review`), soal dikirim tanpa kunci,
+dan penyelesaian dihitung server:
 
 | Mode | Seleksi soal | Batas waktu | XP maksimum |
 | --- | --- | --- | --- |
@@ -126,6 +190,7 @@ soal dikirim tanpa kunci, dan penyelesaian dihitung server:
 | Personalized Practice | topik sering salah / soal belum dicoba | — | 20 |
 | Unit Review | maksimal 12 soal satu unit | — | 20 |
 | Legendary Challenge | soal lesson legendary (fallback tersulit) | — | 30 |
+| Review Terjadwal | maksimal 10 soal yang `next_review_at`-nya sudah lewat | — | 20 |
 
 Aturan practice:
 
@@ -138,7 +203,8 @@ Aturan practice:
    total soal sesi, bukan hanya yang terjawab.
 4. XP hanya diberikan bila akurasi ≥ 60% dan ditulis satu kali per sesi di
    `user_xp_ledger` (`practice_session_id` unik). Practice tidak memakai Hearts dan belum
-   memberi Koin atau mastery.
+   memberi Koin, tetapi setiap jawaban latihan memperbarui mastery soal lewat trigger yang
+   sama dengan lesson.
 
 ## Friends Quest
 
@@ -184,6 +250,31 @@ diubah pemain.
 - **Koin.** Didapat dari lesson, latihan, hadiah quest, reward level, dan milestone Streak.
   Refill Hearts serta pembelian di toko memakai Koin dengan transaksi server.
 
+## Mastery dan review terjadwal
+
+Setiap jawaban lesson dan latihan menulis satu baris `user_question_mastery` per soal lewat
+trigger database. Level penguasaan dan jadwal ulang dihitung server; pemain hanya bisa
+membacanya.
+
+| Hasil jawaban | Level mastery | Interval review berikutnya |
+| --- | --- | --- |
+| Benar | +1 (maksimal 5) | 1, 3, 7, 14, lalu 30 hari |
+| Salah | −2 (minimal 0) | sekitar 10 menit |
+
+Route `/mastery` menampilkan ringkasan soal terlacak, soal dikuasai (mastery level 5), soal
+jatuh tempo, dan akurasi per course dari RPC `get_my_mastery`. Tombol review mengarah ke
+`/practice/play?mode=scheduled_review&course=…`; bila tidak ada soal jatuh tempo, tombol
+dinonaktifkan dan `start_scheduled_review` menolak dengan `practice_no_due_reviews`.
+
+Aturannya:
+
+1. Satu kali jawaban benar tidak langsung berarti dikuasai; butuh lima jawaban benar
+   berturut-turut untuk mencapai level 5.
+2. Jadwal review hanya memilih soal yang memang jatuh tempo di course tersebut, maksimal
+   10 soal per sesi.
+3. Riwayat jawaban lama di-backfill saat migration agar pemain yang sudah bermain punya
+   jadwal awal, bukan halaman kosong.
+
 ## Reward, misi, achievement, dan toko
 
 - **Misi harian/mingguan.** Tiga misi harian dan tiga misi mingguan dihitung dari
@@ -220,12 +311,18 @@ diubah pemain.
 | practice | Ada (7 node, latihan terarah 3 soal). |
 | checkpoint | Ada (7 node, review penutup Level 2, 3 soal). |
 | legendary | Ada (7 node, tantangan penutup Level 3, 3 soal sulit). |
-| reward | Belum; menunggu sistem reward Tahap 5. |
+| reward | Ada (22 node, satu di akhir setiap level). |
 
 Semua node practice/checkpoint/legendary memiliki `lesson_id` dan soal aktif, sehingga
-dapat dimainkan dan ikut mengunci node berikutnya. Node hadiah khusus kurikulum belum
-dibuat; reward level, misi, dan toko sudah ada, tetapi node yang memberi hadiah khusus belum
-didefinisikan.
+dapat dimainkan dan ikut mengunci node berikutnya.
+
+Node `reward` tidak punya `lesson_id`. Node ini terkunci sampai seluruh lesson playable di
+level tersebut selesai, lalu terbuka dan dapat diklaim sekali lewat route
+`/learn/:subject/reward/:nodeSlug`. Hadiah Koin/XP-nya disimpan di
+`learning_nodes.reward_coins`/`reward_xp` (20–75 Koin dan 10–25 XP sesuai kesulitan level).
+Klaim ditulis `claim_reward_node` secara atomik dengan `pg_advisory_xact_lock`, dicatat di
+`user_reward_claims`, dan dijaga unique index pada `user_xp_ledger.reward_claim_id` serta
+`coin_transactions.reward_claim_id`, sehingga klaim berulang tidak menambah saldo.
 
 ## Aturan konten
 
@@ -240,8 +337,9 @@ didefinisikan.
 ## Yang belum ada di scoring
 
 - Koin dari practice (practice hanya memberi XP).
-- Mastery dan review schedule.
 - Reward khusus legendary di luar XP latihan.
+- Koin/XP dari review terjadwal mengikuti aturan XP latihan (akurasi ≥ 60%), bukan bonus
+  tambahan khusus review.
 - Graf teman penuh, friend request, activity feed, dan leaderboard (Tahap 7).
 
 ## Batasan konten yang perlu diketahui

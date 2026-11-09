@@ -14,11 +14,15 @@ function raise(error: { message: string; code?: string } | null): never {
  */
 export const practiceRepository = {
   async start(mode: PracticeMode, courseId: string, unitId?: string | null): Promise<Json> {
-    const { data, error } = await requireSupabase().rpc('start_practice', {
-      p_mode: mode,
-      p_course_id: courseId,
-      p_unit_id: unitId ?? null,
-    });
+    const client = requireSupabase();
+    const { data, error } =
+      mode === 'scheduled_review'
+        ? await client.rpc('start_scheduled_review', { p_course_id: courseId })
+        : await client.rpc('start_practice', {
+            p_mode: mode,
+            p_course_id: courseId,
+            p_unit_id: unitId ?? null,
+          });
     if (error) raise(error);
     return data;
   },

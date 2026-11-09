@@ -32,6 +32,9 @@ export interface PathNode {
   estimatedMinutes: number;
   xpReward: number;
   coinReward: number;
+  rewardCoins: number;
+  rewardXp: number;
+  rewardClaimed: boolean;
   status: LearningNodeStatus;
 }
 
@@ -75,6 +78,16 @@ export interface LessonDetail {
   };
   unit: PathUnit;
   node: PathNode;
+}
+
+export interface RewardDetail extends LessonDetail {
+  level: {
+    slug: string;
+    title: string;
+    difficulty: DifficultyBand;
+    nodeCount: number;
+    completedCount: number;
+  };
 }
 
 function groupBy<T>(items: T[], key: (item: T) => string): Map<string, T[]> {
@@ -138,9 +151,10 @@ export const curriculumService = {
       };
     }
 
-    const [levels, progressRows] = await Promise.all([
+    const [levels, progressRows, rewardClaims] = await Promise.all([
       curriculumRepository.listLevels([course.id]),
       progressRepository.listNodeProgress(userId),
+      progressRepository.listRewardClaims(userId),
     ]);
     const units = await curriculumRepository.listUnits(levels.map((level) => level.id));
     const nodes = await curriculumRepository.listNodes(units.map((unit) => unit.id));
@@ -161,6 +175,7 @@ export const curriculumService = {
         .filter((row) => row.status === 'completed')
         .map((row) => row.node_id),
     );
+    const claimedRewardIds = new Set(rewardClaims.map((claim) => claim.node_id));
 
     const unitsByLevel = groupBy(units, (unit) => unit.course_level_id);
     const nodesByUnit = groupBy(nodes, (node) => node.unit_id);
@@ -201,12 +216,14 @@ export const curriculumService = {
       playableNodes.map((node, index) => [node.id, statuses[index]!] as const),
     );
 
-    // Checkpoint/reward nodes do not gate progress and are not playable yet.
-    // They appear as milestones: available once every earlier lesson is done.
+    // Checkpoint/reward nodes do not gate progress. A reward opens once every
+    // earlier lesson is complete, and stays completed after it is claimed.
     let lastPlayableComplete = true;
     for (const node of orderedNodes) {
       if (node.lesson_id) {
         lastPlayableComplete = statusByNode.get(node.id) === 'completed';
+      } else if (node.node_type === 'reward' && claimedRewardIds.has(node.id)) {
+        statusByNode.set(node.id, 'completed');
       } else {
         statusByNode.set(
           node.id,
@@ -237,7 +254,9 @@ export const curriculumService = {
               const orderB = nodeOrder.get(b.id) ?? 0;
               return orderA - orderB;
             })
-            .map((node) => buildPathNode(node, lessonById, statsByLesson, statusByNode));
+            .map((node) =>
+              buildPathNode(node, lessonById, statsByLesson, statusByNode, claimedRewardIds),
+            );
 
           for (const node of unitNodes) {
             questionCount += node.questionCount;
@@ -319,6 +338,41 @@ export const curriculumService = {
 
     return null;
   },
+
+  async loadRewardDetail(
+    subjectSlug: string,
+    rewardSlug: string,
+    userId: string,
+    options: { developerPreview?: boolean } = {},
+  ): Promise<RewardDetail | null> {
+    const path = await this.loadSubjectPath(subjectSlug, userId, options);
+    if (!path) return null;
+
+    for (const level of path.levels) {
+      for (const unit of level.units) {
+        const node = unit.nodes.find(
+          (item) => item.nodeType === 'reward' && item.slug === rewardSlug,
+        );
+        if (!node) continue;
+
+        return {
+          subject: path.subject,
+          course: path.course,
+          level: {
+            slug: level.slug,
+            title: level.title,
+            difficulty: level.difficulty,
+            nodeCount: level.nodeCount,
+            completedCount: level.completedCount,
+          },
+          unit,
+          node,
+        };
+      }
+    }
+
+    return null;
+  },
 };
 
 function buildPathNode(
@@ -326,6 +380,7 @@ function buildPathNode(
   lessonById: Map<string, LessonRow>,
   statsByLesson: Map<string, { question_count: number; topics: string[] | null; question_types: string[] | null }>,
   statusByNode: Map<string, LearningNodeStatus>,
+  claimedRewardIds: ReadonlySet<string>,
 ): PathNode {
   const lesson = node.lesson_id ? lessonById.get(node.lesson_id) : undefined;
   const stats = node.lesson_id ? statsByLesson.get(node.lesson_id) : undefined;    return {
@@ -343,6 +398,9 @@ function buildPathNode(
     estimatedMinutes: lesson?.estimated_minutes ?? 0,
     xpReward: lesson?.xp_reward ?? 0,
     coinReward: lesson?.coin_reward ?? 0,
+    rewardCoins: node.reward_coins,
+    rewardXp: node.reward_xp,
+    rewardClaimed: claimedRewardIds.has(node.id),
     status: statusByNode.get(node.id) ?? 'locked',
   };
 }

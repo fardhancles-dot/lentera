@@ -1,9 +1,10 @@
 import type { RouteContext } from '../app/router';
 import { avatar } from '../components/avatar';
 import { kikoMarkup, lampMarkup } from '../components/brandArt';
-import { icon, type IconName } from '../components/icons';
+import { icon, iconMarkup, type IconName } from '../components/icons';
 import { showToast } from '../components/toast';
 import { brand } from '../config/brand';
+import { audioEngine } from '../game/audio/audioEngine';
 import { playerStore, type PlayerStoreState } from '../stores/player.store';
 import { sessionStore } from '../stores/session.store';
 import { el, formatNumber } from '../utils/dom';
@@ -177,6 +178,24 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
   ctx.onCleanup(unsubscribePlayer);
   void playerStore.load();
 
+  const muteButton = el('button', {
+    class: 'icon-btn',
+    attrs: {
+      type: 'button',
+      title: 'Bisukan suara',
+      'aria-label': 'Bisukan suara',
+      'aria-pressed': String(audioEngine.isMuted()),
+    },
+    html: iconMarkup(audioEngine.isMuted() ? 'volume-off' : 'volume', 20),
+  });
+  muteButton.addEventListener('click', () => {
+    const muted = audioEngine.toggleMuted();
+    muteButton.setAttribute('aria-pressed', String(muted));
+    muteButton.setAttribute('aria-label', muted ? 'Nyalakan suara' : 'Bisukan suara');
+    muteButton.setAttribute('title', muted ? 'Nyalakan suara' : 'Bisukan suara');
+    muteButton.innerHTML = iconMarkup(muted ? 'volume-off' : 'volume', 20);
+  });
+
   const topbar = el('header', { class: 'topbar' }, [
     el('a', { class: 'topbar__mobile-brand', attrs: { href: '/app' } }, [
       el('span', { class: 'brand__mark', html: lampMarkup(24) }),
@@ -185,6 +204,7 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
     el('span', { class: 'topbar__title', text: options.title }),
     el('div', { class: 'topbar__actions' }, [
       resourceBar,
+      muteButton,
       el(
         'a',
         {

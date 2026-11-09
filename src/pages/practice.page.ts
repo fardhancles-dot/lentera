@@ -2,18 +2,32 @@ import type { PageModule } from '../app/router';
 import { icon } from '../components/icons';
 import { pageHeader, renderAppLayout } from '../layouts/appLayout';
 import { curriculumService, type SubjectCard } from '../services/curriculum.service';
+import { masteryService } from '../services/mastery.service';
 import { PRACTICE_MODES, type PracticeModeInfo } from '../services/practice.service';
+import type { MasteryBoard } from '../types/mastery';
 import { sessionStore } from '../stores/session.store';
 import { el, formatNumber } from '../utils/dom';
 
 const meta = { title: 'Latihan' };
 
-function modeCard(info: PracticeModeInfo, courseId: string | null): HTMLElement {
+function modeCard(
+  info: PracticeModeInfo,
+  courseId: string | null,
+  dueCount: number,
+): HTMLElement {
+  const waitingForDue = Boolean(info.needsDue) && dueCount === 0;
+  const buttonLabel = info.needsDue
+    ? waitingForDue
+      ? 'Belum ada jatuh tempo'
+      : `Review ${dueCount} soal`
+    : info.needsUnit
+      ? 'Pilih unit'
+      : 'Mulai';
   const start = el('button', { class: 'btn btn--secondary', attrs: { type: 'button' } }, [
-    info.needsUnit ? 'Pilih unit' : 'Mulai',
-    icon('arrow-right', 16),
+    buttonLabel,
+    icon(info.needsDue ? 'clock' : 'arrow-right', 16),
   ]);
-  start.disabled = !courseId;
+  start.disabled = !courseId || waitingForDue;
 
   return el('article', { class: 'card practice-mode' }, [
     el('div', { class: 'practice-mode__top' }, [
@@ -36,6 +50,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
   ]);
 
   const toolbar = el('div', { class: 'practice-toolbar' });
+  const masterySlot = el('div');
 
   const content = el('div', {}, [
     pageHeader({
@@ -65,6 +80,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       ]),
       icon('chevron-right', 20),
     ]),
+    masterySlot,
     toolbar,
     listSlot,
   ]);
@@ -82,6 +98,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     void (async () => {
       try {
         const subjects = await curriculumService.loadCatalog(user.id);
+        const mastery: MasteryBoard | null = await masteryService.load().catch(() => null);
         if (!listSlot.isConnected) return;
 
         const playable: SubjectCard[] = subjects.filter(
@@ -122,10 +139,37 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
 
         const grid = el('div', { class: 'practice-grid' });
 
+        const paintMastery = () => {
+          if (!mastery) {
+            masterySlot.replaceChildren();
+            return;
+          }
+
+          masterySlot.replaceChildren(
+            el('a', { class: 'card mastery-cta', attrs: { href: '/mastery' } }, [
+              el('span', { class: 'mastery-cta__icon' }, [icon('target', 24)]),
+              el('span', { class: 'mastery-cta__text' }, [
+                el('span', { class: 'mastery-cta__title', text: 'Mastery & Review' }),
+                el('span', {
+                  class: 'mastery-cta__body',
+                  text: `${mastery.summary.tracked} soal terlacak · ${mastery.summary.due} jatuh tempo · akurasi ${mastery.summary.accuracy}%`,
+                }),
+              ]),
+              mastery.summary.due > 0
+                ? el('span', { class: 'badge badge--yellow', text: `${mastery.summary.due} jatuh tempo` })
+                : el('span', { class: 'badge badge--muted', text: 'Terjadwal' }),
+              icon('chevron-right', 20),
+            ]),
+          );
+        };
+
+        const dueForSelected = () =>
+          mastery?.courses.find((course) => course.courseId === selected.course_id)?.due ?? 0;
+
         const paint = () => {
           grid.replaceChildren(
             ...PRACTICE_MODES.map((info) => {
-              const card = modeCard(info, selected.course_id);
+              const card = modeCard(info, selected.course_id, dueForSelected());
               const button = card.querySelector('button');
               button?.addEventListener('click', () => {
                 if (!selected.course_id) return;
@@ -153,10 +197,11 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
           ]),
           el('span', {
             class: 'practice-toolbar__hint',
-            text: 'Mode Mistakes Review butuh riwayat jawaban salah; Personalized Practice memakai topik yang paling sering salah.',
+            text: 'Review Terjadwal memakai soal yang sudah jatuh tempo; Mistakes Review memakai riwayat jawaban salah; Personalized Practice memakai topik yang paling sering salah.',
           }),
         );
 
+        paintMastery();
         listSlot.className = '';
         listSlot.append(grid);
         paint();

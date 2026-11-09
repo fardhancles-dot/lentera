@@ -1,5 +1,9 @@
 import { requireSupabase } from '../services/supabase/client';
-import type { UserCourseProgressRow, UserNodeProgressRow } from '../types/database';
+import type {
+  UserCourseProgressRow,
+  UserNodeProgressRow,
+  UserRewardClaimRow,
+} from '../types/database';
 
 function raise(error: { message: string; code?: string } | null): never {
   const wrapped = new Error(error?.message ?? 'Permintaan progres gagal.');
@@ -24,6 +28,15 @@ export const progressRepository = {
   async listNodeProgress(userId: string): Promise<UserNodeProgressRow[]> {
     const { data, error } = await requireSupabase()
       .from('user_node_progress')
+      .select('*')
+      .eq('user_id', userId);
+    if (error) raise(error);
+    return data;
+  },
+
+  async listRewardClaims(userId: string): Promise<UserRewardClaimRow[]> {
+    const { data, error } = await requireSupabase()
+      .from('user_reward_claims')
       .select('*')
       .eq('user_id', userId);
     if (error) raise(error);

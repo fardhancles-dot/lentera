@@ -7,14 +7,19 @@ Developer Dashboard.
 Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand terpusat di
 `src/config/brand.ts` dan dapat ditimpa lewat environment variable.
 
-> **Status proyek: Tahap 1–4 selesai; Tahap 5 selesai untuk slice reward.**
+> **Status proyek: Tahap 1–6 selesai.**
 > Lesson, latihan, dan **20 dari 20 mini-game** punya mekanik bermain nyata. Dua belas tipe
 > soal dinilai di server (termasuk Listening, Speaking, Translation, Conversation, Story),
 > tujuh mode latihan berjalan di atas sesi practice dengan XP idempoten, dan **Friends Quest**
 > tersedia sebagai co-op berbasis kode undangan. Tahap 5 menambahkan **Hearts, Streak, level,
 > wallet, reward level, milestone Streak, quest harian/mingguan, achievement, toko, dan
-> inventory** yang seluruhnya dihitung server. Mastery dan node reward kurikulum belum
-> dibuat. Pengujian browser end-to-end (Playwright) belum ada; bukti Tahap 4 ada di
+> inventory** yang seluruhnya dihitung server. Tahap 5 juga menambahkan **mastery per soal,
+> jadwal review terjadwal, dan node hadiah di akhir setiap level**. Tahap 6 menambahkan
+> **peta petualangan Phaser responsif**, **karakter Kiko reusable dengan 13 state animasi**,
+> **audio sintetis** (musik, SFX, volume, mute), dan **pipeline aset**; daftar lesson DOM
+> tetap dipakai sebagai jalur aksesibel. Dua smoke test Playwright lulus: maskot landing
+> dan peta berakun (pemilih level keyboard, status live, mute, serta layout ponsel 390px).
+> Rincian di **[docs/PROJECT_HANDOFF.md](docs/PROJECT_HANDOFF.md)** dan
 > **[docs/STAGE4_COMPLETION.md](docs/STAGE4_COMPLETION.md)**.
 
 ---
@@ -23,15 +28,18 @@ Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand ter
 
 | Area | Status | Keterangan |
 | --- | --- | --- |
-| Fondasi Vite + TypeScript + Phaser 4 | **Implemented · Tested (build)** | Phaser dimuat lazy hanya saat stage maskot tampil. |
+| Fondasi Vite + TypeScript + Phaser 4 | **Implemented · Tested (build)** | Phaser dimuat lazy hanya saat stage maskot atau peta petualangan tampil. |
 | Design system & layout responsif | **Implemented · Verified (browser smoke)** | Token warna, komponen, sidebar desktop, bottom nav mobile. |
-| Landing page + maskot interaktif | **Implemented · Verified** | Kiko digambar vector dengan Phaser, idle/blink/wave/celebrate. |
+| Landing page + maskot interaktif | **Implemented · Verified** | Kiko digambar vector dengan Phaser, idle/blink/celebrate. |
+| Peta petualangan Phaser + animasi Kiko | **Implemented · Tested (unit + build + browser berakun)** | `createKiko` dengan 13 state animasi dipakai ulang oleh maskot dan peta; peta di `/learn/:subject` punya pemilih level tombol DOM yang aksesibel, penanda posisi, layout wide/compact, dan dukungan `prefers-reduced-motion`. |
+| Sistem audio | **Implemented · Tested (unit + browser smoke); pemutaran belum diverifikasi telinga** | Musik dan SFX disintesis Web Audio, volume mengikuti pengaturan pemain, mute lokal di topbar, autoplay-safe. |
+| Pipeline aset | **Implemented · Tested (unit)** | `src/game/assets/manifest.ts` + loader Phaser, lisensi tercatat di `docs/ASSETS.md`. |
 | Register / login / logout | **Implemented · E2E verified** | Login API, payload lesson, grading, dan Practice Hub diuji ke project Supabase nyata. |
 | Verifikasi email & lupa password | **Implemented · Belum E2E** | Memakai Supabase Auth; tautan reset memakai redirect `/reset-password`. |
 | Onboarding profil | **Implemented · Belum E2E** | Username, avatar, nama, target harian, zona waktu. Atomik via RPC. |
 | Profil & pengaturan cloud | **Implemented · Belum E2E** | Disimpan di PostgreSQL dengan RLS + column-level grants. |
-| Database & RLS | **Implemented · Tested (PGlite + Supabase API)** | 11 migration diterapkan ke project Supabase; 189 SQL smoke check + 54 verifikasi API lulus. |
-| Kurikulum & bank soal | **Implemented · Tested (SQL smoke)** | 10 mapel, 22 level, 57 lesson, 231 soal, 12 tipe soal, 6 jenis node; 7 mapel inti + Bahasa Sambas. |
+| Database & RLS | **Implemented · Tested (PGlite + Supabase API)** | 13 migration diterapkan ke project Supabase; 206 SQL smoke check + 61 verifikasi API lulus. |
+| Kurikulum & bank soal | **Implemented · Tested (SQL smoke)** | 10 mapel, 22 level, 57 lesson, 231 soal, 12 tipe soal, 7 jenis node; 7 mapel inti + Bahasa Sambas. |
 | Learning path & progres per mapel | **Implemented · Tested (SQL smoke)** | Node selesai/aktif/terkunci, unlock ditegakkan server, progres per course/node. |
 | Lesson engine & halaman hasil | **Implemented · Tested (SQL smoke)** | Kunci jawaban tidak dikirim ke browser; XP/Koin idempoten per attempt. |
 | Gameplay 20 mini-game | **20/20 implemented · Tested (SQL + Supabase API)** | 12 tipe soal punya layar; 7 mode latihan; Conversation bertahap dan Story dengan pilihan respons. UI belum diuji browser dengan sesi nyata. |
@@ -40,7 +48,7 @@ Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand ter
 | XP, Koin, Hearts, Streak & level | **Implemented · Tested (SQL + Supabase API)** | Ledger XP/Koin, Hearts dengan regenerasi/refill, Streak harian, 30 level akun, dan halaman `/wallet` dengan riwayat transaksi. Semua angka berasal dari RPC server. |
 | Reward level, milestone Streak, quest & achievement | **Implemented · Tested (SQL + Supabase API)** | Hadiah level dan milestone Streak otomatis lewat trigger; 3 quest harian + 3 mingguan dan 8 achievement dihitung dari ledger XP. Halaman `/quests` dan `/wallet`; UI belum diuji browser dengan akun nyata. |
 | Toko & inventory | **Implemented · Tested (SQL + Supabase API)** | Katalog dua item consumable, pembelian atomik, tas, Ramuan Hati, dan Perisai Streak (maksimal 2). Halaman `/shop`; UI belum diuji browser. |
-| Mastery | **Not implemented** | Mastery dan review schedule belum dibuat; bukan bagian slice reward Tahap 5 ini. |
+| Mastery, review terjadwal & node hadiah | **Implemented · Tested (SQL + Supabase API + unit)** | `user_question_mastery` per soal, interval 1/3/7/14/30 hari, halaman `/mastery`, mode Review Terjadwal, dan 22 node hadiah level dengan klaim idempoten. UI belum diuji browser. |
 | Leaderboard, Liga, Teman, Event | **Not implemented** | Tahap 7. |
 | Developer Dashboard | **Not implemented** | Tahap 8; role developer dan mode pratinjau sudah ada. |
 | PWA / offline / AI / monetisasi | **Not implemented** | Direncanakan setelah gameplay stabil. |
@@ -55,9 +63,10 @@ Legenda status: **Implemented** (kode ada), **Tested** (ada bukti eksekusi), **C
 - **HTML5 + CSS3** — halaman aplikasi, formulir, profil, pengaturan.
 - **TypeScript** (strict) — seluruh logic aplikasi dan game.
 - **Vite 8** — dev server dan build.
-- **Phaser 4.2.1** — area gameplay 2D (saat ini: stage maskot).
+- **Phaser 4.2.1** — area gameplay 2D (stage maskot dan peta petualangan).
 - **Supabase** — PostgreSQL, Auth, dan nanti Storage/Realtime/Edge Functions.
-- **Vitest** — unit test. Playwright direncanakan pada tahap QA.
+- **Vitest** — unit test.
+- **Playwright** — smoke test browser (landing); test peta membutuhkan akun E2E.
 
 Node.js **22+** diperlukan (Phaser 4 mensyaratkan Node 22 saat build).
 
@@ -88,8 +97,10 @@ Panduan lengkap Supabase, migrasi, dan deployment: **[docs/SETUP.md](docs/SETUP.
 | `npm run typecheck` | TypeScript tanpa emit. |
 | `npm test` | Unit test Vitest. |
 | `npm run test:watch` | Unit test mode watch. |
+| `npm run test:e2e` | Smoke test browser via Playwright (memakai Chrome terpasang; butuh `.env` untuk test berakun). |
 | `npm run test:sql` | Smoke test migration, RPC, reward, dan RLS di PGlite. |
 | `npm run verify:supabase` | Verifikasi login, payload 20 soal, grading, hasil lesson, Practice Hub, Friends Quest, dan idempotensi reward di Supabase nyata. |
+| `npm run db:apply-catalog-fix` | Menerapkan migration view katalog lewat Supabase Management API (`SUPABASE_ACCESS_TOKEN`); `-- --dry-run` untuk pratinjau. |
 | `npm run seed:build` | Validasi konten dan regenerasi migration seed kurikulum. |
 
 ---
@@ -106,7 +117,10 @@ Panduan lengkap Supabase, migrasi, dan deployment: **[docs/SETUP.md](docs/SETUP.
 │   ├── components/              # ikon SVG, avatar, form, toast, brand art
 │   ├── config/                  # brand, env, katalog avatar
 │   ├── game/
-│   │   ├── mascot/              # scene Phaser Kiko (lazy loaded)
+│   │   ├── characters/          # factory Kiko + 13 state animasi
+│   │   ├── adventure/           # layout peta + mount helper Phaser (lazy loaded)
+│   │   ├── scenes/              # scene Phaser peta petualangan
+│   │   ├── mascot/              # stage maskot landing (memakai createKiko)
 │   │   ├── audio/               # text-to-speech untuk model audio
 │   │   ├── practice/            # helper tampilan timer & combo
 │   │   └── minigames/           # renderer DOM per tipe soal + registry
@@ -131,7 +145,8 @@ Panduan lengkap Supabase, migrasi, dan deployment: **[docs/SETUP.md](docs/SETUP.
 │       ├── 20261109100000_practice_engine.sql
 │       ├── 20261110100000_friends_quest.sql
 │       ├── 20261110120000_progression_economy.sql
-│       └── 20261110130000_tahap5_rewards.sql
+│       ├── 20261110130000_tahap5_rewards.sql
+│       └── 20261110140000_mastery_review_rewards.sql
 ├── scripts/                     # generator + validasi seed kurikulum, SQL smoke test
 ├── tests/                       # unit test Vitest
 ├── docs/                        # dokumentasi teknis + laporan audit

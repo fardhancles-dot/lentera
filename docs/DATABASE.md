@@ -2,11 +2,16 @@
 
 Database: PostgreSQL di Supabase. Migration ada di `supabase/migrations/`.
 
-> **Status:** kesebelas migration sudah diterapkan ke project Supabase nyata
-> (`xvrnmxbrxhtzzavmrlvy`, region Singapura) dan `supabase migration list` menunjukkan
-> local = remote. Smoke test PGlite (189 check) dan verifikasi API Supabase (54 check)
-> lulus, termasuk Friends Quest, progression/economy, serta reward/quest/achievement/toko.
-> Pengujian UI di browser masih terpisah.
+> **Status:** ketiga belas migration sudah diterapkan ke project Supabase nyata
+> (`xvrnmxbrxhtzzavmrlvy`, region Singapura), termasuk perbaikan view katalog
+> `20261110150000_subject_overview_owner.sql` yang diterapkan lewat Management API. Smoke
+> test PGlite (206 check) dan verifikasi API Supabase (61 check) lulus, termasuk Friends
+> Quest, progression/economy, serta reward/quest/achievement/toko. Pengujian UI browser
+> terpisah.
+>
+> Untuk menerapkan migration baru tanpa CLI ter-link, gunakan
+> `SUPABASE_ACCESS_TOKEN=sbp_xxx npm run db:apply-catalog-fix` (`--dry-run` untuk melihat
+> SQL target); skrip menerapkan file lalu memverifikasi view lewat PostgREST.
 
 ## Daftar migration
 
@@ -23,6 +28,8 @@ Database: PostgreSQL di Supabase. Migration ada di `supabase/migrations/`.
 | `20261110100000_friends_quest.sql` | Friends Quest co-op: quest, anggota, klaim, trigger kontribusi XP, RPC create/join/list/claim, RLS. |
 | `20261110120000_progression_economy.sql` | Level akun, Hearts, Streak, wallet RPC, trigger Hearts/Streak, backfill, dan RLS. |
 | `20261110130000_tahap5_rewards.sql` | Reward level, milestone Streak + freeze, quest, achievement, katalog toko, inventory, RPC klaim/pembelian/pakai, RLS. |
+| `20261110140000_mastery_review_rewards.sql` | Mastery per soal, jadwal review, mode `scheduled_review`, node `reward` per level, RPC klaim hadiah, RLS. |
+| `20261110150000_subject_overview_owner.sql` | Menjalankan `subject_overview` dengan hak owner agar katalog tidak gagal saat `questions` di-revoke dari pemain. |
 
 Seed dihasilkan dari `scripts/content/**/*.ts` dengan `npm run seed:build`. Jangan mengedit
 file seed secara manual; ubah sumber TypeScript lalu regenerasi. UUID bersifat deterministik
@@ -48,7 +55,7 @@ Email tidak disimpan di `profiles`; email hidup di `auth.users` dan hanya dibaca
 | `course_levels` | `difficulty` enum 6 tingkat; unique `(course_id, slug)`. |
 | `units` | Tujuan pembelajaran (`text[]`), reward koin, unique `(course_level_id, slug)`. |
 | `lessons` | `kind`, estimasi menit, XP/Koin, `hearts_enabled`, unique `(unit_id, slug)`. |
-| `learning_nodes` | `node_type` 7 jenis (6 terisi: lesson, review, challenge, practice, checkpoint, legendary), opsional `lesson_id`, urutan dalam unit. |
+| `learning_nodes` | `node_type` 7 jenis (semua terisi: lesson, review, challenge, practice, checkpoint, legendary, reward), opsional `lesson_id`, urutan dalam unit, plus `reward_coins`/`reward_xp` untuk node reward. |
 | `questions` | Tipe, topik, kesulitan, instruksi, prompt, penjelasan, hint, poin, `scene` (dialog/narasi/transkrip). |
 | `question_options` | Pilihan + `is_correct`; hanya dibaca server. |
 | `question_answers` | Jawaban alternatif untuk tipe isian; `is_case_sensitive`. |
@@ -68,6 +75,10 @@ Email tidak disimpan di `profiles`; email hidup di `auth.users` dan hanya dibaca
   mengirim soal di luar sesi.
 - `practice_answers` — jawaban latihan, poin, combo, waktu menjawab; unique
   `(session_id, question_id)`.
+- `user_question_mastery` — level mastery, hitungan benar/salah, interval, dan
+  `next_review_at` per `(user_id, question_id)`; ditulis hanya oleh trigger jawaban.
+- `user_reward_claims` — penanda node hadiah yang sudah diklaim; unik per
+  `(user_id, node_id)`, dengan jumlah Koin/XP yang diberikan.
 
 ### Friends Quest (co-op minimal)
 
@@ -84,10 +95,12 @@ activity feed, dan leaderboard tetap Tahap 7.
 ### Ekonomi dan progres pemain
 
 - `user_xp_ledger` — setiap pemberian XP, unik per `lesson_attempt_id`, unik per
-  `practice_session_id`, dan unik per `(friend_quest_id, user_id)` untuk hadiah quest.
+  `practice_session_id`, unik per `(friend_quest_id, user_id)` untuk hadiah quest, dan unik
+  per `reward_claim_id` untuk hadiah node.
 - `coin_transactions` — mutasi Koin, unik per `lesson_attempt_id`, unik per
-  `(friend_quest_id, user_id)` untuk hadiah quest, dan `reference_id` unik untuk reward
-  baru. Refill Hearts menulis transaksi negatif dengan `source = 'heart_refill'`.
+  `(friend_quest_id, user_id)` untuk hadiah quest, `reference_id` unik per
+  `(user_id, source)` untuk reward baru, dan unik per `reward_claim_id` untuk hadiah node.
+  Refill Hearts menulis transaksi negatif dengan `source = 'heart_refill'`.
 - `user_wallets` — saldo Koin, check `coins >= 0`.
 - `player_levels` — 30 ambang level, judul, dan `reward_coins`; level 1 = 0 XP, level 2 = 100
   XP, level 7+ memakai kurva `1000 + (level - 6) × 350`. Tabel ini data katalog, bukan state
@@ -113,7 +126,8 @@ activity feed, dan leaderboard tetap Tahap 7.
 - `user_inventory` — jumlah item per pemain; unik per `(user_id, item_id)`.
 - `shop_purchases` — catatan pembelian dengan `price_coins` dan `quantity`.
 
-Mastery dan review schedule **belum dibuat**.
+Mastery disimpan per soal (bukan per lesson) agar jadwal review bisa presisi. Belum ada
+tabel mastery per topik terpisah; agregasi topik diturunkan dari `questions.topic`.
 
 ## View
 
@@ -122,7 +136,10 @@ Mastery dan review schedule **belum dibuat**.
 | `lesson_question_stats` | Jumlah soal, topik, dan tipe per lesson. Tidak memuat kunci. |
 | `subject_overview` | Agregat level/unit/lesson/soal per mapel untuk katalog. |
 
-Keduanya `security_invoker` dan hanya diberi grant ke `authenticated`.
+Keduanya hanya diberi grant ke `authenticated`. `lesson_question_stats` berjalan dengan
+hak owner sejak awal; `subject_overview` sempat memakai `security_invoker = true` sehingga
+membaca `questions` sebagai pemain dan gagal dengan `permission denied`. Migration
+`20261110150000` mengembalikannya ke hak owner karena view hanya mengembalikan agregat.
 
 ## Fungsi
 
@@ -171,6 +188,12 @@ Keduanya `security_invoker` dan hanya diberi grant ke `authenticated`.
 | `spend_heart_for_wrong_answer()` | Trigger `AFTER INSERT answer_attempts`: kurangi Heart hanya untuk jawaban salah yang benar-benar tersimpan. |
 | `enforce_hearts_before_lesson()` | Trigger `BEFORE INSERT lesson_attempts`: tolak attempt lesson baru bila Hearts 0. |
 | `track_user_streak()` | Trigger `AFTER INSERT user_xp_ledger`: perbarui Streak dari XP lesson/practice. |
+| `record_question_mastery(user, question, correct)` | Hitung level mastery dan `next_review_at`; internal, dipanggil trigger. |
+| `track_lesson_mastery()`, `track_practice_mastery()` | Trigger `AFTER INSERT answer_attempts`/`practice_answers`. |
+| `create_practice_session_from_ids(...)` | Membuat sesi latihan dari daftar soal eksplisit; internal. |
+| `start_scheduled_review(course_id)` | Membuat sesi dari maksimal 10 soal yang jatuh tempo; menolak `practice_no_due_reviews`. |
+| `get_my_mastery()` | RPC mastery: ringkasan + agregat per course (terlacak, dikuasai, jatuh tempo, akurasi). |
+| `claim_reward_node(node_id)` | Memeriksa seluruh lesson level selesai, lalu menulis Koin/XP sekali; idempoten. |
 
 Semua fungsi `security definer` memakai `set search_path` eksplisit. Fungsi engine di-revoke
 dari `public`/`anon` dan hanya dapat dieksekusi `authenticated`.

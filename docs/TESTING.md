@@ -5,17 +5,21 @@
 | Pemeriksaan | Perintah | Hasil |
 | --- | --- | --- |
 | TypeScript strict | `npm run typecheck` | Lulus, 0 error. |
-| Unit test | `npm test` | **57 test lulus (6 file)**. |
-| Migration + RPC + RLS + practice + Friends Quest + progression + reward | `npm run test:sql` | **189 smoke check lulus** di PGlite. |
+| Unit test | `npm test` | **72 test lulus (10 file)**, termasuk audio, aset, dan layout compact. |
+| Migration + RPC + RLS + practice + Friends Quest + progression + reward + mastery | `npm run test:sql` | **206 smoke check lulus** di PGlite, termasuk akses `subject_overview` sebagai `authenticated`. |
 | Build produksi | `npm run build` | Lulus; Phaser, Friends Quest, quest, shop, dan wallet menjadi chunk terpisah. |
 | Browser smoke | Chrome headless | Landing, auth, guard route, 404 (sesi 1). |
-| Supabase nyata | `npm run verify:supabase` | **54 check lulus** (lesson 20 soal, 4 scene, Practice Hub, Friends Quest, progression, reward/quest/achievement/toko, XP idempoten, RLS) di project `xvrnmxbrxhtzzavmrlvy`. |
-| Playwright/E2E | — | Belum ada. |
+| Supabase nyata | `npm run verify:supabase` | **61 check lulus** (view katalog, lesson 20 soal, 4 scene, Practice Hub, Friends Quest, progression, reward/quest/achievement/toko, mastery/review/node hadiah, XP idempoten, RLS) di project `xvrnmxbrxhtzzavmrlvy`. |
+| Playwright/E2E | `npm run test:e2e` | **6 test lulus** (9 rute aplikasi, alur lesson sampai feedback, overflow 390px, reduced motion, maskot landing, peta + pemilih level + mute + resize). |
 
 PGlite membuktikan SQL dan RPC konsisten. Verifikasi Supabase nyata kini juga sudah
-dijalankan lewat Auth + PostgREST, tetapi belum mencakup UI browser, email, dan redirect.
-Sebelas migration (termasuk progression/economy dan reward Tahap 5) dan seed 231 soal sudah
-diterapkan ke project nyata.
+dijalankan lewat Auth + PostgREST. UI browser diuji Playwright memakai akun QA di `.env`
+(Chrome terpasang, bukan unduhan Playwright); email verifikasi dan redirect email belum.
+Ketiga belas migration sudah diterapkan ke project nyata, termasuk
+`20261110140000_mastery_review_rewards.sql` (mastery, review terjadwal, node hadiah) dan
+`20261110150000_subject_overview_owner.sql` (perbaikan view katalog). Migration terakhir
+diterapkan lewat `npm run db:apply-catalog-fix` (Management API) karena project tidak
+ter-link ke Supabase CLI di mesin pengembangan.
 
 ## Verifikasi API Supabase nyata
 
@@ -44,17 +48,51 @@ refill saat Hearts penuh tanpa memotong Koin, dan memastikan pemain tidak dapat 
 Hearts langsung. Untuk reward Tahap 5, skrip memanggil `get_my_quests`,
 `get_my_achievements`, `get_shop_catalog`, dan `get_my_inventory`; memastikan enam misi,
 delapan achievement, dua item toko, dan penolakan item/quest palsu; lalu memastikan
-`user_inventory` tidak dapat diubah langsung. Ini menguji Auth + PostgREST + RPC nyata,
+`user_inventory` tidak dapat diubah langsung. Sesi 11 menambahkan check `get_my_mastery`,
+`start_scheduled_review`, 22 node hadiah aktif, penolakan `claim_reward_node` untuk node
+tidak dikenal, serta penolakan tulis langsung ke `user_question_mastery` dan
+`user_reward_claims`. Ini menguji Auth + PostgREST + RPC nyata,
 **bukan** tampilan browser; uji klik tetap harus dilakukan terpisah.
+
+## Cakupan `npm run test:e2e`
+
+`playwright.config.ts` menjalankan Vite di port 4173 lalu menguji dengan Chrome terpasang
+(channel `chrome`). Test memakai `E2E_EMAIL`/`E2E_PASSWORD` dari `.env` dan skip sendiri
+bila kredensial tidak ada.
+
+| Test | Cakupan |
+| --- | --- |
+| `every app route renders without page errors` | Login, lalu 9 rute (`/app`, `/learn`, `/practice`, `/wallet`, `/quests`, `/shop`, `/mastery`, `/profile`, `/settings`): `main#main`, heading, judul topbar, dan nol error konsol. |
+| `lesson starts, answers, shows feedback, and advances` | Klik node lesson di peta → halaman lesson → `Mulai lesson` → jawab soal → feedback benar/salah → tombol lanjut. |
+| `mobile layout has no horizontal overflow` | Viewport 390×844 pada 5 rute + frame peta; `scrollWidth - clientWidth ≤ 2px`. |
+| `reduced motion keeps the map usable` | `prefers-reduced-motion: reduce`: kanvas peta, tombol level, dan judul tetap tampil. |
+| `landing mascot canvas mounts and reacts to a click` | Maskot landing (kanvas/SVG fallback) dan reaksi klik. |
+| `map renders, level buttons work with the keyboard, and the canvas resizes` | Peta berakun, pemilih level via keyboard (`aria-pressed`, status live), mute, resize 390px. |
+
+Catatan bug katalog: view `subject_overview` sempat memakai `security_invoker = true`
+sementara `questions` di-revoke dari `authenticated`, sehingga view mengembalikan
+`permission denied for table questions`. Migration
+`20261110150000_subject_overview_owner.sql` sudah diterapkan ke project nyata, jadi view
+kembali menjadi sumber katalog dan log 403 hilang. `npm run test:sql` menjalankan view itu
+sebagai role `authenticated` sebagai penjaga regresi; sebelum perbaikan query tersebut
+gagal dengan error yang sama seperti di produksi. `scripts/verify-supabase.mjs` membaca
+view yang sama lewat PostgREST dengan akun uji.
+
+Repositori tetap punya fallback agregat di `curriculumRepository.listSubjects` bila view
+ditolak (misalnya database baru yang belum menjalankan migration terbaru); fallback tidak
+aktif pada project saat ini. Test rute E2E menuntut minimal satu `.subject-card` tampil di
+`/learn`, dan error konsol apa pun menggagalkan test, supaya katalog kosong atau 403 tidak
+lolos hanya karena shell halaman berhasil dimuat.
 
 ## Cakupan `npm run test:sql`
 
 `scripts/test-sql.mjs` membuat database PostgreSQL in-memory, lalu:
 
-1. Menjalankan kesebelas migration berurutan, termasuk `question_scenes`,
-   `practice_engine`, `friends_quest`, `progression_economy`, dan `tahap5_rewards`.
+1. Menjalankan kedua belas migration berurutan, termasuk `question_scenes`,
+   `practice_engine`, `friends_quest`, `progression_economy`, `tahap5_rewards`, dan
+   `mastery_review_rewards`.
 2. Memeriksa 8 mapel aktif, 57 lesson, 231 soal, 12 tipe soal, 19 pasangan matching,
-   3 media gambar, dan 6 jenis node.
+   3 media gambar, dan 7 jenis node.
 3. Memeriksa 7 node practice, 7 checkpoint, dan 7 legendary; semuanya punya lesson
    dengan minimal 3 soal aktif.
 4. Memastikan tidak ada node playable pada mapel inti yang kehabisan soal.
@@ -152,7 +190,9 @@ delapan achievement, dua item toko, dan penolakan item/quest palsu; lalu memasti
   diuji di PGlite.
 - Gameplay dan Practice Hub belum diuji di browser dengan sesi nyata; RPC sudah diuji
   di database.
-- Belum ada Playwright, uji responsif otomatis, atau audit performa.
+- E2E browser mencakup rute utama, alur lesson, overflow ponsel, reduced motion, peta,
+  dan maskot. Belum ada uji dua akun Friends Quest, uji audio yang benar-benar didengar,
+  pembaca layar sungguhan, atau audit performa.
 - Audio memakai text-to-speech browser; belum ada pengujian suara nyata di perangkat.
 - Speaking belum diuji dengan mikrofon sungguhan; Web Speech Recognition berbeda tiap
   browser.
@@ -251,12 +291,25 @@ delapan achievement, dua item toko, dan penolakan item/quest palsu; lalu memasti
 - [ ] Membeli Perisai Streak memotong 120 Koin; penggunaan dibatasi maksimal 2.
 - [ ] Tombol beli/pakai nonaktif saat Koin, stok, atau item tidak mencukupi.
 
+### Mastery, review, dan node hadiah
+
+- [ ] `/mastery` menampilkan ringkasan dan kartu per mapel dari `get_my_mastery`.
+- [ ] Jawaban benar menaikkan mastery dan memperpanjang interval review.
+- [ ] Jawaban salah menjadwalkan soal kembali sekitar 10 menit kemudian.
+- [ ] Tombol review nonaktif saat belum ada soal jatuh tempo; sesi review hanya berisi soal
+      yang jatuh tempo.
+- [ ] Node hadiah terkunci menampilkan sisa lesson yang harus diselesaikan.
+- [ ] Klaim node hadiah menambah Koin/XP sekali; klik kedua menampilkan “sudah diklaim”.
+- [ ] Saldo wallet dan riwayat Koin/XP cocok dengan hadiah yang diklaim.
+
 ### RLS
 
 - [ ] Akun A tidak dapat `select` settings/attempt/wallet/Hearts/Streak milik B.
 - [ ] Akun A tidak dapat `update` profil B meski tahu UUID B.
-- [ ] Akun A tidak dapat menulis `user_roles`, `user_wallets`, atau tabel soal.
+- [ ] Akun A tidak dapat menulis `user_roles`, `user_wallets`, `user_question_mastery`,
+      atau `user_reward_claims`.
 - [ ] `complete_lesson_attempt` milik pengguna lain ditolak.
+- [ ] `user_reward_claims` akun B tidak terbaca dari akun A.
 
 ### Responsif dan aksesibilitas
 
@@ -273,3 +326,15 @@ delapan achievement, dua item toko, dan penolakan item/quest palsu; lalu memasti
 - Jangan menurunkan assertion atau menonaktifkan test untuk membuat build hijau.
 - Laporkan test yang gagal atau tidak dapat dijalankan secara eksplisit.
 - Jalankan `npm run test:sql` setiap kali migration berubah.
+
+## Smoke test browser (Playwright)
+
+`npm run test:e2e` menjalankan `tests/e2e/stage6.spec.ts` memakai Chrome yang terpasang
+(channel `chrome`) dan dev server Vite di port 4173.
+
+- Test landing selalu berjalan: kanvas maskot harus tampil, bisa diklik, dan tidak
+  menghasilkan error Phaser/audio.
+- Test peta membutuhkan `E2E_EMAIL` dan `E2E_PASSWORD`. Skrip memuat `.env` lewat
+  `node --env-file=.env`, sehingga kredensial tidak pernah ditulis di test.
+- Bila akun uji ditolak Supabase atau belum menyelesaikan onboarding, test peta
+  **di-skip dengan alasan**, bukan dianggap lulus.

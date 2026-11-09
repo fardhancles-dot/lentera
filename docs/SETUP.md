@@ -87,18 +87,27 @@ Restart dev server setiap kali `.env` berubah.
 
 ## 7. Jalankan migration
 
-Buka **SQL Editor** di Supabase, salin isi
-`supabase/migrations/20261108090000_identity.sql`, lalu **Run**.
+Buka **SQL Editor** di Supabase, lalu jalankan file berikut **berurutan**. Jangan melewati
+`question_pairs`, karena seed matching membutuhkannya.
 
-Yang dibuat:
+1. `20261108090000_identity.sql`
+2. `20261108100000_curriculum.sql`
+3. `20261108105000_curriculum_overview.sql`
+4. `20261108107000_question_pairs.sql`
+5. `20261108110000_curriculum_seed.sql`
+6. `20261108120000_lesson_engine.sql`
 
-- enum `app_role`
-- tabel `profiles`, `user_roles`, `user_settings`
-- trigger profil otomatis untuk setiap user baru
-- fungsi onboarding, role helper, bootstrap developer
-- RLS + grant kolom
+Migration identity membuat enum `app_role`, tabel `profiles`, `user_roles`,
+`user_settings`, trigger profil otomatis, fungsi onboarding/role/bootstrap developer, serta
+RLS + grant kolom. Migration berikutnya membuat kurikulum, view katalog, pasangan matching,
+seed konten, dan lesson engine.
 
-Verifikasi di **Table Editor** bahwa ketiga tabel muncul dan **RLS enabled**.
+Verifikasi di **Table Editor** bahwa tabel utama muncul dan **RLS enabled**, lalu cek:
+
+```sql
+select count(*) from public.lessons;   -- 57
+select count(*) from public.questions; -- 217
+```
 
 Alternatif CLI:
 
@@ -147,7 +156,25 @@ Kedua fungsi sengaja tidak dapat dipanggil dari browser.
 ```bash
 npm test
 npm run build
+npm run test:sql
 ```
+
+Untuk verifikasi ke project Supabase nyata, tambahkan akun uji developer ke `.env`:
+
+```env
+E2E_EMAIL=akun-developer@contoh.com
+E2E_PASSWORD=password-akun-uji
+```
+
+Lalu jalankan:
+
+```bash
+npm run verify:supabase
+```
+
+Perintah ini menguji login, payload soal, grading 12 soal contoh, penyelesaian lesson, dan
+penolakan akses `question_pairs` tanpa sesi. Tampilan browser tetap perlu diuji manual
+karena skrip ini memanggil API, bukan mengklik UI.
 
 ## 11. Deploy ke Vercel
 

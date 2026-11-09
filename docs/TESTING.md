@@ -9,11 +9,32 @@
 | Migration + RPC + RLS | `npm run test:sql` | 68 smoke check lulus di PGlite. |
 | Build produksi | `npm run build` | Lulus; Phaser menjadi chunk terpisah. |
 | Browser smoke | Chrome headless | Landing, auth, guard route, 404 (sesi 1). |
-| Supabase nyata | — | **Belum dijalankan**; kredensial belum tersedia. |
+| Supabase nyata | `npm run verify:supabase` | **Belum dijalankan**; `.env` dan akun uji belum tersedia. |
 | Playwright/E2E | — | Belum ada. |
 
 PGlite membuktikan SQL dan RPC konsisten, tetapi bukan pengganti pengujian pada project
 Supabase nyata (Auth, PostgREST, email, redirect URL, latensi).
+
+## Verifikasi API Supabase nyata
+
+Setelah migration diterapkan, isi `.env` dan tambahkan akun uji:
+
+```env
+E2E_EMAIL=akun-developer@contoh.com
+E2E_PASSWORD=password-akun-uji
+```
+
+Akun harus punya role `developer` agar bisa membuka lesson di luar urutan unlock. Jalankan:
+
+```bash
+npm run verify:supabase
+```
+
+Skrip `scripts/verify-supabase.mjs` login dengan akun uji, memeriksa role, mencari lesson
+`greetings-vocabulary`, memulai attempt, memeriksa payload (12 soal, tanpa kunci/relasi),
+menjawab seluruh soal dengan kunci uji, menyelesaikan lesson, dan memastikan
+`question_pairs` tidak bisa dibaca tanpa sesi. Ini menguji Auth + PostgREST + RPC nyata,
+**bukan** tampilan browser; uji klik tetap harus dilakukan terpisah.
 
 ## Cakupan `npm run test:sql`
 

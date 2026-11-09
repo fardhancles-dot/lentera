@@ -15,6 +15,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:sql": "node scripts/test-sql.mjs",
+    "verify:supabase": "node scripts/verify-supabase.mjs",
     "seed:build": "tsx scripts/generate-curriculum-sql.ts"
   },
   "dependencies": {

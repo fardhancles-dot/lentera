@@ -82,6 +82,7 @@ Panduan lengkap Supabase, migrasi, dan deployment: **[docs/SETUP.md](docs/SETUP.
 | `npm test` | Unit test Vitest. |
 | `npm run test:watch` | Unit test mode watch. |
 | `npm run test:sql` | Smoke test migration, RPC, reward, dan RLS di PGlite. |
+| `npm run verify:supabase` | Verifikasi login, payload, grading, dan hasil lesson di Supabase nyata. |
 | `npm run seed:build` | Validasi konten dan regenerasi migration seed kurikulum. |
 
 ---

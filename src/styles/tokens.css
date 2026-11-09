@@ -1,0 +1,69 @@
+:root {
+  /* Brand palette */
+  --green-50: #f4fcef;
+  --green-100: #e9f9dc;
+  --green-200: #d3f2b8;
+  --green-300: #b0e585;
+  --green-500: #58cc02;
+  --green-600: #46a302;
+  --green-700: #2f8f24;
+  --yellow-100: #fff6d9;
+  --yellow-400: #ffc83d;
+  --yellow-500: #f0b01f;
+  --blue-100: #e8f4fd;
+  --blue-500: #4ca8e8;
+  --blue-600: #2f8fd0;
+  --red-100: #fdecec;
+  --red-500: #ea5b5b;
+  --red-600: #cf4545;
+
+  --ink: #303a32;
+  --ink-soft: #4a554c;
+  --muted: #89928a;
+  --muted-strong: #6c766e;
+  --border: #e5ebe2;
+  --border-strong: #d4dcd0;
+  --surface: #ffffff;
+  --background: #f7faf5;
+  --background-deep: #eef4ea;
+
+  /* Typography */
+  --font-sans: 'Nunito Variable', 'Nunito', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+  --text-4xl: 3rem;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Shape and depth */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+  --shadow-soft: 0 1px 2px rgba(48, 58, 50, 0.04), 0 12px 32px -22px rgba(48, 58, 50, 0.38);
+  --shadow-card: 0 1px 0 rgba(47, 143, 36, 0.04), 0 18px 40px -30px rgba(48, 58, 50, 0.45);
+  --shadow-pop: 0 24px 60px -28px rgba(48, 58, 50, 0.45);
+  --ring: 0 0 0 3px rgba(76, 168, 232, 0.35);
+
+  --sidebar-width: 248px;
+  --topbar-height: 68px;
+  --bottom-nav-height: 68px;
+  --content-max: 1080px;
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+}

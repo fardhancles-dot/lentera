@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-label="Bola dunia biru dengan daratan hijau">
+  <rect width="320" height="240" rx="24" fill="#F1F8FD"/>
+  <ellipse cx="160" cy="202" rx="78" ry="11" fill="#D9E8F3"/>
+  <circle cx="160" cy="118" r="70" fill="#4CA8E8"/>
+  <path d="M100 92c16-18 38-26 60-26 10 0 18 2 26 6l-8 14 14 8-4 18-20 4-8 14-18-6-6-12-20-4Z" fill="#58CC02"/>
+  <path d="M166 142c14-8 30-8 44 0l-4 16-16 8-18-6Z" fill="#2F8F24"/>
+  <path d="M118 142c8 10 20 16 34 18l-6 12-18-4-12-16Z" fill="#58CC02"/>
+  <ellipse cx="160" cy="118" rx="70" ry="70" fill="none" stroke="#2F8F24" stroke-width="4" opacity=".35"/>
+  <path d="M160 48v140M90 118h140" stroke="#2F8F24" stroke-width="3" opacity=".25"/>
+  <path d="M160 188v18" stroke="#89928A" stroke-width="10" stroke-linecap="round"/>
+  <path d="M122 214h76" stroke="#89928A" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="214" cy="70" r="12" fill="#FFC83D"/>
+</svg>

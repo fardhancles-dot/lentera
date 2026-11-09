@@ -1,0 +1,33 @@
+{
+  "name": "lentera",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Lentera — platform game edukasi 2D berbasis web.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:sql": "node scripts/test-sql.mjs",
+    "seed:build": "tsx scripts/generate-curriculum-sql.ts"
+  },
+  "dependencies": {
+    "@fontsource-variable/nunito": "^5.2.8",
+    "@supabase/supabase-js": "2.119.0",
+    "phaser": "4.2.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.15",
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "5.9.3",
+    "vite": "8.3.6",
+    "vitest": "5.1.0"
+  }
+}

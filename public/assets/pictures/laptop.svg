@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-label="Laptop abu-abu dengan layar biru">
+  <rect width="320" height="240" rx="24" fill="#F5F7FB"/>
+  <ellipse cx="160" cy="198" rx="94" ry="12" fill="#DFE6F0"/>
+  <rect x="82" y="54" width="156" height="108" rx="12" fill="#89928A"/>
+  <rect x="94" y="66" width="132" height="84" rx="6" fill="#4CA8E8"/>
+  <rect x="106" y="80" width="62" height="10" rx="5" fill="#E9F4FD"/>
+  <rect x="106" y="100" width="94" height="8" rx="4" fill="#BEE0F7"/>
+  <rect x="106" y="116" width="78" height="8" rx="4" fill="#BEE0F7"/>
+  <circle cx="202" cy="132" r="9" fill="#FFC83D"/>
+  <path d="M62 168h196l18 20H44Z" fill="#B7C0BA"/>
+  <path d="M128 174h64" stroke="#89928A" stroke-width="7" stroke-linecap="round"/>
+</svg>

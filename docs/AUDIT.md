@@ -24,12 +24,13 @@ Semua angka diambil dari migration seed dan eksekusi test pada tanggal tersebut.
 | Unit test | `npm test` | 34 test lulus (3 file). |
 | Migration + RPC + RLS + practice | `npm run test:sql` | 106 smoke check lulus di PGlite. |
 | Build produksi | `npm run build` | Lulus; Phaser tetap chunk terpisah. |
-| Supabase nyata | — | **Belum diuji**; kredensial belum tersedia. |
+| Supabase nyata | `npm run verify:supabase` | **29 check lulus** (login, lesson 20 soal, 12 tipe, Practice Hub, RLS) di project `xvrnmxbrxhtzzavmrlvy`. |
 | Git | `git status` | Repository Git lokal sudah ada; riwayat singkat dan commit masih lokal. |
 
 PGlite adalah PostgreSQL yang berjalan di Node. Hasilnya membuktikan SQL, RPC, dan policy
-konsisten secara logika, tetapi **bukan** bukti bahwa migration sudah diterapkan ke project
-Supabase milik pemilik produk.
+konsisten secara logika. Sejak 9 November 2026 seluruh 8 migration juga sudah diterapkan ke
+project Supabase nyata (`xvrnmxbrxhtzzavmrlvy`), dan verifikasi API lulus. Pengujian UI di
+browser masih terpisah.
 
 ## Status 8 prioritas
 
@@ -214,7 +215,7 @@ Practice, Unit Review, Legendary Challenge).
 - AI provider abstraction dan fitur AI.
 - Premium/entitlement/pembayaran (belum ada provider).
 - Playwright/E2E, pengujian responsif otomatis, audit performa.
-- Deployment Vercel dan penerapan migration ke Supabase nyata.
+- Deployment Vercel dan pengujian browser E2E.
 
 ---
 
@@ -229,7 +230,7 @@ Practice, Unit Review, Legendary Challenge).
 | 5 | `subject_overview` menghasilkan satu baris per course; katalog memakai `courses[0]`. | Mapel dengan >1 course akan tampil ganda / course lain tak terjangkau. | Perlu redesign katalog saat course ganda ditambahkan. |
 | 6 | Riwayat attempt belum ditampilkan. | Data ada tetapi tidak berguna bagi pemain. | Tambahkan di Tahap 5 (statistik). |
 | 7 | `buildPathNode` punya format indentasi rusak (bukan bug perilaku). | Keterbacaan. | Dirapikan saat menyentuh file tersebut. |
-| 8 | Migration belum diterapkan ke Supabase nyata. | Auth, RLS, dan gameplay belum diuji end-to-end. | Butuh kredensial; lihat SETUP.md. |
+| 8 | Migration dan E2E API Supabase sudah dijalankan; browser E2E belum. | UI belum diuji dengan sesi nyata. | Tambahkan Playwright pada QA akhir. |
 | 9 | Folder bukan repository Git. | Tidak ada riwayat perubahan/rollback. | Inisialisasi Git sebelum perubahan besar berikutnya. |
 
 ---
@@ -281,7 +282,7 @@ dukungan multi-course.
 4. **Tahap 6** — sprite/animasi karakter, adventure map Phaser, audio, efek.
 5. **Tahap 7** — leaderboard, liga, teman, activity feed, event.
 6. **Tahap 8** — Developer Dashboard, content management, Reward Center, inbox, audit log.
-7. **QA** — Playwright, Supabase nyata, responsif, performa, deploy Vercel.
+7. **QA** — Playwright/browser E2E, responsif, performa, deploy Vercel.
 
 Aturan kerja yang dipertahankan: jangan menulis ulang fondasi, jangan mengganti stack,
 jangan menghapus progres, dan jangan menyatakan fitur selesai tanpa bukti eksekusi.
@@ -343,7 +344,7 @@ STARTED** belum, **NEEDS FIX** ada tetapi bermasalah.
 
 ### Batasan yang belum ditutup
 
-1. Supabase nyata dan browser E2E belum diuji; belum ada kredensial.
+1. Browser E2E belum ada; verifikasi Supabase saat ini lewat API/RPC.
 2. Konten lima mekanik baru baru ada di satu lesson Bahasa Inggris.
 3. Belum ada aset audio rekaman; model audio memakai TTS browser.
 4. Conversation belum bercabang multi-langkah.

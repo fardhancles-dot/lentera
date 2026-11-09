@@ -2,9 +2,10 @@
 
 Database: PostgreSQL di Supabase. Migration ada di `supabase/migrations/`.
 
-> **Status:** seluruh migration lulus smoke test di PGlite (PostgreSQL WASM), tetapi
-> **belum diterapkan** ke project Supabase nyata karena kredensial belum tersedia.
-> Jalankan lewat SQL Editor atau `supabase db push` sebelum menguji auth dan gameplay.
+> **Status:** kedelapan migration sudah diterapkan ke project Supabase nyata
+> (`xvrnmxbrxhtzzavmrlvy`, region Singapura) dan `supabase migration list` menunjukkan
+> local = remote. Smoke test PGlite (106 check) dan verifikasi API Supabase (29 check)
+> lulus. Pengujian UI di browser masih terpisah.
 
 ## Daftar migration
 

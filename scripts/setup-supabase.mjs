@@ -174,27 +174,26 @@ async function waitForProject(ref, token) {
 
 function pushMigrations(ref, dbPassword, token) {
   console.log('   mendorong 8 migration...');
-  const bin = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-  const result = spawnSync(
-    bin,
-    [
-      '--yes',
-      'supabase',
-      'db',
-      'push',
-      '--remote',
-      ref,
-      '--password',
-      dbPassword,
-      '--include-all',
-      '--yes',
-    ],
-    {
-      stdio: 'inherit',
-      env: { ...process.env, SUPABASE_ACCESS_TOKEN: token },
-    },
-  );
+  const args = [
+    '--yes',
+    'supabase',
+    'db',
+    'push',
+    '--remote',
+    ref,
+    '--password',
+    dbPassword,
+    '--include-all',
+    '--yes',
+  ];
+  const result = spawnSync('npx', args, {
+    stdio: 'inherit',
+    // Node cannot execute npx.cmd directly on Windows without a shell.
+    shell: process.platform === 'win32',
+    env: { ...process.env, SUPABASE_ACCESS_TOKEN: token },
+  });
 
+  if (result.error) console.error(`   ${result.error.message}`);
   if (result.status !== 0) {
     fail('supabase db push gagal. Periksa pesan di atas; migration belum dianggap selesai.');
   }

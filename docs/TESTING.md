@@ -9,11 +9,11 @@
 | Migration + RPC + RLS + practice | `npm run test:sql` | 106 smoke check lulus di PGlite. |
 | Build produksi | `npm run build` | Lulus; Phaser menjadi chunk terpisah. |
 | Browser smoke | Chrome headless | Landing, auth, guard route, 404 (sesi 1). |
-| Supabase nyata | `npm run verify:supabase` | **Belum dijalankan**; `.env` dan akun uji belum tersedia. |
+| Supabase nyata | `npm run verify:supabase` | **29 check lulus** (lesson 20 soal, 4 scene, Practice Hub, XP idempoten, RLS) di project `xvrnmxbrxhtzzavmrlvy`. |
 | Playwright/E2E | — | Belum ada. |
 
-PGlite membuktikan SQL dan RPC konsisten, tetapi bukan pengganti pengujian pada project
-Supabase nyata (Auth, PostgREST, email, redirect URL, latensi).
+PGlite membuktikan SQL dan RPC konsisten. Verifikasi Supabase nyata kini juga sudah
+dijalankan lewat Auth + PostgREST, tetapi belum mencakup UI browser, email, dan redirect.
 
 ## Verifikasi API Supabase nyata
 
@@ -99,9 +99,10 @@ menjawab seluruh soal dengan kunci uji, menyelesaikan lesson, dan memastikan
 
 ## Yang belum dapat diuji
 
-- Registrasi, login, verifikasi email, reset password, onboarding, simpan profil, dan
-  simpan pengaturan **belum E2E** karena project Supabase belum aktif.
-- Migration belum diterapkan ke Supabase nyata; RLS belum diuji lewat PostgREST.
+- Registrasi lewat UI, verifikasi email, reset password, onboarding, simpan profil, dan
+  simpan pengaturan belum diuji di browser. Login API sudah diuji.
+- RLS Practice Hub dan `question_pairs` sudah diuji lewat PostgREST; RLS tabel lain baru
+  diuji di PGlite.
 - Gameplay dan Practice Hub belum diuji di browser dengan sesi nyata; RPC sudah diuji
   di database.
 - Belum ada Playwright, uji responsif otomatis, atau audit performa.

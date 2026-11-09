@@ -95,7 +95,15 @@ jadikan developer, tulis `.env`, lalu jalankan verifikasi lesson + Practice Hub.
 
 Prasyarat:
 
-- Personal Access Token dari **Dashboard Supabase → Account → Access Tokens**.
+- Personal Access Token dari **Dashboard Supabase → Account → Access Tokens**, dibuat
+  dengan **Create legacy token** (akses penuh). Token scoped yang hanya diberi akses ke
+  project yang sudah ada tidak dapat membuat organization/project baru.
+
+Jika memakai token scoped, pilih resource **Organization**, bukan **Project**. Project
+belum ada, jadi pilihan Project akan kosong; token organization yang dapat membuat project
+baru. Beri akses penuh pada organization tersebut (minimal: projects write, database
+write, API keys read). Jika daftar organization kosong, kembali dan pakai
+**Create legacy token**.
 - Kuota project paket gratis masih tersedia.
 
 Halaman Access Tokens bersifat **akun**, bukan project. Project tidak perlu dibuat dulu —

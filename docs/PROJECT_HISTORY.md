@@ -421,3 +421,42 @@ fondasi Tahap 1–3.
    `/practice` dan tipe soal baru di browser.
 2. Sebarkan konten listening/speaking/translation/conversation/story ke mapel inti lain.
 3. Tahap 5: Hearts, streak, player level, wallet UI, mastery, quest, achievement, shop.
+
+---
+
+## Sesi 7 — 9 November 2026 — Supabase nyata dan repositori GitHub
+
+**Fokus:** membawa proyek dari verifikasi lokal ke project Supabase nyata dan repo GitHub.
+
+### Hasil
+
+- Project Supabase `xvrnmxbrxhtzzavmrlvy` (`lentera-0ea3`, region Singapura, paket gratis)
+  dibuat lewat `npm run setup:supabase`.
+- 8 migration diterapkan; `supabase migration list` menunjukkan local = remote.
+- Akun QA terverifikasi `qa+xvrnmxbrxhtzzavmrlvy@example.com` dibuat dan diberi role
+  `developer`.
+- `.env` berisi URL, anon key, project ref, database password, dan kredensial E2E; file ini
+  di-ignore Git.
+- `npm run verify:supabase` lulus **29 check**: login, role, 20 soal, 12 tipe, 4 scene,
+  grading, Practice Hub match madness, bonus skor, XP idempoten, dan RLS.
+- Repo GitHub privat `fardhancles-dot/lentera` dibuat dan commit `00f7f58` di-push.
+
+### Bug yang diperbaiki
+
+- `spawnSync('npx.cmd')` gagal di Windows tanpa shell sehingga `db push` dari skrip tidak
+  berjalan. Diganti `spawnSync('npx', { shell: true })` + logging error.
+- Verifikasi lesson masih mengharapkan 12 soal; diperbarui ke 20 beserta tipe baru dan
+  Practice Hub.
+
+### Belum selesai
+
+- UI browser belum diuji dengan sesi nyata (belum ada Playwright).
+- Registrasi UI, verifikasi email, reset password, dan onboarding belum E2E.
+- Legacy token Supabase masih aktif; hapus setelah setup selesai.
+- Perubahan sesi 7 (perbaikan skrip setup + dokumentasi) belum di-push ke GitHub.
+
+### Langkah berikutnya
+
+1. Jalankan `npm run dev`, daftar akun, mainkan lesson dan `/practice` di browser.
+2. Hapus legacy token Supabase dari Dashboard → Account → Access Tokens.
+3. Push perubahan dokumentasi/skrip, lalu lanjut Tahap 5.

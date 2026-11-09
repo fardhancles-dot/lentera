@@ -23,11 +23,11 @@ Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand ter
 | Fondasi Vite + TypeScript + Phaser 4 | **Implemented · Tested (build)** | Phaser dimuat lazy hanya saat stage maskot tampil. |
 | Design system & layout responsif | **Implemented · Verified (browser smoke)** | Token warna, komponen, sidebar desktop, bottom nav mobile. |
 | Landing page + maskot interaktif | **Implemented · Verified** | Kiko digambar vector dengan Phaser, idle/blink/wave/celebrate. |
-| Register / login / logout | **Implemented · Unit tested, E2E pending** | Membutuhkan project Supabase aktif untuk uji end-to-end. |
+| Register / login / logout | **Implemented · E2E verified** | Login API, payload lesson, grading, dan Practice Hub diuji ke project Supabase nyata. |
 | Verifikasi email & lupa password | **Implemented · Belum E2E** | Memakai Supabase Auth; tautan reset memakai redirect `/reset-password`. |
 | Onboarding profil | **Implemented · Belum E2E** | Username, avatar, nama, target harian, zona waktu. Atomik via RPC. |
 | Profil & pengaturan cloud | **Implemented · Belum E2E** | Disimpan di PostgreSQL dengan RLS + column-level grants. |
-| Database & RLS | **Implemented · Tested di PGlite, belum di Supabase nyata** | 6 migration; 68 SQL smoke check lulus. |
+| Database & RLS | **Implemented · Tested (PGlite + Supabase)** | 8 migration diterapkan ke project Supabase; 106 SQL smoke check + 29 E2E check lulus. |
 | Kurikulum & bank soal | **Implemented · Tested (SQL smoke)** | 10 mapel, 22 level, 57 lesson, 225 soal, 12 tipe soal, 6 jenis node; 7 mapel inti + Bahasa Sambas. |
 | Learning path & progres per mapel | **Implemented · Tested (SQL smoke)** | Node selesai/aktif/terkunci, unlock ditegakkan server, progres per course/node. |
 | Lesson engine & halaman hasil | **Implemented · Tested (SQL smoke)** | Kunci jawaban tidak dikirim ke browser; XP/Koin idempoten per attempt. |
@@ -83,7 +83,7 @@ Panduan lengkap Supabase, migrasi, dan deployment: **[docs/SETUP.md](docs/SETUP.
 | `npm test` | Unit test Vitest. |
 | `npm run test:watch` | Unit test mode watch. |
 | `npm run test:sql` | Smoke test migration, RPC, reward, dan RLS di PGlite. |
-| `npm run verify:supabase` | Verifikasi login, payload, grading, dan hasil lesson di Supabase nyata. |
+| `npm run verify:supabase` | Verifikasi login, payload 20 soal, grading, hasil lesson, Practice Hub, dan idempotensi XP di Supabase nyata. |
 | `npm run seed:build` | Validasi konten dan regenerasi migration seed kurikulum. |
 
 ---

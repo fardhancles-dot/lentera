@@ -59,6 +59,8 @@ try {
   await run('supabase/migrations/20261108110000_curriculum_seed.sql');
   await run('supabase/migrations/20261108120000_lesson_engine.sql');
   await run('supabase/migrations/20261109100000_practice_engine.sql');
+  await run('supabase/migrations/20261110100000_friends_quest.sql');
+  await run('supabase/migrations/20261110120000_progression_economy.sql');
 
   const content = await db.query(`
     select
@@ -71,7 +73,7 @@ try {
   const stats = content.rows[0];
   check(stats.active_subjects === 8, '8 primary subjects are active', String(stats.active_subjects));
   check(stats.lessons === 57, '57 lessons are seeded', String(stats.lessons));
-  check(stats.questions === 225, '225 questions are seeded', String(stats.questions));
+  check(stats.questions === 231, '231 questions are seeded', String(stats.questions));
   check(
     stats.node_kinds === 6,
     'lesson, review, challenge, practice, checkpoint, and legendary nodes exist',
@@ -98,7 +100,7 @@ try {
   `);
   const miniData = miniGameData.rows[0];
   check(miniData.lesson_questions === 20, 'greetings lesson has 20 questions', String(miniData.lesson_questions));
-  check(miniData.pairs === 15, 'matching questions store 15 pairs', String(miniData.pairs));
+  check(miniData.pairs === 19, 'matching questions store 19 pairs', String(miniData.pairs));
   check(miniData.images === 3, 'three picture questions have image media', String(miniData.images));
   check(miniData.minigame_types === 5, 'five mini-game question types are seeded', String(miniData.minigame_types));
   check(miniData.english_questions === 45, 'English has 45 questions', String(miniData.english_questions));
@@ -217,6 +219,62 @@ try {
   check(
     stageFour['en-speaking-greeting']?.scene?.speech?.length > 0,
     'speaking question stores a model sentence',
+  );
+  check(
+    stageFour['en-listening-classroom']?.scene?.lang === 'en-US',
+    'English listening declares the en-US locale',
+  );
+  check(
+    stageFour['en-conversation-teacher']?.scene?.responses?.length === 4,
+    'conversation stores one NPC reaction per option',
+  );
+  check(
+    stageFour['en-story-kiko-garden']?.scene?.screens?.[1]?.choices?.length === 2,
+    'story stores an ungraded response choice',
+  );
+
+  const indonesianStageFour = await db.query(
+    `select id, slug, type, prompt, scene from public.questions
+     where slug in (
+       'id-listening-ejaan', 'id-speaking-perpustakaan',
+       'id-fill-dua-rumpang', 'id-conversation-guru', 'id-story-kalimat-efektif'
+     )`,
+  );
+  const indoFour = Object.fromEntries(
+    indonesianStageFour.rows.map((row) => [row.slug, row]),
+  );
+  check(indonesianStageFour.rows.length === 5, 'five Indonesian Stage 4 questions are seeded');
+  check(
+    indoFour['id-listening-ejaan']?.scene?.lang === 'id-ID',
+    'Indonesian listening declares the id-ID locale',
+  );
+  check(
+    (indoFour['id-fill-dua-rumpang']?.prompt?.match(/_{2,}/g) ?? []).length === 2,
+    'Indonesian fill blank stores two inline blanks',
+  );
+  check(
+    indoFour['id-conversation-guru']?.scene?.responses?.length === 4,
+    'Indonesian conversation stores four NPC reactions',
+  );
+  check(
+    indoFour['id-story-kalimat-efektif']?.scene?.screens?.[1]?.choices?.length === 3,
+    'Indonesian story stores three response choices',
+  );
+
+  const gradeIndo = async (slug, answer) => {
+    const result = await db.query('select public.grade_question($1, $2::jsonb) as correct', [
+      indoFour[slug].id,
+      JSON.stringify(answer),
+    ]);
+    return result.rows[0].correct;
+  };
+  check(
+    await gradeIndo('id-fill-dua-rumpang', { text: 'membaca menulis' }),
+    'multi-blank fill accepts both words in order',
+  );
+  check(
+    !(await gradeIndo('id-fill-dua-rumpang', { text: 'menulis membaca' })),
+    'multi-blank fill rejects the reversed order',
   );
 
   const gradeFour = async (slug, answer) => {
@@ -367,12 +425,14 @@ try {
   );
 
   const users = await db.query(`
-    insert into auth.users (email) values ('player-one@example.com'), ('player-two@example.com')
+    insert into auth.users (email) values
+      ('player-one@example.com'), ('player-two@example.com'), ('player-three@example.com')
     returning id, email
   `);
   const user1 = users.rows.find((row) => row.email.startsWith('player-one')).id;
   const user2 = users.rows.find((row) => row.email.startsWith('player-two')).id;
-  check(Boolean(user1 && user2), 'trigger created two auth users');
+  const user3 = users.rows.find((row) => row.email.startsWith('player-three')).id;
+  check(Boolean(user1 && user2 && user3), 'trigger created three auth users');
   await asUser(user1);
 
   const path = await db.query(`
@@ -569,6 +629,194 @@ try {
   await asUser(user1);
 
   // -------------------------------------------------------------------------
+  // Progression: Hearts, Streak, account level, and wallet RPCs.
+  // -------------------------------------------------------------------------
+  await asUser(user3);
+  const initialProgress = await db.query('select public.get_player_state() as payload');
+  check(
+    initialProgress.rows[0].payload.hearts.current === 5 &&
+      initialProgress.rows[0].payload.hearts.max === 5,
+    'new player starts with five Hearts',
+    JSON.stringify(initialProgress.rows[0].payload.hearts),
+  );
+  check(initialProgress.rows[0].payload.streak.current === 0, 'new player starts with a zero streak');
+  check(initialProgress.rows[0].payload.coins === 0, 'new player starts with an empty wallet');
+
+  const levelTwo = await db.query('select public.player_level_for_xp(100) as payload');
+  check(levelTwo.rows[0].payload.level === 2, '100 XP reaches account level 2');
+  check(levelTwo.rows[0].payload.title === 'Penjelajah', 'level 2 exposes its title');
+  check(levelTwo.rows[0].payload.progressPercent === 0, 'fresh level 2 starts at 0% progress');
+
+  await db.query(
+    'update public.user_hearts set current_hearts = 0, last_refill_at = now() where user_id = $1',
+    [user3],
+  );
+  await expectError(
+    'zero Hearts blocks starting a lesson',
+    'select public.start_lesson($1)',
+    [firstNode.node_id],
+    'hearts_empty',
+  );
+
+  await db.query(
+    'update public.user_hearts set current_hearts = 5, last_refill_at = now() where user_id = $1',
+    [user3],
+  );
+  const heartStart = await db.query('select public.start_lesson($1) as payload', [firstNode.node_id]);
+  const heartAttempt = heartStart.rows[0].payload.attemptId;
+  const heartQuestions = await db.query(
+    `select q.id, q.type,
+       (select id from public.question_options where question_id = q.id and is_correct order by sort_order limit 1) as correct_option,
+       (select id from public.question_options where question_id = q.id and not is_correct order by sort_order limit 1) as wrong_option,
+       (select answer from public.question_answers where question_id = q.id order by id limit 1) as answer
+     from public.questions q
+     where q.lesson_id = $1 and q.is_active
+     order by q.sort_order
+     limit 2`,
+    [firstNode.lesson_id],
+  );
+  const firstHeartQuestion = heartQuestions.rows[0];
+  const secondHeartQuestion = heartQuestions.rows[1];
+  const wrongHeartAnswer = firstHeartQuestion.wrong_option
+    ? { optionId: firstHeartQuestion.wrong_option }
+    : { text: 'jawaban-salah' };
+
+  const wrongHeart = await db.query(
+    'select public.submit_attempt_answer($1, $2, $3::jsonb) as payload',
+    [heartAttempt, firstHeartQuestion.id, JSON.stringify(wrongHeartAnswer)],
+  );
+  check(wrongHeart.rows[0].payload.isCorrect === false, 'Hearts test submits a wrong answer');
+  await db.query(
+    'select public.submit_attempt_answer($1, $2, $3::jsonb)',
+    [heartAttempt, firstHeartQuestion.id, JSON.stringify(wrongHeartAnswer)],
+  );
+  const heartsAfterDuplicate = await db.query(
+    'select current_hearts from public.user_hearts where user_id = $1',
+    [user3],
+  );
+  check(
+    heartsAfterDuplicate.rows[0].current_hearts === 4,
+    'wrong answer removes one Heart and a duplicate does not remove another',
+    String(heartsAfterDuplicate.rows[0].current_hearts),
+  );
+
+  const correctHeartAnswer = secondHeartQuestion.correct_option
+    ? { optionId: secondHeartQuestion.correct_option }
+    : { text: secondHeartQuestion.answer };
+  await db.query('select public.submit_attempt_answer($1, $2, $3::jsonb)', [
+    heartAttempt,
+    secondHeartQuestion.id,
+    JSON.stringify(correctHeartAnswer),
+  ]);
+  const heartsAfterCorrect = await db.query(
+    'select current_hearts from public.user_hearts where user_id = $1',
+    [user3],
+  );
+  check(heartsAfterCorrect.rows[0].current_hearts === 4, 'a correct answer does not spend a Heart');
+
+  // The XP ledger is the source of truth for Streak and level. Quest XP is
+  // deliberately excluded from the activity streak.
+  await db.query(
+    "insert into public.user_xp_ledger (user_id, amount, source) values ($1, 100, 'lesson')",
+    [user3],
+  );
+  const afterLevelXp = await db.query('select public.get_player_state() as payload');
+  const levelState = afterLevelXp.rows[0].payload;
+  check(levelState.totalXp === 100, 'XP ledger total is server-derived', String(levelState.totalXp));
+  check(levelState.level.level === 2, 'account level follows the XP threshold');
+  check(levelState.streak.current === 1, 'first activity creates a one-day streak');
+  check(levelState.streak.longest === 1, 'streak also records the longest run');
+  check(levelState.todayXp === 100, 'today XP comes from the ledger');
+
+  await db.query(
+    "insert into public.user_xp_ledger (user_id, amount, source) values ($1, 10, 'practice')",
+    [user3],
+  );
+  await db.query(
+    "insert into public.user_xp_ledger (user_id, amount, source) values ($1, 25, 'friend_quest_reward')",
+    [user3],
+  );
+  const afterMoreXp = await db.query('select public.get_player_state() as payload');
+  check(afterMoreXp.rows[0].payload.totalXp === 135, 'quest XP is included in total XP');
+  check(
+    afterMoreXp.rows[0].payload.streak.current === 1,
+    'quest XP does not extend the activity streak',
+  );
+  check(
+    afterMoreXp.rows[0].payload.level.progressPercent === 23,
+    'level progress uses the XP gap to the next threshold',
+    String(afterMoreXp.rows[0].payload.level.progressPercent),
+  );
+
+  await db.query(
+    `insert into public.user_wallets (user_id, coins) values ($1, 10)
+     on conflict (user_id) do update set coins = excluded.coins`,
+    [user3],
+  );
+  await db.query(
+    'update public.user_hearts set current_hearts = 2, last_refill_at = now() where user_id = $1',
+    [user3],
+  );
+  await db.exec('set role authenticated');
+  await asUser(user3);
+  await expectError(
+    'refill rejects a wallet with insufficient coins',
+    'select public.refill_hearts()',
+    [],
+    'not_enough_coins',
+  );
+  await db.exec('reset role');
+  const rejectedRefill = await db.query(
+    'select current_hearts from public.user_hearts where user_id = $1',
+    [user3],
+  );
+  check(rejectedRefill.rows[0].current_hearts === 2, 'failed refill leaves Hearts unchanged');
+
+  await db.query('update public.user_wallets set coins = 100 where user_id = $1', [user3]);
+  await db.exec('set role authenticated');
+  await asUser(user3);
+  const refill = await db.query('select public.refill_hearts() as payload');
+  const refillPayload = refill.rows[0].payload;
+  check(refillPayload.hearts.current === 5, 'refill restores Hearts to the maximum');
+  check(refillPayload.coins === 70, 'refill deducts 10 Coins per missing Heart');
+  check(refillPayload.coinsSpent === 30 && refillPayload.heartsRestored === 3, 'refill reports its server cost');
+
+  const walletPayload = await db.query('select public.get_my_wallet() as payload');
+  const walletRpc = walletPayload.rows[0].payload;
+  check(Array.isArray(walletRpc.transactions), 'wallet returns a coin transaction list');
+  check(
+    walletRpc.transactions.some((transaction) => transaction.source === 'heart_refill' && transaction.amount === -30),
+    'refill writes a negative coin transaction',
+  );
+  check(
+    Array.isArray(walletRpc.xpTransactions) && walletRpc.xpTransactions.length === 3,
+    'wallet returns the XP ledger history',
+  );
+
+  const fullRefill = await db.query('select public.refill_hearts() as payload');
+  check(fullRefill.rows[0].payload.alreadyFull === true, 'refill on full Hearts is idempotent');
+  check(fullRefill.rows[0].payload.coinsSpent === 0, 'full refill spends no Coins');
+
+  await db.exec('reset role');
+  await asUser(user3);
+  await db.exec('set role authenticated');
+  const visibleHearts = await db.query('select count(*)::int as count from public.user_hearts');
+  check(visibleHearts.rows[0].count === 1, 'RLS hides another player’s Hearts');
+  const visibleStreaks = await db.query('select count(*)::int as count from public.user_streaks');
+  check(visibleStreaks.rows[0].count === 1, 'RLS hides another player’s Streak');
+  const visibleLevels = await db.query('select count(*)::int as count from public.player_levels');
+  check(visibleLevels.rows[0].count === 30, 'authenticated players can read the level table');
+  await expectError(
+    'RLS blocks direct Hearts edits',
+    'update public.user_hearts set current_hearts = 5 where user_id = $1',
+    [user3],
+    'permission denied',
+  );
+  await db.exec('reset role');
+
+  await asUser(user1);
+
+  // -------------------------------------------------------------------------
   // Practice engine: timed modes, combo scoring, and idempotent XP.
   // -------------------------------------------------------------------------
   const courseRows = await db.query(
@@ -719,6 +967,138 @@ try {
     'permission denied',
   );
   await db.exec('reset role');
+
+  await asUser(user1);
+
+  // -------------------------------------------------------------------------
+  // Friends Quest: invite code, shared XP, RLS isolation, and idempotent claim.
+  // -------------------------------------------------------------------------
+  const createdQuest = await db.query(
+    `select public.create_friend_quest('Belajar Bersama', 30, 25, 10) as payload`,
+  );
+  const quest = createdQuest.rows[0].payload;
+  check(Boolean(quest?.id && /^[A-Z0-9]{6}$/.test(quest.code)), 'friend quest is created with an invite code');
+  check(quest.targetXp === 30 && quest.rewardXp === 25 && quest.rewardCoins === 10, 'friend quest stores target and rewards');
+  check(quest.memberCount === 1 && quest.viewerContribution === 0, 'creator becomes the first member with zero contribution');
+
+  await db.exec('set role authenticated');
+  await asUser(user2);
+  const hiddenQuest = await db.query('select count(*)::int as count from public.friend_quests');
+  check(hiddenQuest.rows[0].count === 0, 'RLS hides a friend quest from non-members');
+  const joinedQuest = await db.query('select public.join_friend_quest($1) as payload', [quest.code]);
+  check(
+    joinedQuest.rows[0].payload.memberCount === 2,
+    'a player can join a friend quest with the invite code',
+  );
+  check(
+    (await db.query('select count(*)::int as count from public.friend_quests')).rows[0].count === 1,
+    'RLS exposes the friend quest after joining',
+  );
+  await db.exec('reset role');
+
+  await asUser(user1);
+  const questPractice = await db.query(
+    "select public.start_practice('timed', $1) as payload",
+    [webCourse],
+  );
+  const questSession = questPractice.rows[0].payload;
+  for (const question of questSession.questions) {
+    const answer = await correctAnswerFor(question);
+    await db.query('select public.submit_practice_answer($1, $2, $3::jsonb, $4)', [
+      questSession.sessionId,
+      question.id,
+      JSON.stringify(answer),
+      3000,
+    ]);
+  }
+  const questPracticeSummary = await db.query(
+    'select public.complete_practice_session($1) as payload',
+    [questSession.sessionId],
+  );
+  check(questPracticeSummary.rows[0].payload.xpAwarded === 20, 'quest practice awards its own XP');
+
+  const afterPractice = await db.query('select public.get_my_friend_quests() as payload');
+  const questAfterPractice = afterPractice.rows[0].payload[0];
+  check(
+    questAfterPractice.totalXp === 20 && questAfterPractice.viewerContribution === 20,
+    'practice XP is counted toward the shared quest total',
+    JSON.stringify(questAfterPractice),
+  );
+  check(questAfterPractice.status === 'active', 'quest stays active below its target');
+
+  await asUser(user2);
+  const questLessonPath = await db.query(
+    `select n.id as node_id, l.id as lesson_id
+     from public.learning_nodes n
+     join public.lessons l on l.id = n.lesson_id
+     join public.units u on u.id = n.unit_id
+     join public.course_levels lv on lv.id = u.course_level_id
+     join public.courses c on c.id = lv.course_id
+     join public.subjects s on s.id = c.subject_id
+     where s.slug = 'pemrograman-web'
+     order by lv.sort_order, u.sort_order, n.sort_order
+     limit 1`,
+  );
+  const questLesson = questLessonPath.rows[0];
+  const questAttempt = await db.query('select public.start_lesson($1) as payload', [
+    questLesson.node_id,
+  ]);
+  const questAttemptId = questAttempt.rows[0].payload.attemptId;
+  const questQuestions = await db.query(
+    `select q.id,
+       (select id from public.question_options where question_id = q.id and is_correct limit 1) as correct_option,
+       (select answer from public.question_answers where question_id = q.id order by id limit 1) as answer
+     from public.questions q where q.lesson_id = $1 and q.is_active order by q.sort_order`,
+    [questLesson.lesson_id],
+  );
+  for (const question of questQuestions.rows) {
+    const answer = question.correct_option
+      ? { optionId: question.correct_option }
+      : { text: question.answer };
+    await db.query('select public.submit_attempt_answer($1, $2, $3::jsonb)', [
+      questAttemptId,
+      question.id,
+      JSON.stringify(answer),
+    ]);
+  }
+  const questLessonSummary = await db.query(
+    'select public.complete_lesson_attempt($1) as payload',
+    [questAttemptId],
+  );
+  check(questLessonSummary.rows[0].payload.xpAwarded === 10, 'second member earns lesson XP');
+
+  const completedQuest = await db.query('select public.get_my_friend_quests() as payload');
+  const questCompleted = completedQuest.rows[0].payload[0];
+  check(questCompleted.status === 'completed', 'quest completes when combined XP reaches the target');
+  check(questCompleted.totalXp === 30, 'quest total combines both members', String(questCompleted.totalXp));
+  check(questCompleted.canClaim === true, 'completed quest exposes the claim action');
+
+  await asUser(user1);
+  const claim = await db.query('select public.claim_friend_quest_reward($1) as payload', [quest.id]);
+  check(claim.rows[0].payload.alreadyClaimed === false, 'first claim is accepted');
+  check(
+    claim.rows[0].payload.xpAwarded === 25 && claim.rows[0].payload.coinsAwarded === 10,
+    'claim awards the configured XP and coins',
+  );
+  const claimRepeat = await db.query('select public.claim_friend_quest_reward($1) as payload', [quest.id]);
+  check(claimRepeat.rows[0].payload.alreadyClaimed === true, 'second claim is rejected as already claimed');
+  check(claimRepeat.rows[0].payload.xpAwarded === 0, 'second claim grants no XP');
+
+  const questLedger = await db.query(
+    `select count(*)::int as count
+     from public.user_xp_ledger
+     where friend_quest_id = $1 and user_id = $2 and source = 'friend_quest_reward'`,
+    [quest.id, user1],
+  );
+  check(questLedger.rows[0].count === 1, 'friend quest reward is written once to the ledger');
+
+  await asUser(user3);
+  await expectError(
+    'a non-member cannot claim a friend quest reward',
+    'select public.claim_friend_quest_reward($1)',
+    [quest.id],
+    'friend_quest_not_member',
+  );
 
   await asUser(user1);
   const staffCheck = await db.query('select public.is_staff() as staff');

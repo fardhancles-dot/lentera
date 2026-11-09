@@ -1,7 +1,13 @@
 import type { PageModule } from '../app/router';
 import { kikoMarkup } from '../components/brandArt';
 import { icon } from '../components/icons';
+import {
+  playerProgressError,
+  playerProgressPanel,
+  playerProgressSkeleton,
+} from '../components/playerSummary';
 import { renderAppLayout } from '../layouts/appLayout';
+import { playerStore, type PlayerStoreState } from '../stores/player.store';
 import { sessionStore } from '../stores/session.store';
 import { el, formatDate } from '../utils/dom';
 
@@ -20,21 +26,21 @@ const ROADMAP: Array<{ title: string; meta: string; state: 'done' | 'active' | '
   },
   {
     title: 'Mata pelajaran, level, unit, learning path, bank soal',
-    meta: 'Selesai — 10 mapel, 22 level, 57 lesson, 210 soal, 6 jenis node',
+    meta: 'Selesai — 10 mapel, 22 level, 57 lesson, 231 soal, 6 jenis node',
     state: 'done',
   },
   {
     title: 'Gameplay dan 20 mini-game',
-    meta: 'Berjalan — lesson engine server-side dan 3 tipe soal; 17 mini-game belum dibangun',
-    state: 'active',
+    meta: 'Selesai — lesson engine server-side, 20 mini-game, 12 tipe soal',
+    state: 'done',
   },
   {
-    title: 'XP, Koin, Hearts, Streak, dan reward',
-    meta: 'Sebagian — XP dan Koin tercatat di ledger; Hearts, Streak, level akun, dan quest belum',
+    title: 'XP, Koin, Hearts, Streak, dan wallet',
+    meta: 'Tahap 5 — Hearts, Streak, level akun, dan riwayat wallet',
     state: 'active',
   },
   { title: 'Karakter, animasi, audio, adventure map', meta: 'Direncanakan', state: 'todo' },
-  { title: 'Leaderboard, teman, Quest, sistem sosial', meta: 'Direncanakan', state: 'todo' },
+  { title: 'Leaderboard, teman, Quest, sistem sosial', meta: 'Friends Quest sudah ada; leaderboard dan teman penuh direncanakan', state: 'active' },
   { title: 'Developer Dashboard dan administrasi', meta: 'Direncanakan', state: 'todo' },
 ];
 
@@ -90,6 +96,42 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     el('div', { class: 'greeting-card__mascot', html: kikoMarkup(200) }),
   ]);
 
+  const progressionBody = el('div');
+  const progressionCard = el('section', { class: 'card card--padded' }, [
+    el('div', { class: 'card__header' }, [
+      el('div', {}, [
+        el('h2', { class: 'card__title', text: 'Progres akun' }),
+        el('p', {
+          class: 'card__subtitle',
+          text: 'Level, Koin, Hearts, dan Streak dihitung di server.',
+        }),
+      ]),
+      el('a', { class: 'btn btn--secondary btn--sm', attrs: { href: '/wallet' } }, [
+        icon('bag', 16),
+        'Buka wallet',
+      ]),
+    ]),
+    progressionBody,
+  ]);
+
+  const paintProgression = (state: PlayerStoreState) => {
+    if (state.data) {
+      progressionBody.replaceChildren(playerProgressPanel(state.data));
+    } else if (state.status === 'error') {
+      progressionBody.replaceChildren(
+        playerProgressError(state.error ?? 'Progres gagal dimuat.', () => {
+          void playerStore.load(true);
+        }),
+      );
+    } else {
+      progressionBody.replaceChildren(playerProgressSkeleton());
+    }
+  };
+
+  ctx.onCleanup(playerStore.subscribe(paintProgression));
+  paintProgression(playerStore.getState());
+  void playerStore.load();
+
   const goalCard = el('section', { class: 'card card--padded goal-card' }, [
     el('div', { class: 'goal-card__top' }, [
       el('div', {}, [
@@ -109,7 +151,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
         el('p', { style: { fontWeight: '800' }, text: 'Belum ada sesi belajar hari ini' }),
         el('p', {
           class: 'small muted',
-          text: 'Pencatatan durasi belajar aktif bersamaan dengan sistem progres dan XP (tahap 5).',
+          text: 'Durasi belajar per sesi belum dicatat; target ini masih menjadi pengingat harian.',
         }),
       ]),
     ]),
@@ -171,6 +213,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       statusItem('Row Level Security aktif di database'),
       statusItem('Kurikulum dan bank soal tersimpan di database'),
       statusItem('Lesson dinilai di server; XP & Koin tercatat'),
+      statusItem('Hearts, Streak, level, dan wallet dihitung server'),
     ]),
   ]);
 
@@ -191,7 +234,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
   const content = el('div', {}, [
     greetingCard,
     el('div', { class: 'dashboard-grid', style: { marginTop: '1.25rem' } }, [
-      el('div', { class: 'dashboard-main' }, [goalCard, roadmapCard]),
+      el('div', { class: 'dashboard-main' }, [progressionCard, goalCard, roadmapCard]),
       el('div', { class: 'dashboard-aside' }, [accountCard, statusCard, tipCard]),
     ]),
   ]);

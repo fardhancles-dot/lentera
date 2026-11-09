@@ -569,3 +569,59 @@
     padding-right: var(--space-12);
   }
 }
+
+/* Topbar resource summary */
+.resource-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.resource-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+  transition:
+    border-color 0.15s var(--ease-out),
+    background-color 0.15s var(--ease-out);
+}
+
+.resource-chip:hover {
+  border-color: var(--green-300);
+  background: var(--green-50);
+  color: var(--ink);
+}
+
+.resource-chip--coin svg {
+  color: var(--yellow-500);
+}
+
+.resource-chip--hearts svg {
+  color: var(--red-500);
+}
+
+.resource-chip--streak svg {
+  color: #e5852f;
+}
+
+.resource-chip--low {
+  border-color: #f3c2c2;
+  background: var(--red-100);
+  color: var(--red-600);
+}
+
+@media (max-width: 640px) {
+  .topbar .resource-bar {
+    display: none;
+  }
+}

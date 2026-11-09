@@ -90,8 +90,9 @@ Restart dev server setiap kali `.env` berubah.
 ### Cara otomatis (satu perintah)
 
 Jika Anda punya akun Supabase, seluruh langkah berikut bisa dijalankan otomatis: buat
-project, tunggu aktif, dorong 8 migration, ambil API key, buat akun QA terverifikasi,
-jadikan developer, tulis `.env`, lalu jalankan verifikasi lesson + Practice Hub.
+project, tunggu aktif, dorong 10 migration, ambil API key, buat akun QA terverifikasi,
+jadikan developer, tulis `.env`, lalu jalankan verifikasi lesson, Practice Hub, dan
+progression.
 
 Prasyarat:
 
@@ -152,22 +153,25 @@ Buka **SQL Editor** di Supabase, lalu jalankan file berikut **berurutan**. Janga
 6. `20261108110000_curriculum_seed.sql`
 7. `20261108120000_lesson_engine.sql`
 8. `20261109100000_practice_engine.sql`
+9. `20261110100000_friends_quest.sql`
+10. `20261110120000_progression_economy.sql`
 
 Migration identity membuat enum `app_role`, tabel `profiles`, `user_roles`,
 `user_settings`, trigger profil otomatis, fungsi onboarding/role/bootstrap developer, serta
 RLS + grant kolom. Migration berikutnya membuat kurikulum, view katalog, pasangan matching,
-seed konten, dan lesson engine.
+seed konten, lesson engine, practice engine, Friends Quest, lalu Hearts/Streak/level/wallet.
 
 Verifikasi di **Table Editor** bahwa tabel utama muncul dan **RLS enabled**, lalu cek:
 
 ```sql
 select count(*) from public.lessons;   -- 57
-select count(*) from public.questions; -- 225
+select count(*) from public.questions; -- 231
 select count(*) from public.practice_sessions; -- 0 (tabel siap)
+select count(*) from public.friend_quests; -- 0 (tabel siap)
 select count(*) from public.user_roles where role = 'developer'; -- 1 setelah setup otomatis
 ```
 
-Alternatif CLI (mendorong seluruh 8 migration tanpa membuka SQL Editor):
+Alternatif CLI (mendorong seluruh 10 migration tanpa membuka SQL Editor):
 
 ```bash
 npx supabase login
@@ -241,9 +245,12 @@ npm run verify:supabase
 Skrip ini login sebagai akun uji, memverifikasi lesson 20 soal (termasuk scene listening,
 speaking, conversation, story dan kebocoran kunci), lalu memulai Practice Hub mode match
 madness, menjawab semua soal, menyelesaikan sesi, dan memastikan penyelesaian ulang tidak
-menambah XP. Tanpa `.env` skrip berhenti dengan pesan konfigurasi, bukan lulus palsu.
+menambah XP. Skrip juga membuat Friends Quest, menjalankan beberapa sesi latihan sampai
+target tercapai, memastikan kontribusi dihitung server, mengklaim hadiah, dan memastikan
+klaim kedua tidak menambah hadiah. Tanpa `.env` skrip berhenti dengan pesan konfigurasi,
+bukan lulus palsu.
 
-Perintah ini menguji login, payload soal, grading 12 soal contoh, penyelesaian lesson, dan
+Perintah ini menguji login, payload soal, grading, penyelesaian lesson, Friends Quest, dan
 penolakan akses `question_pairs` tanpa sesi. Tampilan browser tetap perlu diuji manual
 karena skrip ini memanggil API, bukan mengklik UI.
 

@@ -1,4 +1,5 @@
 import { applyStageThreeNodes } from './extensions';
+import { allowedQuestionTypes } from './mapping';
 import { applyMiniGameQuestions } from './minigames';
 import { applyReviewLessons } from './reviews';
 import { applyStageFourQuestions } from './stage4';
@@ -81,6 +82,8 @@ export function validateCurriculum(subjects: SeedSubject[] = curriculumSubjects)
 
     const levelSlugs = new Set<string>();
     const nodeTypes = new Set<string>();
+    const subjectQuestionTypes = new Set<string>();
+    const allowedTypes = allowedQuestionTypes(subject);
     for (const level of subject.levels) {
       if (levelSlugs.has(level.slug)) {
         issues.push({
@@ -139,10 +142,24 @@ export function validateCurriculum(subjects: SeedSubject[] = curriculumSubjects)
               issues.push({ level: 'error', message: `Slug soal duplikat: ${location}` });
             }
             questionSlugs.add(question.slug);
+            subjectQuestionTypes.add(question.type);
+            if (!allowedTypes.has(question.type)) {
+              issues.push({
+                level: 'error',
+                message: `Tipe ${question.type} tidak dipetakan untuk kategori ${subject.category}: ${location}`,
+              });
+            }
             validateQuestion(question, location, issues);
           }
         }
       }
+    }
+
+    if (subject.isPrimary && subjectQuestionTypes.size < 3) {
+      issues.push({
+        level: 'warning',
+        message: `Mapel inti sebaiknya memakai minimal 3 tipe soal: ${subject.slug} (${subjectQuestionTypes.size})`,
+      });
     }
 
     if (subject.isPrimary) {
@@ -214,12 +231,31 @@ function validateQuestion(
           message: `Conversation wajib punya NPC dan minimal satu baris dialog: ${location}`,
         });
       }
+      if (
+        question.scene?.responses &&
+        question.scene.responses.length !== options.length
+      ) {
+        issues.push({
+          level: 'error',
+          message: `Conversation harus punya satu respons NPC per opsi: ${location}`,
+        });
+      }
     }
-    if (question.type === 'story' && !(question.scene?.screens?.length ?? 0)) {
-      issues.push({
-        level: 'error',
-        message: `Story wajib punya minimal satu layar cerita: ${location}`,
-      });
+    if (question.type === 'story') {
+      if (!(question.scene?.screens?.length ?? 0)) {
+        issues.push({
+          level: 'error',
+          message: `Story wajib punya minimal satu layar cerita: ${location}`,
+        });
+      }
+      for (const [index, screen] of (question.scene?.screens ?? []).entries()) {
+        if (screen.choices?.some((choice) => !choice.label.trim() || !choice.reply.trim())) {
+          issues.push({
+            level: 'error',
+            message: `Pilihan cerita bagian ${index + 1} punya label/reply kosong: ${location}`,
+          });
+        }
+      }
     }
     return;
   }
@@ -249,11 +285,22 @@ function validateQuestion(
     issues.push({ level: 'error', message: `Soal isian tanpa jawaban: ${location}` });
   }
 
-  if (question.type === 'fill_blank' && !/_{2,}/.test(question.prompt)) {
-    issues.push({
-      level: 'error',
-      message: `Fill in the Blank butuh penanda rumpang __: ${location}`,
-    });
+  if (question.type === 'fill_blank') {
+    const blanks = (question.prompt.match(/_{2,}/g) ?? []).length;
+    if (blanks === 0) {
+      issues.push({
+        level: 'error',
+        message: `Fill in the Blank butuh penanda rumpang __: ${location}`,
+      });
+    } else if (
+      blanks > 1 &&
+      !answers.some((answer) => answer.trim().split(/\s+/).length === blanks)
+    ) {
+      issues.push({
+        level: 'error',
+        message: `Fill in the Blank dengan ${blanks} rumpang butuh jawaban ${blanks} kata: ${location}`,
+      });
+    }
   }
 
   if (question.type === 'word_bank' || question.type === 'sentence_builder') {

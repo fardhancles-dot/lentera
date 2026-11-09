@@ -257,6 +257,31 @@ export type CoinTransactionRow = {
   created_at: string;
 };
 
+export type PlayerLevelRow = {
+  level: number;
+  title: string;
+  xp_required: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type UserHeartsRow = {
+  user_id: string;
+  current_hearts: number;
+  max_hearts: number;
+  last_refill_at: string;
+  updated_at: string;
+};
+
+export type UserStreakRow = {
+  user_id: string;
+  current_streak: number;
+  longest_streak: number;
+  last_activity_date: string | null;
+  last_activity_at: string | null;
+  updated_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -424,6 +449,24 @@ export type Database = {
         Update: Record<string, unknown>;
         Relationships: [];
       };
+      player_levels: {
+        Row: PlayerLevelRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      user_hearts: {
+        Row: UserHeartsRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      user_streaks: {
+        Row: UserStreakRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
     };
     Views: {
       lesson_question_stats: {
@@ -477,6 +520,39 @@ export type Database = {
       };
       complete_practice_session: {
         Args: { p_session_id: string };
+        Returns: Json;
+      };
+      create_friend_quest: {
+        Args: {
+          p_title: string;
+          p_target_xp: number;
+          p_reward_xp?: number;
+          p_reward_coins?: number;
+        };
+        Returns: Json;
+      };
+      join_friend_quest: {
+        Args: { p_code: string };
+        Returns: Json;
+      };
+      get_my_friend_quests: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      claim_friend_quest_reward: {
+        Args: { p_quest_id: string };
+        Returns: Json;
+      };
+      get_player_state: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      get_my_wallet: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      refill_hearts: {
+        Args: Record<PropertyKey, never>;
         Returns: Json;
       };
     };

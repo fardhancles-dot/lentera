@@ -1,12 +1,14 @@
 # Gameplay
 
-> **Status: lesson engine dan Practice Hub berjalan; 12 tipe soal punya layar bermain.**
-> Sembilan belas dari 20 mini-game sudah punya mekanik nyata. Listening memakai audio
-> tersimpan atau text-to-speech browser; Speaking memakai Web Speech Recognition dengan
-> alternatif menulis dan tanpa skor pengucapan palsu. Conversation dan Story memakai scene
-> dialog dari database. Tujuh mode latihan memakai sesi server dengan timer, combo, dan XP
-> idempoten. **Friends Quest belum dibuat** karena membutuhkan sistem teman Tahap 7.
-> Hearts, Streak, level akun, dan quest belum ada.
+> **Status: lesson engine, Practice Hub, dan 20 dari 20 mini-game berjalan.**
+> Listening memakai audio tersimpan atau text-to-speech browser; Speaking memakai Web
+> Speech Recognition dengan alternatif menulis dan tanpa skor pengucapan palsu.
+> Conversation memakai dialog bertahap dengan respons NPC berbeda, Story meminta pilihan
+> respons sebelum lanjut, dan Fill in the Blank mendukung beberapa rumpang. Tujuh mode
+> latihan memakai sesi server dengan timer, combo, dan XP idempoten. **Friends Quest**
+> tersedia sebagai co-op berbasis kode undangan; graf teman penuh tetap Tahap 7.
+> **Hearts, Streak, level akun, dan wallet** sudah aktif dan dihitung di server; quest
+> harian/mingguan, achievement, dan shop belum ada.
 
 ## Yang benar-benar ada sekarang
 
@@ -16,8 +18,9 @@
 - Learning path per mapel: level → unit → node, dengan status selesai/aktif/terkunci.
 - Detail lesson: topik, jenis soal, tujuan unit, XP/Koin, syarat mulai.
 - Layar lesson: progress bar, hint, pilihan ganda, input teks, word bank, sentence
-  builder, matching pairs, fill in the blank inline, picture identification, tombol
-  periksa, feedback benar/salah, penjelasan, jawaban benar, dan tombol lanjut.
+  builder, matching pairs, fill in the blank inline (satu atau banyak rumpang), picture
+  identification, tombol periksa, feedback benar/salah, penjelasan, jawaban benar, dan
+  tombol lanjut.
 - Hasil lesson: akurasi, jumlah benar, durasi, poin, XP/Koin yang benar-benar diberikan,
   serta pesan bila hadiah tidak diberikan karena replay.
 - Penilaian, progres, dan reward ditulis RPC server. Browser tidak menerima kunci jawaban.
@@ -60,10 +63,10 @@ Aturan yang sudah ditegakkan:
 | 6 | Typing Challenge | Input teks, validasi ejaan/format. | **Implemented · Tested (SQL)** |
 | 7 | Matching Pairs | Cocokkan dua kolom, animasi benar/salah. | **Implemented · Tested (SQL)** |
 | 8 | Picture Identification | Pilih nama objek dari gambar. | **Implemented · Tested (SQL)** (3 soal + media) |
-| 9 | Fill in the Blank | Isi satu rumpang pada kalimat. | **Implemented · Tested (SQL)** (input inline `__`/`___`) |
+| 9 | Fill in the Blank | Isi satu atau beberapa rumpang pada kalimat. | **Implemented · Tested (SQL)** (input inline `__`/`___`, multi-rumpang) |
 | 10 | Translation Challenge | Dua arah; susun token atau tulis sendiri, dinilai sebagai teks. | **Implemented · Tested (SQL)** |
-| 11 | Conversation Challenge | NPC, bubble dialog, audio per baris, pilihan respons dinilai server. | **Implemented · Tested (SQL)** · satu keputusan per soal, belum pohon cabang |
-| 12 | Story Mode | Layar cerita berurutan, audio, lalu pertanyaan pemahaman. | **Implemented · Tested (SQL)** |
+| 11 | Conversation Challenge | NPC, bubble dialog, audio per baris, dialog bertahap, respons NPC berbeda per pilihan. | **Implemented · Tested (SQL)** · cabang terbatas pada respons yang ditulis di scene |
+| 12 | Story Mode | Layar cerita berurutan, audio, pilihan respons, lalu pertanyaan pemahaman. | **Implemented · Tested (SQL)** |
 | 13 | Match Madness | Ronde matching berbatas 90 detik + combo + poin kecepatan. | **Implemented · Tested (SQL)** (mode latihan) |
 | 14 | Ramp Up | Soal makin sulit; 20 detik per soal; combo. | **Implemented · Tested (SQL)** (mode latihan) |
 | 15 | Timed Challenge | Countdown total 120 detik, 10 soal, bonus waktu. | **Implemented · Tested (SQL)** (mode latihan) |
@@ -71,7 +74,7 @@ Aturan yang sudah ditegakkan:
 | 17 | Personalized Practice | Soal dari topik yang sering salah, fallback soal belum dicoba. | **Implemented · Tested (SQL)** |
 | 18 | Unit Review | Campuran soal satu unit, maksimal 12 soal. | **Implemented · Tested (SQL)** + unit chooser |
 | 19 | Legendary Challenge | Soal dari lesson legendary, XP hingga 30. | **Implemented · Tested (SQL)** |
-| 20 | Friends Quest | Target gabungan, kontribusi tiap anggota. | **Not implemented** — butuh graf teman & quest (Tahap 7) |
+| 20 | Friends Quest | Target XP gabungan, kontribusi tiap anggota, klaim hadiah sekali. | **Implemented · Tested (SQL + Supabase API)** — co-op kode undangan; UI belum diuji browser |
 
 Catatan implementasi: lima mini-game baru berada di `src/game/minigames/` dan dipilih
 lewat registry `createMiniGame`. Halaman lesson tidak lagi memilih renderer berdasarkan
@@ -79,9 +82,11 @@ tipe; ia hanya menampilkan `view.prompt`/`view.answer`, mengirim `view.getAnswer
 memanggil `setDisabled`, lalu `markResult`. Tipe yang belum punya renderer memakai layar
 `unsupported` dengan tombol lewati, bukan input teks yang menyamar sebagai mekanik lain.
 
-Konten contoh kelima mini-game ada di lesson `bahasa-inggris/greetings-vocabulary`:
-1 word bank, 1 sentence builder, 1 fill in the blank, 1 matching (4 pasangan), dan
-3 picture identification dengan SVG di `public/assets/pictures/`.
+Konten contoh tersebar di `bahasa-inggris/greetings-vocabulary` dan beberapa lesson
+Bahasa Indonesia. Bahasa Inggris memuat word bank, sentence builder, fill in the blank,
+matching, picture identification, listening, speaking, translation, conversation, dan
+story. Bahasa Indonesia memuat listening, speaking, fill in the blank dua rumpang,
+conversation, story, dan matching. Total seed saat ini **231 soal** dengan 12 tipe soal.
 
 Perbedaan implementasi yang ditegakkan:
 
@@ -96,8 +101,15 @@ Perbedaan implementasi yang ditegakkan:
 - **Speaking** memakai Web Speech Recognition. Penilaian hanya memeriksa apakah ucapan
   dikenali, bukan memberi skor pengucapan buatan. Tanpa dukungan browser, pemain memakai
   input alternatif; server tetap menilai teksnya.
-- **Conversation** menyimpan NPC dan baris dialog di `scene`; percakapan saat ini satu
-  keputusan respons yang dinilai, belum pohon cabang multi-langkah.
+- **Conversation** menyimpan NPC, baris dialog, dan respons di `scene`. Dialog berjalan
+  bertahap; setiap pilihan menampilkan reaksi NPC yang berbeda sebelum layar berikutnya.
+  Cabang mengikuti respons yang ditulis di konten, bukan pohon tak terbatas.
+- **Story** menampilkan beberapa layar; layar tertentu mewajibkan pemain memilih respons
+  sebelum tombol lanjut aktif. Pertanyaan pemahaman tetap dinilai server.
+- **Fill in the Blank** memecah prompt pada setiap penanda `__`/`___`, menampilkan input
+  inline sebanyak rumpang, lalu menggabungkan jawaban berurutan untuk dinilai server.
+- **Listening/Speaking** memakai `scene.lang` (`en-US` atau `id-ID`) agar pengenalan dan
+  pelafalan tidak dipaku ke satu bahasa. Volume slider juga memengaruhi text-to-speech.
 
 ## Practice Hub
 
@@ -124,8 +136,48 @@ Aturan practice:
 3. Sesi boleh diselesaikan dengan sebagian jawaban bila waktu habis. Akurasi dihitung dari
    total soal sesi, bukan hanya yang terjawab.
 4. XP hanya diberikan bila akurasi ≥ 60% dan ditulis satu kali per sesi di
-   `user_xp_ledger` (`practice_session_id` unik). Koin, Hearts, dan mastery belum diberikan
-   oleh practice.
+   `user_xp_ledger` (`practice_session_id` unik). Practice tidak memakai Hearts dan belum
+   memberi Koin atau mastery.
+
+## Friends Quest
+
+Route `/friends-quest` menyediakan mini-game co-op #20. Ini bukan graf pertemanan penuh:
+undangan memakai **kode enam karakter**, dan kontribusi dihitung dari XP yang sudah ditulis
+server, bukan dari angka kiriman browser.
+
+- Pemain membuat quest (judul, target 20–10.000 XP, hadiah XP/Koin) atau bergabung dengan
+  kode. Maksimal 3 quest aktif per pemain dan 8 anggota per quest.
+- Setiap XP dari `lesson` dan `practice` setelah bergabung menambah kontribusi anggota ke
+  semua quest aktifnya. XP hadiah quest tidak dihitung agar tidak menggelembungkan quest
+  berikutnya.
+- Quest selesai saat total kontribusi anggota mencapai target. Setiap anggota mengklaim
+  hadiahnya sendiri satu kali; klaim ganda mengembalikan `alreadyClaimed` tanpa hadiah.
+- Hadiah ditulis ke `user_xp_ledger`/`coin_transactions` dengan `friend_quest_id` unik dan
+  masuk ke wallet dalam transaksi yang sama.
+- RLS hanya mengizinkan anggota membaca quest dan anggotanya; non-anggota ditolak saat
+  mencoba klaim.
+
+## Hearts, Streak, level, dan wallet
+
+Route `/wallet` menampilkan saldo Koin, level akun, Hearts, Streak 14 hari, dan riwayat
+Koin/XP. Ringkasan Koin/Hearts/Streak juga muncul di topbar, beranda, dan profil. Semua
+nilai berasal dari RPC `get_player_state`/`get_my_wallet`, bukan state lokal yang bisa
+diubah pemain.
+
+- **Hearts.** Maksimal 5, satu Heart pulih setiap 30 menit. Jawaban salah pertama pada
+  sebuah soal mengurangi satu Heart; menjawab ulang soal yang sama tidak mengurangi lagi.
+  Lesson dengan Hearts 0 tidak bisa dimulai (`hearts_empty`), tetapi attempt yang sudah
+  berjalan tetap bisa diselesaikan. Practice tidak memakai Hearts.
+- **Refill.** Pemain dapat mengisi Hearts yang hilang dengan 10 Koin per Heart. Biaya,
+  saldo, transaksi, dan pengisian dihitung dalam satu RPC atomik; Hearts penuh tidak
+  memotong Koin.
+- **Streak.** Dihitung dari hari aktivitas XP `lesson`/`practice`, memakai zona waktu akun.
+  XP hadiah Friends Quest tidak memperpanjang Streak. Hari yang terlewat mereset Streak ke 1
+  saat aktivitas berikutnya; `longest_streak` tetap menyimpan rekor terbaik.
+- **Level akun.** Diturunkan dari total XP lewat tabel `player_levels` (30 level). Level 2
+  dimulai pada 100 XP; tidak ada angka level yang bisa dikirim client.
+- **Koin.** Didapat dari lesson, latihan, dan hadiah quest. Refill Hearts adalah pengeluaran
+  Koin pertama yang aktif; shop/inventory belum ada.
 
 ## Pemetaan mini-game per mata pelajaran
 
@@ -166,19 +218,21 @@ belum ada mekanisme pemberian hadiah khusus; membuatnya sekarang akan menjadi to
 
 ## Yang belum ada di scoring
 
-- Hearts dan pengurangan nyawa.
-- Level akun, kurva XP, dan reward level.
+- Reward level (level hanya ditampilkan; belum ada hadiah saat naik level).
 - Koin dari practice (practice hanya memberi XP).
-- Quest, achievement, dan mastery.
+- Quest harian/mingguan, achievement, dan mastery.
 - Reward khusus legendary di luar XP latihan.
-- Friends Quest (butuh sistem teman Tahap 7).
+- Graf teman penuh, friend request, activity feed, dan leaderboard (Tahap 7).
 
 ## Batasan konten yang perlu diketahui
 
-- Delapan soal baru (listening, speaking, translation, conversation, story, dua matching)
-  hanya ada di lesson `bahasa-inggris/greetings-vocabulary`. Mata pelajaran lain masih
-  dominan pilihan ganda dan isian.
+- Enam soal Bahasa Indonesia baru (listening, speaking, fill dua rumpang, conversation,
+  story, matching) sudah masuk seed, tetapi mata pelajaran lain masih dominan pilihan
+  ganda dan isian. Penyebaran tipe soal ke semua mapel belum selesai.
 - Belum ada aset audio rekaman; model audio memakai text-to-speech browser.
-- Conversation belum punya cabang dialog bertingkat; baru satu respons yang dinilai.
+- Conversation memakai cabang respons yang ditulis di konten, bukan pohon dialog bebas.
 - Match Madness bergantung pada jumlah soal matching per course (saat ini 3 di Bahasa
-  Inggris). Mapel tanpa cukup soal matching akan menampilkan pesan bahwa soal belum cukup.
+  Inggris dan 1 di Bahasa Indonesia). Mapel tanpa cukup soal matching akan menampilkan
+  pesan bahwa soal belum cukup.
+- Friends Quest belum diuji lewat UI browser dengan dua akun nyata; alur server sudah diuji
+  di PGlite dan Supabase, termasuk kontribusi XP dan klaim ganda.

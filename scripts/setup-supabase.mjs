@@ -173,7 +173,7 @@ async function waitForProject(ref, token) {
 }
 
 function pushMigrations(ref, dbPassword, token) {
-  console.log('   mendorong 8 migration...');
+  console.log('   mendorong migration...');
   const args = [
     '--yes',
     'supabase',

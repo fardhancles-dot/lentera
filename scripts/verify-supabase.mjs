@@ -318,6 +318,18 @@ try {
     throw new Error('course tidak ditemukan');
   }
 
+  const { data: quest, error: questError } = await supabase.rpc('create_friend_quest', {
+    p_title: 'Verifikasi Friends Quest',
+    p_target_xp: 20,
+    p_reward_xp: 5,
+    p_reward_coins: 1,
+  });
+  if (questError || !quest?.id || !/^[A-Z0-9]{6}$/.test(quest.code ?? '')) {
+    fail('create_friend_quest', questError?.message ?? 'payload kosong');
+    throw new Error('create_friend_quest gagal');
+  }
+  ok('create_friend_quest membuat quest dengan kode');
+
   const { data: practice, error: practiceError } = await supabase.rpc('start_practice', {
     p_mode: 'match_madness',
     p_course_id: courses[0].id,
@@ -431,6 +443,193 @@ try {
     }
   }
 
+  for (let round = 0; round < 3; round += 1) {
+    const { data: extra, error: extraError } = await supabase.rpc('start_practice', {
+      p_mode: 'match_madness',
+      p_course_id: courses[0].id,
+    });
+    if (extraError || !extra?.sessionId) {
+      fail('start_practice tambahan untuk Friends Quest', extraError?.message ?? 'payload kosong');
+      break;
+    }
+
+    for (const question of extra.questions) {
+      const matches = question.leftItems.map((left) => {
+        const right = question.rightItems.find(
+          (item) => item.label === practiceMeanings.get(left.label),
+        );
+        if (!right) throw new Error(`Pasangan untuk "${left.label}" tidak ditemukan.`);
+        return { leftId: left.id, rightId: right.id };
+      });
+      const { error: extraAnswerError } = await supabase.rpc('submit_practice_answer', {
+        p_session_id: extra.sessionId,
+        p_question_id: question.id,
+        p_answer: { matches },
+        p_elapsed_ms: 1200,
+      });
+      if (extraAnswerError) {
+        fail('nilai jawaban latihan tambahan', extraAnswerError.message);
+      }
+    }
+
+    const { data: extraSummary, error: extraCompleteError } = await supabase.rpc(
+      'complete_practice_session',
+      { p_session_id: extra.sessionId },
+    );
+    if (extraCompleteError || !(extraSummary?.xpAwarded > 0)) {
+      fail(
+        'selesaikan latihan tambahan untuk Friends Quest',
+        extraCompleteError?.message ?? String(extraSummary?.xpAwarded),
+      );
+      break;
+    }
+  }
+
+  const { data: quests, error: questsError } = await supabase.rpc('get_my_friend_quests');
+  const currentQuest = Array.isArray(quests)
+    ? quests.find((item) => item.id === quest.id)
+    : null;
+  if (questsError || !currentQuest) {
+    fail('get_my_friend_quests memuat quest', questsError?.message ?? 'quest tidak ditemukan');
+  } else {
+    if (currentQuest.status === 'completed' && currentQuest.totalXp >= 20) {
+      ok('XP latihan dihitung ke target Friends Quest');
+    } else {
+      fail(
+        'XP latihan dihitung ke target Friends Quest',
+        `${currentQuest.status} · ${currentQuest.totalXp}`,
+      );
+    }
+
+    if (currentQuest.canClaim === true) ok('Friends Quest selesai dapat diklaim');
+    else fail('Friends Quest selesai dapat diklaim');
+  }
+
+  const { data: claim, error: claimError } = await supabase.rpc(
+    'claim_friend_quest_reward',
+    { p_quest_id: quest.id },
+  );
+  if (claimError) {
+    fail('claim_friend_quest_reward', claimError.message);
+  } else if (
+    claim.alreadyClaimed === false &&
+    claim.xpAwarded === 5 &&
+    claim.coinsAwarded === 1
+  ) {
+    ok('klaim Friends Quest memberi hadiah sesuai konfigurasi');
+  } else {
+    fail('klaim Friends Quest memberi hadiah sesuai konfigurasi');
+  }
+
+  const { data: repeatClaim, error: repeatClaimError } = await supabase.rpc(
+    'claim_friend_quest_reward',
+    { p_quest_id: quest.id },
+  );
+  if (repeatClaimError) {
+    fail('klaim Friends Quest ulang', repeatClaimError.message);
+  } else if (repeatClaim.alreadyClaimed === true && repeatClaim.xpAwarded === 0) {
+    ok('klaim Friends Quest ulang tidak menambah hadiah');
+  } else {
+    fail('klaim Friends Quest ulang tidak menambah hadiah');
+  }
+
+  const { data: playerState, error: playerStateError } = await supabase.rpc(
+    'get_player_state',
+  );
+  if (playerStateError) {
+    fail('get_player_state', playerStateError.message);
+  } else {
+    const hearts = playerState?.hearts;
+    const streak = playerState?.streak;
+    const level = playerState?.level;
+
+    if (
+      typeof playerState?.totalXp === 'number' &&
+      typeof playerState?.coins === 'number' &&
+      hearts?.max === 5 &&
+      typeof hearts?.current === 'number' &&
+      typeof hearts?.nextRefillSeconds === 'number' &&
+      Array.isArray(streak?.activityDays) &&
+      typeof level?.level === 'number' &&
+      level?.progressPercent >= 0 &&
+      level?.progressPercent <= 100
+    ) {
+      ok('get_player_state mengembalikan Hearts, Streak, level, dan Koin');
+    } else {
+      fail('get_player_state mengembalikan Hearts, Streak, level, dan Koin', JSON.stringify(playerState));
+    }
+
+    if (hearts?.current >= hearts?.max) {
+      const { data: refill, error: refillError } = await supabase.rpc('refill_hearts');
+      if (refillError) {
+        fail('refill_hearts saat penuh', refillError.message);
+      } else if (refill?.alreadyFull === true && refill?.coinsSpent === 0) {
+        ok('refill_hearts saat penuh tidak memakai Koin');
+      } else {
+        fail('refill_hearts saat penuh tidak memakai Koin', JSON.stringify(refill));
+      }
+    }
+  }
+
+  const { data: walletRpc, error: walletRpcError } = await supabase.rpc('get_my_wallet');
+  if (walletRpcError) {
+    fail('get_my_wallet', walletRpcError.message);
+  } else if (
+    Array.isArray(walletRpc?.transactions) &&
+    Array.isArray(walletRpc?.xpTransactions) &&
+    typeof walletRpc?.coins === 'number'
+  ) {
+    ok('get_my_wallet mengembalikan saldo dan riwayat Koin/XP');
+  } else {
+    fail('get_my_wallet mengembalikan saldo dan riwayat Koin/XP', JSON.stringify(walletRpc));
+  }
+
+  const { data: levelTable, error: levelTableError } = await supabase
+    .from('player_levels')
+    .select('level, xp_required')
+    .order('level');
+  if (levelTableError || levelTable?.length !== 30) {
+    fail(
+      'tabel player_levels berisi 30 level',
+      levelTableError?.message ?? String(levelTable?.length),
+    );
+  } else if (levelTable[0]?.xp_required === 0 && levelTable[29]?.xp_required === 9400) {
+    ok('tabel player_levels berisi 30 level dengan ambang XP');
+  } else {
+    fail('tabel player_levels berisi 30 level dengan ambang XP');
+  }
+
+  const { data: ownHearts, error: ownHeartsError } = await supabase
+    .from('user_hearts')
+    .select('current_hearts, max_hearts');
+  if (ownHeartsError || ownHearts?.length !== 1) {
+    fail(
+      'RLS Hearts hanya mengembalikan milik sendiri',
+      ownHeartsError?.message ?? String(ownHearts?.length),
+    );
+  } else {
+    ok('RLS Hearts hanya mengembalikan milik sendiri');
+  }
+
+  const { error: heartsWriteError } = await supabase
+    .from('user_hearts')
+    .update({ current_hearts: 5 })
+    .eq('user_id', auth.user.id);
+  if (heartsWriteError) ok('pemain tidak bisa mengubah Hearts langsung');
+  else fail('pemain tidak bisa mengubah Hearts langsung');
+
+  const { data: ownStreaks, error: ownStreaksError } = await supabase
+    .from('user_streaks')
+    .select('current_streak, longest_streak');
+  if (ownStreaksError || ownStreaks?.length !== 1) {
+    fail(
+      'RLS Streak hanya mengembalikan milik sendiri',
+      ownStreaksError?.message ?? String(ownStreaks?.length),
+    );
+  } else {
+    ok('RLS Streak hanya mengembalikan milik sendiri');
+  }
+
   const anon = createClient(url, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
@@ -444,6 +643,13 @@ try {
     .limit(1);
   if (practiceRlsError) ok('practice_sessions tidak bisa dibaca tanpa sesi');
   else fail('practice_sessions tidak bisa dibaca tanpa sesi');
+
+  const { error: heartsRlsError } = await anon
+    .from('user_hearts')
+    .select('current_hearts')
+    .limit(1);
+  if (heartsRlsError) ok('user_hearts tidak bisa dibaca tanpa sesi');
+  else fail('user_hearts tidak bisa dibaca tanpa sesi');
 } catch (error) {
   if (failures.length === 0) fail('verifikasi berhenti', error.message);
 } finally {

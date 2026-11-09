@@ -8,14 +8,20 @@ export function speechSynthesisSupported(): boolean {
   return typeof window !== 'undefined' && 'speechSynthesis' in window;
 }
 
-export function speak(text: string, rate = 1): boolean {
+export function speak(
+  text: string,
+  rate = 1,
+  lang = 'id-ID',
+  volume = 1,
+): boolean {
   if (!speechSynthesisSupported() || !text.trim()) return false;
 
   try {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = /[a-z]/i.test(text) ? 'en-US' : 'id-ID';
+    utterance.lang = lang;
     utterance.rate = Math.min(1.5, Math.max(0.5, rate));
+    utterance.volume = Math.min(1, Math.max(0, volume));
     window.speechSynthesis.speak(utterance);
     return true;
   } catch {

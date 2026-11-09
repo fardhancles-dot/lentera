@@ -460,3 +460,152 @@ fondasi Tahap 1–3.
 1. Jalankan `npm run dev`, daftar akun, mainkan lesson dan `/practice` di browser.
 2. Hapus legacy token Supabase dari Dashboard → Account → Access Tokens.
 3. Push perubahan dokumentasi/skrip, lalu lanjut Tahap 5.
+
+---
+
+## Sesi 8 — 10 November 2026 — Menyelesaikan Tahap 4
+
+**Fokus:** audit kondisi nyata Tahap 4, memperbaiki bagian yang belum sesuai spesifikasi,
+menambahkan Friends Quest, menerapkan migration ke Supabase nyata, dan menutup tahap dengan
+bukti eksekusi. Tahap 1–3 tidak dibangun ulang dan tidak ada reset data.
+
+### Audit
+
+- Audit lengkap ada di `docs/AUDIT_STAGE4.md`. Temuan utama: klaim lama “19/20” belum benar.
+- Conversation belum bercabang, Story belum punya pilihan respons, Fill in the Blank hanya
+  satu rumpang, Speaking dipaku `en-US`, dan Friends Quest belum ada.
+- Baseline sebelum perubahan: typecheck lulus, 34 unit test, 106 SQL check, build lulus,
+  29 check Supabase lulus.
+
+### Perbaikan gameplay
+
+- Kontrak `scene` diperluas: `lang`, `responses`, dan `screens[].choices`; parser
+  `LessonScene` di client ikut diperbarui.
+- Fill in the Blank sekarang mendukung banyak rumpang. Helper `parseBlankPrompt` dan
+  `joinBlankAnswers` memecah prompt dan menggabungkan jawaban berurutan.
+- Listening dan Speaking memakai locale dari `scene.lang` (`en-US`/`id-ID`); volume TTS
+  mengikuti slider, bukan hanya elemen `<audio>`.
+- Conversation menjadi dialog bertahap: setiap pilihan menampilkan reaksi NPC berbeda
+  sebelum layar berikutnya. Story meminta pilihan respons sebelum tombol lanjut aktif.
+- Pemetaan tipe soal per kategori mapel ditambahkan di generator, sehingga Listening/
+  Speaking tidak dipaksakan ke Matematika dan tipe soal tetap relevan.
+
+### Konten
+
+- Enam soal Bahasa Indonesia baru: listening, speaking, fill dua rumpang, conversation,
+  story, dan matching. Total seed menjadi **231 soal**; Bahasa Indonesia 36 soal,
+  Bahasa Inggris 45 soal.
+- Seed diregenerasi menjadi 8 mapel aktif, 22 level, 22 unit, 57 lesson, 231 soal, dan
+  1.178 statement. Bahasa Sambas tetap kosong dan tidak di-auto-generate.
+
+### Friends Quest
+
+- Migration `20261110100000_friends_quest.sql`: tabel `friend_quests`,
+  `friend_quest_members`, `friend_quest_claims`; kolom `friend_quest_id` pada ledger XP dan
+  transaksi Koin; trigger kontribusi; RPC create/join/list/claim; RLS anggota-only.
+- Kontribusi hanya dihitung dari XP `lesson`/`practice` yang ditulis server. XP hadiah quest
+  dikecualikan agar tidak menggelembungkan quest berikutnya. Klaim sekali per anggota,
+  idempoten, dan non-anggota ditolak.
+- Client: repository, service, halaman `/friends-quest`, route, CTA di Practice Hub, dan CSS.
+- Bug yang ditemukan saat verifikasi remote: policy RLS memanggil helper yang sudah
+  di-revoke. Diperbaiki dengan helper `is_my_friend_quest_member(uuid)` yang di-grant ke
+  `authenticated`. Bug lain: `replaceChildren` menolak `null` di renderer conversation;
+  sudah dibatasi ke node yang valid.
+
+### Pengujian yang dijalankan
+
+| Perintah | Hasil |
+| --- | --- |
+| `npm run typecheck` | Lulus, 0 error. |
+| `npm test` | **42 test lulus (4 file)**; 8 test baru untuk Fill in the Blank. |
+| `npm run test:sql` | **135 smoke check lulus** di PGlite, termasuk 22 check Friends Quest. |
+| `npm run seed:build` | Lulus; 231 soal, 1.178 statement. |
+| `npm run build` | Lulus; halaman Friends Quest menjadi chunk terpisah. |
+| `npm run verify:supabase` | **33 check lulus** di project `xvrnmxbrxhtzzavmrlvy`. |
+
+Migration Friends Quest diterapkan dengan `supabase db push --include-all --remote`.
+Seed idempoten diterapkan ulang lewat `supabase db query --file`; query verifikasi
+menunjukkan 231 soal dan 3 tabel Friends Quest. Verifikasi remote awalnya menemukan
+kontribusi quest hanya 6 XP karena satu sesi Match Madness memang memberi 6 XP; skrip uji
+diperbaiki agar menyelesaikan beberapa sesi sampai target 20 XP, bukan mengubah aturan produk.
+
+### Batasan yang tetap jujur
+
+- UI browser dua akun untuk Friends Quest belum diuji; alur server sudah diuji di PGlite dan
+  Supabase.
+- Graf teman penuh, friend request, activity feed, leaderboard, dan liga tetap Tahap 7.
+- Admin Panel soal dan Bahasa Sambas tetap Tahap 8.
+- Audio masih memakai media tersimpan atau TTS browser; belum ada rekaman produksi.
+- Hearts, streak, level akun, quest harian/mingguan, achievement, shop, dan inventory belum
+  dibuat (Tahap 5).
+- Playwright/E2E browser belum ada.
+
+### Status akhir
+
+Tahap 4 selesai dan diuji pada level database/API. Laporan lengkap ada di
+`docs/STAGE4_COMPLETION.md`. Pekerjaan berhenti di sini; Tahap 5 menunggu instruksi pemilik
+proyek.
+
+---
+
+## Sesi 9 — 10 November 2026 — Tahap 5: Hearts, Streak, level, dan wallet
+
+**Fokus:** mulai dan selesaikan slice Tahap 5 tanpa membangun ulang Tahap 1–4, tanpa
+mengubah stack, dan tanpa membuat reward yang bisa diubah client.
+
+### Database
+
+- Migration baru `20261110120000_progression_economy.sql`:
+  - `player_levels` berisi 30 ambang XP dan judul (level 2 = 100 XP; level 7+ memakai
+    `1000 + (level - 6) × 350`).
+  - `user_hearts` 5/5 dengan regenerasi 30 menit; `user_streaks` menyimpan Streak sekarang,
+    rekor terpanjang, dan tanggal aktivitas terakhir.
+  - Backfill Hearts/Streak dari `auth.users` dan XP lama; trigger `BEFORE INSERT` pada
+    `lesson_attempts` menolak lesson baru saat Hearts 0.
+  - Trigger `AFTER INSERT` pada `answer_attempts` mengurangi Heart hanya untuk jawaban salah
+    yang benar-benar tersimpan, sehingga duplicate answer tidak mengurangi dua kali.
+  - Trigger `AFTER INSERT` pada `user_xp_ledger` memperbarui Streak dari XP lesson/practice
+    memakai zona waktu pemain; XP hadiah quest dikecualikan.
+  - RPC `get_player_state`, `get_my_wallet`, `refill_hearts`, plus helper level/refill.
+  - RLS: Hearts/Streak hanya baris sendiri, `player_levels` baca-saja untuk authenticated,
+    tidak ada grant tulis langsung.
+- Migration diterapkan ke project Supabase nyata; total menjadi 10 migration.
+
+### Client dan UI
+
+- `player.repository.ts`, `player.service.ts`, `player.store.ts`, dan tipe `PlayerState`/
+  `PlayerWallet`; semua payload RPC divalidasi dan di-clamp sebelum ditampilkan.
+- Halaman `/wallet` dengan saldo Koin, level dan progress bar, Hearts + refill, Streak 14
+  hari, riwayat Koin/XP, dan countdown pemulihan.
+- HUD Koin/Hearts/Streak di topbar; kartu progres di beranda dan profil; item navigasi
+  Wallet di sidebar/bottom nav.
+- Lesson menampilkan Hearts, menyegarkan state setelah jawaban salah, dan menampilkan error
+  `hearts_empty` dengan tautan isi Hearts. Hasil lesson/practice menampilkan level dan
+  Streak terbaru.
+
+### Pengujian yang dijalankan
+
+| Perintah | Hasil |
+| --- | --- |
+| `npm run typecheck` | Lulus, 0 error. |
+| `npm test` | **49 test lulus (5 file)**; 7 test baru untuk parser progression/wallet. |
+| `npm run test:sql` | **167 smoke check lulus** di PGlite. |
+| `npm run build` | Lulus; wallet dan player store menjadi chunk terpisah. |
+| `npm run verify:supabase` | **43 check lulus** di project `xvrnmxbrxhtzzavmrlvy`. |
+
+Verifikasi remote mencakup `get_player_state`, `get_my_wallet`, 30 baris level, refill saat
+Hearts penuh tanpa memotong Koin, RLS Hearts/Streak, dan penolakan update Hearts langsung.
+
+### Batasan yang tetap jujur
+
+- Halaman wallet/HUD belum diuji lewat browser dengan akun nyata; belum ada Playwright.
+- Reward saat naik level, quest harian/mingguan, achievement, shop, dan inventory belum ada.
+- Practice tetap hanya memberi XP; tidak memakai Hearts dan belum memberi Koin.
+- `node reward` belum dibuat.
+- Admin Panel dan graf teman penuh tetap Tahap 7–8.
+
+### Langkah berikutnya
+
+1. Uji `/wallet`, HUD Hearts, refill, dan hasil lesson di browser dengan akun nyata.
+2. Tambahkan reward naik level dan aturan Hearts premium bila pemilik produk memutuskan.
+3. Lanjutkan quest harian/mingguan, achievement, shop, dan inventory sebagai slice berikutnya.

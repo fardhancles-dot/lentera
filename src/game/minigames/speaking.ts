@@ -39,6 +39,7 @@ function recognitionConstructor(): RecognitionConstructor | null {
 export function createSpeaking({ question, onChange }: MiniGameProps): MiniGameView {
   const Ctor = recognitionConstructor();
   const target = question.scene?.speech || question.prompt;
+  const lang = question.scene?.lang ?? 'id-ID';
   const canSpeak = speechSynthesisSupported();
   let disabled = false;
   let recognizing = false;
@@ -56,7 +57,7 @@ export function createSpeaking({ question, onChange }: MiniGameProps): MiniGameV
     [icon('volume', 16), 'Dengar contoh'],
   );
   modelButton.addEventListener('click', () => {
-    if (canSpeak) speak(target, 0.9);
+    if (canSpeak) speak(target, 0.9, lang);
   });
 
   const recordButton = el(
@@ -90,7 +91,7 @@ export function createSpeaking({ question, onChange }: MiniGameProps): MiniGameV
 
   if (Ctor) {
     recognition = new Ctor();
-    recognition.lang = 'en-US';
+    recognition.lang = lang;
     recognition.interimResults = true;
     recognition.continuous = false;
     recognition.onresult = (event) => {

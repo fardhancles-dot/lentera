@@ -17,16 +17,25 @@ export interface LessonMatchItem {
   label: string;
 }
 
+export interface LessonSceneChoice {
+  label: string;
+  reply: string;
+}
+
 export interface LessonSceneScreen {
   speaker?: string;
   line: string;
   narration?: string;
+  choices?: LessonSceneChoice[];
 }
 
 export interface LessonScene {
+  lang?: string;
   speech?: string;
   npc?: { name: string; role?: string };
   screens: LessonSceneScreen[];
+  /** NPC reaction per option, aligned with the option order. */
+  responses: string[];
 }
 
 export interface LessonQuestion {
@@ -105,6 +114,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   attempt_abandoned: 'Sesi ini sudah dibatalkan. Mulai ulang lesson.',
   attempt_incomplete: 'Masih ada soal yang belum dijawab.',
   question_not_in_lesson: 'Soal tidak cocok dengan lesson ini.',
+  hearts_empty: 'Hearts kamu habis. Isi Hearts di wallet atau tunggu pemulihan otomatis.',
 };
 
 function messageFor(error: unknown): Error {
@@ -152,21 +162,39 @@ function parseScene(value: unknown): LessonScene {
     ? record.screens
         .map((item) => {
           const screen = asRecord(item);
+          const choices = Array.isArray(screen.choices)
+            ? screen.choices
+                .map((choice) => {
+                  const entry = asRecord(choice);
+                  return {
+                    label: asString(entry.label),
+                    reply: asString(entry.reply),
+                  };
+                })
+                .filter((choice) => Boolean(choice.label) && Boolean(choice.reply))
+            : [];
           return {
             speaker: asString(screen.speaker) || undefined,
             line: asString(screen.line),
             narration: asString(screen.narration) || undefined,
+            ...(choices.length > 0 ? { choices } : {}),
           };
         })
         .filter((screen) => Boolean(screen.line || screen.narration))
     : [];
 
+  const responses = Array.isArray(record.responses)
+    ? record.responses.map((item) => asString(item)).filter(Boolean)
+    : [];
+
   return {
+    ...(asString(record.lang) ? { lang: asString(record.lang) } : {}),
     ...(asString(record.speech) ? { speech: asString(record.speech) } : {}),
     ...(asString(npc.name)
       ? { npc: { name: asString(npc.name), role: asString(npc.role) || undefined } }
       : {}),
     screens,
+    responses,
   };
 }
 

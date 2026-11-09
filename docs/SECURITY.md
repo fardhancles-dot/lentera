@@ -50,7 +50,7 @@ Ini harus diselesaikan sebelum fitur terkait dinyatakan selesai:
 
 | Area | Status | Rencana |
 | --- | --- | --- |
-| Otoritas XP/Koin/Hearts | XP/Koin sudah lewat RPC; Hearts belum ada | Hearts ditulis lewat RPC dengan ledger idempotent. Client tidak boleh mengirim nilai final. |
+| Otoritas XP/Koin/Hearts/Streak/level | XP, Koin, Hearts, Streak, dan level dihitung RPC/trigger server | Client hanya membaca snapshot; tidak ada grant tulis ke Hearts/Streak/wallet. Level diturunkan dari total XP. |
 | Idempotensi reward | Lesson sudah idempoten | `lesson_attempt_id` unik + unique `answer_attempts`; reward lain memakai pola yang sama. |
 | Rate limiting | Hanya bawaan Supabase Auth | Batasi aksi sensitif di Edge Function. |
 | Anti-cheat gameplay | Penilaian dan attempt sudah di server; timer belum | Tambah batas waktu wajar dan deteksi request berulang saat mode timed dibuat. |

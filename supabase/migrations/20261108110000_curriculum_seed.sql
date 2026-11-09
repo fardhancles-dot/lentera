@@ -1,7 +1,7 @@
 -- Lentera · Curriculum seed (generated)
 -- Jangan mengedit file ini secara manual. Sumber: scripts/content/**/*.ts
 -- Jalankan ulang: npm run seed:build
--- Ringkasan: 10 mata pelajaran, 22 level, 22 unit, 57 lesson, 225 soal.
+-- Ringkasan: 10 mata pelajaran, 22 level, 22 unit, 57 lesson, 231 soal.
 
 begin;
 
@@ -5982,7 +5982,7 @@ on conflict (id) do update set
 
 -- questions: bahasa-inggris/greetings-vocabulary/en-listening-classroom
 insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
-values ('59b667f3-9847-4ec1-822e-bf03b192a790', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-listening-classroom', 'listening'::public.question_type, 'Listening', 'beginner'::public.difficulty_band, 'Dengarkan audio, lalu pilih jawaban yang sesuai.', 'Apa instruksi yang kamu dengar?', 'Instruksi yang diucapkan adalah "Please open your book to page ten", yaitu membuka buku ke halaman sepuluh.', 'Perhatikan kata "open" dan angka "ten".', 15, '{"speech":"Please open your book to page ten."}'::jsonb, 12, true)
+values ('59b667f3-9847-4ec1-822e-bf03b192a790', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-listening-classroom', 'listening'::public.question_type, 'Listening', 'beginner'::public.difficulty_band, 'Dengarkan audio, lalu pilih jawaban yang sesuai.', 'Apa instruksi yang kamu dengar?', 'Instruksi yang diucapkan adalah "Please open your book to page ten", yaitu membuka buku ke halaman sepuluh.', 'Perhatikan kata "open" dan angka "ten".', 15, '{"speech":"Please open your book to page ten.","lang":"en-US"}'::jsonb, 12, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6036,7 +6036,7 @@ on conflict (id) do update set
 
 -- questions: bahasa-inggris/greetings-vocabulary/en-listening-greeting
 insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
-values ('35a7a7e2-3a03-402e-81c1-c76d7232a051', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-listening-greeting', 'listening'::public.question_type, 'Listening', 'beginner'::public.difficulty_band, 'Dengarkan audio, lalu pilih jawaban yang sesuai.', 'Sapaan apa yang kamu dengar?', 'Kalimat "Good morning, how are you today?" berarti selamat pagi, apa kabar hari ini.', 'Fokus pada "Good morning" dan "how are you".', 15, '{"speech":"Good morning, how are you today?"}'::jsonb, 13, true)
+values ('35a7a7e2-3a03-402e-81c1-c76d7232a051', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-listening-greeting', 'listening'::public.question_type, 'Listening', 'beginner'::public.difficulty_band, 'Dengarkan audio, lalu pilih jawaban yang sesuai.', 'Sapaan apa yang kamu dengar?', 'Kalimat "Good morning, how are you today?" berarti selamat pagi, apa kabar hari ini.', 'Fokus pada "Good morning" dan "how are you".', 15, '{"speech":"Good morning, how are you today?","lang":"en-US"}'::jsonb, 13, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6090,7 +6090,7 @@ on conflict (id) do update set
 
 -- questions: bahasa-inggris/greetings-vocabulary/en-speaking-greeting
 insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
-values ('7e066a48-0180-458d-8768-7905eb7e7c63', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-speaking-greeting', 'speaking'::public.question_type, 'Speaking', 'beginner'::public.difficulty_band, 'Ucapkan kalimat berikut, lalu periksa apakah ucapanmu dikenali.', 'Ucapkan sapaan: "Good morning, how are you?"', 'Sapaan yang benar adalah "Good morning, how are you?". Penilaian memeriksa apakah ucapan dikenali, bukan memberi skor pengucapan buatan.', 'Ucapkan dengan jelas dan perlahan.', 15, '{"speech":"Good morning, how are you?"}'::jsonb, 14, true)
+values ('7e066a48-0180-458d-8768-7905eb7e7c63', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-speaking-greeting', 'speaking'::public.question_type, 'Speaking', 'beginner'::public.difficulty_band, 'Ucapkan kalimat berikut, lalu periksa apakah ucapanmu dikenali.', 'Ucapkan sapaan: "Good morning, how are you?"', 'Sapaan yang benar adalah "Good morning, how are you?". Penilaian memeriksa apakah ucapan dikenali, bukan memberi skor pengucapan buatan.', 'Ucapkan dengan jelas dan perlahan.', 15, '{"speech":"Good morning, how are you?","lang":"en-US"}'::jsonb, 14, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6222,7 +6222,7 @@ on conflict (id) do update set
 
 -- questions: bahasa-inggris/greetings-vocabulary/en-conversation-teacher
 insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
-values ('77c15c49-287f-48f9-83cd-cb1fd2624a10', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-conversation-teacher', 'conversation'::public.question_type, 'Conversation', 'beginner'::public.difficulty_band, 'Baca percakapan, lalu pilih respons yang paling tepat.', 'Kamu bertemu gurumu di pagi hari. Pilih respons yang paling sopan.', 'Respons sopan membalas sapaan pagi dan menjawab pertanyaan kabar: "Good morning, Ma''am. We are fine, thank you."', 'Balas sapaan terlebih dahulu, lalu jawab pertanyaan kabarnya.', 15, '{"npc":{"name":"Bu Rani","role":"Guru bahasa Inggris"},"screens":[{"speaker":"Bu Rani","line":"Good morning, students. How are you today?"}]}'::jsonb, 16, true)
+values ('77c15c49-287f-48f9-83cd-cb1fd2624a10', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-conversation-teacher', 'conversation'::public.question_type, 'Conversation', 'beginner'::public.difficulty_band, 'Baca percakapan, lalu pilih respons yang paling tepat.', 'Kamu bertemu gurumu di pagi hari. Pilih respons yang paling sopan.', 'Respons sopan membalas sapaan pagi dan menjawab pertanyaan kabar: "Good morning, Ma''am. We are fine, thank you."', 'Balas sapaan terlebih dahulu, lalu jawab pertanyaan kabarnya.', 15, '{"npc":{"name":"Bu Rani","role":"Guru bahasa Inggris"},"screens":[{"speaker":"Bu Rani","line":"Good morning, students. How are you today?"}],"responses":["Bu Rani smiles. \"I am fine too, thank you. Please sit down.\"","Bu Rani frowns. \"It is still morning, not night.\"","Bu Rani waits. \"I asked how you are, not who you are.\"","Bu Rani looks puzzled. \"A book cannot answer me.\""],"lang":"en-US"}'::jsonb, 16, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -6276,7 +6276,7 @@ on conflict (id) do update set
 
 -- questions: bahasa-inggris/greetings-vocabulary/en-story-kiko-garden
 insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
-values ('fcd8eaef-4df5-4603-89ce-407ed34cafb8', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-story-kiko-garden', 'story'::public.question_type, 'Reading', 'beginner'::public.difficulty_band, 'Baca cerita sampai selesai, lalu jawab pertanyaan pemahaman.', 'Mengapa Kiko membawa lentera ke taman?', 'Cerita menyebut langit mendung dan lampu taman mati, sehingga Kiko membawa lentera agar taman terang kembali.', 'Perhatikan alasan yang Kiko ucapkan sendiri.', 20, '{"screens":[{"narration":"Setiap sore Kiko menyiram tanaman di taman sekolah. Hari itu langit mendung dan lampu taman mati."},{"speaker":"Kiko","line":"Taman ini terlalu gelap. Teman-teman tidak bisa membaca nama tanaman."},{"narration":"Kiko mengambil lentera kecil dari kelas, lalu menggantungnya di pagar taman. Taman kembali terang."}]}'::jsonb, 17, true)
+values ('fcd8eaef-4df5-4603-89ce-407ed34cafb8', 'f0515b28-98c2-4f02-81da-1f2be92efb99', 'en-story-kiko-garden', 'story'::public.question_type, 'Reading', 'beginner'::public.difficulty_band, 'Baca cerita sampai selesai, lalu jawab pertanyaan pemahaman.', 'Mengapa Kiko membawa lentera ke taman?', 'Cerita menyebut langit mendung dan lampu taman mati, sehingga Kiko membawa lentera agar taman terang kembali.', 'Perhatikan alasan yang Kiko ucapkan sendiri.', 20, '{"screens":[{"narration":"Setiap sore Kiko menyiram tanaman di taman sekolah. Hari itu langit mendung dan lampu taman mati."},{"speaker":"Kiko","line":"Taman ini terlalu gelap. Teman-teman tidak bisa membaca nama tanaman.","choices":[{"label":"Bantu Kiko mencari lampu","reply":"Kamu menyalakan lampu taman bersama Kiko. Taman kembali terang dan nama tanaman bisa dibaca."},{"label":"Tunggu sampai besok","reply":"Kiko menghela napas. \"Besok taman akan lebih gelap lagi.\""}]},{"narration":"Kiko mengambil lentera kecil dari kelas, lalu menggantungnya di pagar taman. Taman kembali terang."}],"lang":"id-ID"}'::jsonb, 17, true)
 on conflict (id) do update set
   lesson_id = excluded.lesson_id,
   slug = excluded.slug,
@@ -8203,6 +8203,290 @@ on conflict (id) do update set
   question_id = excluded.question_id,
   label = excluded.label,
   is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- questions: bahasa-indonesia/ejaan-dasar/id-listening-ejaan
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('b7df5e29-9369-4cc7-80fa-06b1d88ed84f', '75c30eb4-e575-4159-8dcc-6ee667a975ca', 'id-listening-ejaan', 'listening'::public.question_type, 'Listening', 'beginner'::public.difficulty_band, 'Dengarkan audio, lalu pilih jawaban yang sesuai.', 'Apa instruksi yang kamu dengar?', 'Instruksi "Bacalah buku itu dengan saksama" meminta kita membaca buku dengan teliti.', 'Perhatikan kata "bacalah" dan "saksama".', 15, '{"speech":"Bacalah buku itu dengan saksama.","lang":"id-ID"}'::jsonb, 5, true)
+on conflict (id) do update set
+  lesson_id = excluded.lesson_id,
+  slug = excluded.slug,
+  type = excluded.type,
+  topic = excluded.topic,
+  difficulty = excluded.difficulty,
+  instruction = excluded.instruction,
+  prompt = excluded.prompt,
+  explanation = excluded.explanation,
+  hint = excluded.hint,
+  points = excluded.points,
+  scene = excluded.scene,
+  sort_order = excluded.sort_order,
+  is_active = excluded.is_active;
+
+-- question_options: bahasa-indonesia/ejaan-dasar/id-listening-ejaan/0
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('7ef12366-2b04-4007-8963-25f5324284c6', 'b7df5e29-9369-4cc7-80fa-06b1d88ed84f', 'Membaca buku dengan saksama', true, 0)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-indonesia/ejaan-dasar/id-listening-ejaan/1
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('a92d71ff-aed8-41b1-8ee4-e6fe2f1b0b33', 'b7df5e29-9369-4cc7-80fa-06b1d88ed84f', 'Menutup buku dan keluar kelas', false, 1)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-indonesia/ejaan-dasar/id-listening-ejaan/2
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('77526536-6bc1-4622-8e71-db424fd97a19', 'b7df5e29-9369-4cc7-80fa-06b1d88ed84f', 'Menulis judul buku di papan tulis', false, 2)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-indonesia/ejaan-dasar/id-listening-ejaan/3
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('bcf74190-4f43-45ad-89c0-2c87580d01a3', 'b7df5e29-9369-4cc7-80fa-06b1d88ed84f', 'Mengembalikan buku ke lemari', false, 3)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- questions: bahasa-indonesia/ejaan-dasar/id-speaking-perpustakaan
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('3fb10d2a-3848-45f1-8168-47c1143fee64', '75c30eb4-e575-4159-8dcc-6ee667a975ca', 'id-speaking-perpustakaan', 'speaking'::public.question_type, 'Speaking', 'beginner'::public.difficulty_band, 'Ucapkan kalimat berikut, lalu periksa apakah ucapanmu dikenali.', 'Ucapkan kalimat: "Saya membaca buku di perpustakaan."', 'Kalimat yang benar adalah "Saya membaca buku di perpustakaan". Penilaian memeriksa apakah ucapan dikenali, bukan memberi skor pengucapan buatan.', 'Ucapkan setiap kata dengan jelas.', 15, '{"speech":"Saya membaca buku di perpustakaan.","lang":"id-ID"}'::jsonb, 6, true)
+on conflict (id) do update set
+  lesson_id = excluded.lesson_id,
+  slug = excluded.slug,
+  type = excluded.type,
+  topic = excluded.topic,
+  difficulty = excluded.difficulty,
+  instruction = excluded.instruction,
+  prompt = excluded.prompt,
+  explanation = excluded.explanation,
+  hint = excluded.hint,
+  points = excluded.points,
+  scene = excluded.scene,
+  sort_order = excluded.sort_order,
+  is_active = excluded.is_active;
+
+-- question_answers: bahasa-indonesia/ejaan-dasar/id-speaking-perpustakaan/0
+insert into public.question_answers (id, question_id, answer, is_case_sensitive)
+values ('1e969be2-1356-4ed8-8021-f0742b5af3e8', '3fb10d2a-3848-45f1-8168-47c1143fee64', 'saya membaca buku di perpustakaan', false)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  answer = excluded.answer,
+  is_case_sensitive = excluded.is_case_sensitive;
+
+-- question_answers: bahasa-indonesia/ejaan-dasar/id-speaking-perpustakaan/1
+insert into public.question_answers (id, question_id, answer, is_case_sensitive)
+values ('7a7360fc-2f4b-4f8f-8a1b-bfe56beeaeb2', '3fb10d2a-3848-45f1-8168-47c1143fee64', 'saya membaca buku di perpustakaan.', false)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  answer = excluded.answer,
+  is_case_sensitive = excluded.is_case_sensitive;
+
+-- questions: bahasa-indonesia/ejaan-dasar/id-fill-dua-rumpang
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('b06a8677-80ab-4b19-887f-34da67a1ce8b', '75c30eb4-e575-4159-8dcc-6ee667a975ca', 'id-fill-dua-rumpang', 'fill_blank'::public.question_type, 'Kalimat', 'beginner'::public.difficulty_band, 'Lengkapi bagian rumpang dengan jawaban yang tepat.', 'Ani __ buku di perpustakaan dan __ catatan di rumah.', 'Kata kerja yang tepat adalah membaca untuk buku dan menulis untuk catatan. Kedua rumpang diisi sesuai kegiatan yang dilakukan.', 'Gunakan kata kerja yang sesuai dengan objeknya.', 10, '{}'::jsonb, 7, true)
+on conflict (id) do update set
+  lesson_id = excluded.lesson_id,
+  slug = excluded.slug,
+  type = excluded.type,
+  topic = excluded.topic,
+  difficulty = excluded.difficulty,
+  instruction = excluded.instruction,
+  prompt = excluded.prompt,
+  explanation = excluded.explanation,
+  hint = excluded.hint,
+  points = excluded.points,
+  scene = excluded.scene,
+  sort_order = excluded.sort_order,
+  is_active = excluded.is_active;
+
+-- question_answers: bahasa-indonesia/ejaan-dasar/id-fill-dua-rumpang/0
+insert into public.question_answers (id, question_id, answer, is_case_sensitive)
+values ('a88121af-969c-4e77-8df4-488f1d89d4c0', 'b06a8677-80ab-4b19-887f-34da67a1ce8b', 'membaca menulis', false)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  answer = excluded.answer,
+  is_case_sensitive = excluded.is_case_sensitive;
+
+-- questions: bahasa-indonesia/ejaan-dasar/id-conversation-guru
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('722e75ff-aff2-4281-89a5-ea4537094a95', '75c30eb4-e575-4159-8dcc-6ee667a975ca', 'id-conversation-guru', 'conversation'::public.question_type, 'Conversation', 'beginner'::public.difficulty_band, 'Baca percakapan, lalu pilih respons yang paling tepat.', 'Bu Sari menanyakan tugas membaca. Pilih respons yang paling tepat.', 'Respons yang tepat menjawab pertanyaan guru dengan jujur dan menyebut kegiatan membaca serta mencatat kata baku.', 'Jawab pertanyaan "apakah sudah membaca" terlebih dahulu.', 15, '{"npc":{"name":"Bu Sari","role":"Guru bahasa Indonesia"},"screens":[{"speaker":"Bu Sari","line":"Selamat pagi. Apakah kamu sudah membaca teks tentang ejaan?"}],"responses":["Bu Sari tersenyum. \"Bagus. Sekarang jelaskan satu kata baku yang kamu temukan.\"","Bu Sari mengangguk. \"Baik, baca sekarang, lalu kita bahas bersama.\"","Bu Sari mengingatkan. \"Ini masih pagi, bukan malam.\"","Bu Sari menanggapi. \"Panjang bukan alasan untuk tidak membaca.\""],"lang":"id-ID"}'::jsonb, 8, true)
+on conflict (id) do update set
+  lesson_id = excluded.lesson_id,
+  slug = excluded.slug,
+  type = excluded.type,
+  topic = excluded.topic,
+  difficulty = excluded.difficulty,
+  instruction = excluded.instruction,
+  prompt = excluded.prompt,
+  explanation = excluded.explanation,
+  hint = excluded.hint,
+  points = excluded.points,
+  scene = excluded.scene,
+  sort_order = excluded.sort_order,
+  is_active = excluded.is_active;
+
+-- question_options: bahasa-indonesia/ejaan-dasar/id-conversation-guru/0
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('7d0e2bf6-e0c0-47ed-8bec-e70010cf2557', '722e75ff-aff2-4281-89a5-ea4537094a95', 'Sudah, Bu. Saya sudah membaca dan mencatat kata bakunya.', true, 0)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-indonesia/ejaan-dasar/id-conversation-guru/1
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('0353324c-57b1-4967-8c0b-01078e483dff', '722e75ff-aff2-4281-89a5-ea4537094a95', 'Belum, Bu. Saya tidak membawa buku.', false, 1)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-indonesia/ejaan-dasar/id-conversation-guru/2
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('a6116879-d3fa-45a7-8787-5b95c4ec25c9', '722e75ff-aff2-4281-89a5-ea4537094a95', 'Selamat malam, Bu. Sampai jumpa.', false, 2)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-indonesia/ejaan-dasar/id-conversation-guru/3
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('fbbd5442-6e6e-4b39-8504-67c6ab43cef5', '722e75ff-aff2-4281-89a5-ea4537094a95', 'Teks itu sangat panjang.', false, 3)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- questions: bahasa-indonesia/ejaan-dasar/id-story-kalimat-efektif
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('204e313d-ca59-458d-83bf-25b89dbfa66d', '75c30eb4-e575-4159-8dcc-6ee667a975ca', 'id-story-kalimat-efektif', 'story'::public.question_type, 'Reading', 'beginner'::public.difficulty_band, 'Baca cerita sampai selesai, lalu jawab pertanyaan pemahaman.', 'Mengapa Rani menulis ulang kalimatnya?', 'Kata "para" dan bentuk ulang "siswa-siswa" sama-sama menandai jamak, sehingga salah satunya harus dihilangkan agar kalimat efektif.', 'Perhatikan dua penanda jamak dalam kalimat Rani.', 20, '{"screens":[{"narration":"Rani menulis kalimat \"para siswa-siswa berkumpul di lapangan\" di papan tulis."},{"speaker":"Rani","line":"Guruku bilang kata \"para\" sudah menunjukkan banyak. Kenapa kalimatku masih terasa berlebihan?","choices":[{"label":"Hapus salah satu penanda jamak","reply":"Rani menghapus bentuk ulang \"siswa-siswa\". Kalimatnya menjadi \"Para siswa berkumpul di lapangan.\""},{"label":"Tambahkan kata \"sangat\"","reply":"Rani menambahkan \"sangat\", tetapi kalimatnya justru makin berlebihan."},{"label":"Ubah menjadi kalimat tanya","reply":"Rani mengubahnya menjadi pertanyaan, padahal maksudnya memberi informasi."}]},{"narration":"Rani menulis ulang kalimat menjadi \"Para siswa berkumpul di lapangan.\" Kalimat itu ringkas dan tidak mengulang makna jamak."}],"lang":"id-ID"}'::jsonb, 9, true)
+on conflict (id) do update set
+  lesson_id = excluded.lesson_id,
+  slug = excluded.slug,
+  type = excluded.type,
+  topic = excluded.topic,
+  difficulty = excluded.difficulty,
+  instruction = excluded.instruction,
+  prompt = excluded.prompt,
+  explanation = excluded.explanation,
+  hint = excluded.hint,
+  points = excluded.points,
+  scene = excluded.scene,
+  sort_order = excluded.sort_order,
+  is_active = excluded.is_active;
+
+-- question_options: bahasa-indonesia/ejaan-dasar/id-story-kalimat-efektif/0
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('9e0ddef4-1d27-43e7-85cd-3e67a2d4caa8', '204e313d-ca59-458d-83bf-25b89dbfa66d', 'Karena kata "para" dan "siswa-siswa" sama-sama menyatakan jamak.', true, 0)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-indonesia/ejaan-dasar/id-story-kalimat-efektif/1
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('64295212-4065-4c57-8fdc-601a98b5170d', '204e313d-ca59-458d-83bf-25b89dbfa66d', 'Karena kalimatnya terlalu pendek.', false, 1)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-indonesia/ejaan-dasar/id-story-kalimat-efektif/2
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('cf6f4d40-cce2-46dc-858b-5fbe554d0902', '204e313d-ca59-458d-83bf-25b89dbfa66d', 'Karena Rani ingin membuat puisi.', false, 2)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- question_options: bahasa-indonesia/ejaan-dasar/id-story-kalimat-efektif/3
+insert into public.question_options (id, question_id, label, is_correct, sort_order)
+values ('5d635320-8b5f-4ae6-821f-d748f819459f', '204e313d-ca59-458d-83bf-25b89dbfa66d', 'Karena guru meminta semua kalimat dihapus.', false, 3)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  label = excluded.label,
+  is_correct = excluded.is_correct,
+  sort_order = excluded.sort_order;
+
+-- questions: bahasa-indonesia/ejaan-dasar/id-matching-ejaan
+insert into public.questions (id, lesson_id, slug, type, topic, difficulty, instruction, prompt, explanation, hint, points, scene, sort_order, is_active)
+values ('b931e99f-e6cc-4fcb-8216-3c0a89d3d724', '75c30eb4-e575-4159-8dcc-6ee667a975ca', 'id-matching-ejaan', 'matching_pairs'::public.question_type, 'Ejaan', 'beginner'::public.difficulty_band, 'Cocokkan setiap item di kolom kiri dengan pasangannya di kolom kanan.', 'Cocokkan istilah dengan keterangannya.', 'Praktik adalah bentuk baku, praktek tidak baku, karena menandai sebab, dan titik mengakhiri kalimat berita.', 'Gunakan KBBI sebagai acuan bentuk baku.', 20, '{}'::jsonb, 10, true)
+on conflict (id) do update set
+  lesson_id = excluded.lesson_id,
+  slug = excluded.slug,
+  type = excluded.type,
+  topic = excluded.topic,
+  difficulty = excluded.difficulty,
+  instruction = excluded.instruction,
+  prompt = excluded.prompt,
+  explanation = excluded.explanation,
+  hint = excluded.hint,
+  points = excluded.points,
+  scene = excluded.scene,
+  sort_order = excluded.sort_order,
+  is_active = excluded.is_active;
+
+-- question_pairs: bahasa-indonesia/ejaan-dasar/id-matching-ejaan/pair-0
+insert into public.question_pairs (id, question_id, left_id, right_id, left_label, right_label, sort_order)
+values ('3010ef2c-3e1c-41ee-8a42-4555afd30be8', 'b931e99f-e6cc-4fcb-8216-3c0a89d3d724', 'bf26abc0-2bab-441a-8dc4-040751961b3b', '7b6c14b5-b6f9-4107-827d-5f1a94d01f4b', 'praktik', 'bentuk baku', 0)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  left_id = excluded.left_id,
+  right_id = excluded.right_id,
+  left_label = excluded.left_label,
+  right_label = excluded.right_label,
+  sort_order = excluded.sort_order;
+
+-- question_pairs: bahasa-indonesia/ejaan-dasar/id-matching-ejaan/pair-1
+insert into public.question_pairs (id, question_id, left_id, right_id, left_label, right_label, sort_order)
+values ('34339a13-b114-4512-8c2a-5772c1d4a23a', 'b931e99f-e6cc-4fcb-8216-3c0a89d3d724', '204f87d1-7152-422f-855f-42345e5657d6', 'c5c2fad1-51b2-42a1-8569-0eb0671d692a', 'praktek', 'bentuk tidak baku', 1)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  left_id = excluded.left_id,
+  right_id = excluded.right_id,
+  left_label = excluded.left_label,
+  right_label = excluded.right_label,
+  sort_order = excluded.sort_order;
+
+-- question_pairs: bahasa-indonesia/ejaan-dasar/id-matching-ejaan/pair-2
+insert into public.question_pairs (id, question_id, left_id, right_id, left_label, right_label, sort_order)
+values ('5618a43f-e871-4c68-86c0-158c205260b2', 'b931e99f-e6cc-4fcb-8216-3c0a89d3d724', 'e112ecf5-c3af-4bc0-879f-587bb02b7c53', '9be72c00-0c25-4a9f-84ad-da78535ffaf8', 'karena', 'konjungsi sebab', 2)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  left_id = excluded.left_id,
+  right_id = excluded.right_id,
+  left_label = excluded.left_label,
+  right_label = excluded.right_label,
+  sort_order = excluded.sort_order;
+
+-- question_pairs: bahasa-indonesia/ejaan-dasar/id-matching-ejaan/pair-3
+insert into public.question_pairs (id, question_id, left_id, right_id, left_label, right_label, sort_order)
+values ('6103d85b-e967-4312-8b30-cf49af00a9a7', 'b931e99f-e6cc-4fcb-8216-3c0a89d3d724', '324a9232-6672-41f6-8efb-d11d7275af57', '3c822398-cbda-400c-8121-7375cfa5621e', 'titik', 'akhir kalimat berita', 3)
+on conflict (id) do update set
+  question_id = excluded.question_id,
+  left_id = excluded.left_id,
+  right_id = excluded.right_id,
+  left_label = excluded.left_label,
+  right_label = excluded.right_label,
   sort_order = excluded.sort_order;
 
 -- lessons: bahasa-indonesia/indonesia-review

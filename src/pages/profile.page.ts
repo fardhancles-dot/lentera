@@ -2,9 +2,15 @@ import type { PageModule } from '../app/router';
 import { AVATAR_KEYS, AVATAR_LABELS, avatar, avatarMarkup, isAvatarKey } from '../components/avatar';
 import { createButton, createField } from '../components/forms';
 import { icon } from '../components/icons';
+import {
+  playerProgressError,
+  playerProgressPanel,
+  playerProgressSkeleton,
+} from '../components/playerSummary';
 import { showToast } from '../components/toast';
 import { pageHeader, renderAppLayout } from '../layouts/appLayout';
 import { profileService } from '../services/profile.service';
+import { playerStore, type PlayerStoreState } from '../stores/player.store';
 import { sessionStore } from '../stores/session.store';
 import { el, formatDate } from '../utils/dom';
 
@@ -189,6 +195,39 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     })();
   });
 
+  const progressBody = el('div');
+  const progressCard = el('section', { class: 'card card--padded' }, [
+    el('div', { class: 'card__header' }, [
+      el('div', {}, [
+        el('h2', { class: 'card__title', text: 'Progres akun' }),
+        el('p', { class: 'card__subtitle', text: 'Ringkasan level, Hearts, Streak, dan Koin.' }),
+      ]),
+      el('a', { class: 'btn btn--secondary btn--sm', attrs: { href: '/wallet' } }, [
+        icon('bag', 16),
+        'Wallet',
+      ]),
+    ]),
+    progressBody,
+  ]);
+
+  const paintProgress = (state: PlayerStoreState) => {
+    if (state.data) {
+      progressBody.replaceChildren(playerProgressPanel(state.data));
+    } else if (state.status === 'error') {
+      progressBody.replaceChildren(
+        playerProgressError(state.error ?? 'Progres gagal dimuat.', () => {
+          void playerStore.load(true);
+        }),
+      );
+    } else {
+      progressBody.replaceChildren(playerProgressSkeleton());
+    }
+  };
+
+  ctx.onCleanup(playerStore.subscribe(paintProgress));
+  paintProgress(playerStore.getState());
+  void playerStore.load();
+
   const accountCard = el('section', { class: 'card card--padded' }, [
     el('h2', { class: 'card__title', text: 'Informasi akun' }),
     el('p', { class: 'card__subtitle', text: 'Data ini dipakai untuk masuk ke akunmu.' }),
@@ -226,7 +265,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
           el('div', { style: { marginTop: '1.25rem' } }, [form]),
         ]),
       ]),
-      el('div', { class: 'dashboard-aside' }, [accountCard, privacyCard]),
+      el('div', { class: 'dashboard-aside' }, [progressCard, accountCard, privacyCard]),
     ]),
   ]);
 

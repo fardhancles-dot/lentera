@@ -7,12 +7,14 @@ Developer Dashboard.
 Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand terpusat di
 `src/config/brand.ts` dan dapat ditimpa lewat environment variable.
 
-> **Status proyek: Tahap 1–3 selesai; Tahap 4 selesai kecuali Friends Quest.**
-> Lesson, latihan, dan 19 dari 20 mini-game punya mekanik bermain nyata. Dua belas tipe
+> **Status proyek: Tahap 1–5 selesai pada level database/API.**
+> Lesson, latihan, dan **20 dari 20 mini-game** punya mekanik bermain nyata. Dua belas tipe
 > soal dinilai di server (termasuk Listening, Speaking, Translation, Conversation, Story),
-> dan tujuh mode latihan berjalan di atas sesi practice dengan XP idempoten.
-> **Friends Quest belum dibuat** karena membutuhkan graf pertemanan Tahap 7.
-> Rincian bukti, batasan, dan sisa pekerjaan: **[docs/AUDIT.md](docs/AUDIT.md)**.
+> tujuh mode latihan berjalan di atas sesi practice dengan XP idempoten, dan **Friends Quest**
+> tersedia sebagai co-op berbasis kode undangan. Tahap 5 menambahkan **Hearts, Streak,
+> level akun, dan wallet** yang seluruhnya dihitung server. Pengujian browser end-to-end
+> (Playwright) belum ada; bukti Tahap 4 ada di
+> **[docs/STAGE4_COMPLETION.md](docs/STAGE4_COMPLETION.md)**.
 
 ---
 
@@ -27,14 +29,15 @@ Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand ter
 | Verifikasi email & lupa password | **Implemented · Belum E2E** | Memakai Supabase Auth; tautan reset memakai redirect `/reset-password`. |
 | Onboarding profil | **Implemented · Belum E2E** | Username, avatar, nama, target harian, zona waktu. Atomik via RPC. |
 | Profil & pengaturan cloud | **Implemented · Belum E2E** | Disimpan di PostgreSQL dengan RLS + column-level grants. |
-| Database & RLS | **Implemented · Tested (PGlite + Supabase)** | 8 migration diterapkan ke project Supabase; 106 SQL smoke check + 29 E2E check lulus. |
-| Kurikulum & bank soal | **Implemented · Tested (SQL smoke)** | 10 mapel, 22 level, 57 lesson, 225 soal, 12 tipe soal, 6 jenis node; 7 mapel inti + Bahasa Sambas. |
+| Database & RLS | **Implemented · Tested (PGlite + Supabase API)** | 10 migration diterapkan ke project Supabase; 167 SQL smoke check + 43 verifikasi API lulus. |
+| Kurikulum & bank soal | **Implemented · Tested (SQL smoke)** | 10 mapel, 22 level, 57 lesson, 231 soal, 12 tipe soal, 6 jenis node; 7 mapel inti + Bahasa Sambas. |
 | Learning path & progres per mapel | **Implemented · Tested (SQL smoke)** | Node selesai/aktif/terkunci, unlock ditegakkan server, progres per course/node. |
 | Lesson engine & halaman hasil | **Implemented · Tested (SQL smoke)** | Kunci jawaban tidak dikirim ke browser; XP/Koin idempoten per attempt. |
-| Gameplay 20 mini-game | **19/20 implemented · Tested (SQL)** | 12 tipe soal punya layar; 7 mode latihan (Match Madness, Ramp Up, Timed, Mistakes, Personalized, Unit Review, Legendary). Friends Quest belum (Tahap 7). |
+| Gameplay 20 mini-game | **20/20 implemented · Tested (SQL + Supabase API)** | 12 tipe soal punya layar; 7 mode latihan; Conversation bertahap dan Story dengan pilihan respons. UI belum diuji browser dengan sesi nyata. |
 | Practice Hub & sesi latihan | **Implemented · Tested (SQL)** | Sesi server, timer, combo, bonus kecepatan, XP idempoten, unit chooser. UI belum diuji browser dengan sesi nyata. |
-| XP & Koin | **Sebagian** | Ledger, wallet, dan reward lesson sudah bekerja; UI saldo dan level akun belum. |
-| Hearts, Streak, Quest, Achievement, Shop | **Not implemented** | Tahap 5. |
+| Friends Quest | **Implemented · Tested (SQL + Supabase API)** | Co-op lewat kode undangan, target XP gabungan, kontribusi dari XP lesson/latihan server, klaim sekali per anggota. UI belum diuji browser. Graf teman penuh tetap Tahap 7. |
+| XP, Koin, Hearts, Streak & level | **Implemented · Tested (SQL + Supabase API)** | Ledger XP/Koin, Hearts dengan regenerasi/refill, Streak harian, 30 level akun, dan halaman `/wallet` dengan riwayat transaksi. Semua angka berasal dari RPC server. |
+| Quest, Achievement, Shop & Inventory | **Not implemented** | Quest harian/mingguan, achievement, shop, dan inventory belum dibuat; Friends Quest co-op sudah ada. |
 | Leaderboard, Liga, Teman, Event | **Not implemented** | Tahap 7. |
 | Developer Dashboard | **Not implemented** | Tahap 8; role developer dan mode pratinjau sudah ada. |
 | PWA / offline / AI / monetisasi | **Not implemented** | Direncanakan setelah gameplay stabil. |
@@ -83,7 +86,7 @@ Panduan lengkap Supabase, migrasi, dan deployment: **[docs/SETUP.md](docs/SETUP.
 | `npm test` | Unit test Vitest. |
 | `npm run test:watch` | Unit test mode watch. |
 | `npm run test:sql` | Smoke test migration, RPC, reward, dan RLS di PGlite. |
-| `npm run verify:supabase` | Verifikasi login, payload 20 soal, grading, hasil lesson, Practice Hub, dan idempotensi XP di Supabase nyata. |
+| `npm run verify:supabase` | Verifikasi login, payload 20 soal, grading, hasil lesson, Practice Hub, Friends Quest, dan idempotensi reward di Supabase nyata. |
 | `npm run seed:build` | Validasi konten dan regenerasi migration seed kurikulum. |
 
 ---
@@ -122,7 +125,8 @@ Panduan lengkap Supabase, migrasi, dan deployment: **[docs/SETUP.md](docs/SETUP.
 │       ├── 20261108109000_question_scenes.sql
 │       ├── 20261108110000_curriculum_seed.sql
 │       ├── 20261108120000_lesson_engine.sql
-│       └── 20261109100000_practice_engine.sql
+│       ├── 20261109100000_practice_engine.sql
+│       └── 20261110100000_friends_quest.sql
 ├── scripts/                     # generator + validasi seed kurikulum, SQL smoke test
 ├── tests/                       # unit test Vitest
 ├── docs/                        # dokumentasi teknis + laporan audit
@@ -147,6 +151,8 @@ terkait dikerjakan — bukan folder kosong yang dibuat lebih awal.
 - [GAMEPLAY.md](docs/GAMEPLAY.md) — rencana lesson engine & 20 mini-game, status nyata.
 - [TESTING.md](docs/TESTING.md) — test yang ada, checklist manual, gap.
 - [AUDIT.md](docs/AUDIT.md) — laporan audit kondisi nyata, temuan, dan rencana lanjutan.
+- [AUDIT_STAGE4.md](docs/AUDIT_STAGE4.md) — snapshot audit Tahap 4 sebelum perbaikan.
+- [STAGE4_COMPLETION.md](docs/STAGE4_COMPLETION.md) — laporan akhir Tahap 4 dan bukti pengujian.
 - [PROJECT_HISTORY.md](docs/PROJECT_HISTORY.md) — catatan per sesi pengembangan.
 - [SESSION_2026-11-09.md](docs/SESSION_2026-11-09.md) — catatan percakapan dan status sesi lima mini-game.
 

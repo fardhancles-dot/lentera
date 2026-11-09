@@ -3,9 +3,13 @@ import type {
   SeedLesson,
   SeedLevel,
   SeedQuestion,
+  SeedSceneScreen,
   SeedSubject,
   SeedUnit,
 } from './types';
+
+/** Content defaults to Indonesian audio; English lessons opt into en-US. */
+const DEFAULT_LANG = 'id-ID';
 
 const MC_INSTRUCTION = 'Pilih satu jawaban yang paling tepat.';
 const TYPING_INSTRUCTION = 'Tulis jawaban pada kolom yang tersedia.';
@@ -183,6 +187,7 @@ export function listening(
   correctIndex: number,
   explanation: string,
   hint?: string,
+  lang = DEFAULT_LANG,
 ): SeedQuestion {
   if (correctIndex < 0 || correctIndex >= options.length) {
     throw new Error(`Question ${slug} has an invalid correct option index.`);
@@ -198,7 +203,7 @@ export function listening(
     hint,
     points: 15,
     options: options.map((text, index) => ({ text, correct: index === correctIndex })),
-    scene: { speech },
+    scene: { speech, lang },
   };
 }
 
@@ -210,6 +215,7 @@ export function speaking(
   answers: string[],
   explanation: string,
   hint?: string,
+  lang = DEFAULT_LANG,
 ): SeedQuestion {
   return {
     slug,
@@ -221,7 +227,7 @@ export function speaking(
     hint,
     points: 15,
     answers,
-    scene: { speech: spokenText },
+    scene: { speech: spokenText, lang },
   };
 }
 
@@ -258,7 +264,13 @@ export function conversation(
   correctIndex: number,
   explanation: string,
   hint?: string,
+  /** One NPC reaction per option, aligned with `options`. */
+  responses?: string[],
+  lang = DEFAULT_LANG,
 ): SeedQuestion {
+  if (responses && responses.length !== options.length) {
+    throw new Error(`Question ${slug} needs one response per option.`);
+  }
   if (correctIndex < 0 || correctIndex >= options.length) {
     throw new Error(`Question ${slug} has an invalid correct option index.`);
   }
@@ -273,7 +285,7 @@ export function conversation(
     hint,
     points: 15,
     options: options.map((text, index) => ({ text, correct: index === correctIndex })),
-    scene: { npc, screens },
+    scene: { npc, screens, ...(responses ? { responses } : {}), lang },
   };
 }
 
@@ -281,11 +293,12 @@ export function story(
   slug: string,
   topic: string,
   prompt: string,
-  screens: Array<{ line: string; narration?: string }>,
+  screens: SeedSceneScreen[],
   options: string[],
   correctIndex: number,
   explanation: string,
   hint?: string,
+  lang = DEFAULT_LANG,
 ): SeedQuestion {
   if (correctIndex < 0 || correctIndex >= options.length) {
     throw new Error(`Question ${slug} has an invalid correct option index.`);
@@ -301,7 +314,7 @@ export function story(
     hint,
     points: 20,
     options: options.map((text, index) => ({ text, correct: index === correctIndex })),
-    scene: { screens },
+    scene: { screens, lang },
   };
 }
 

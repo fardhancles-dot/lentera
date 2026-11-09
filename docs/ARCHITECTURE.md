@@ -126,10 +126,26 @@ Batas kepercayaan:
 
 - Browser **tidak pernah** menerima `is_correct`, tabel jawaban, relasi pasangan, atau
   saldo yang bisa dikirim balik.
-- Browser tidak mengirim XP, Koin, status lulus, atau flag achievement.
+- Browser tidak mengirim XP, Koin, Hearts, Streak, level, status lulus, atau flag
+  achievement.
 - Semua penulisan reward terjadi di RPC `security definer` dengan transaksi, unique
   constraint, dan advisory lock.
-- RLS + grant kolom mencegah pemain mengubah tabel ekonomi secara langsung.
+- Hearts dikurangi trigger database saat jawaban salah benar-benar tersimpan; attempt baru
+  dicek trigger sebelum dibuat. Streak diperbarui trigger dari XP lesson/practice.
+- RLS + grant kolom mencegah pemain mengubah tabel ekonomi/progresi secara langsung.
+
+## Progression dan wallet
+
+- `player.repository.ts` hanya memanggil RPC `get_player_state`, `get_my_wallet`, dan
+  `refill_hearts`; tidak ada query tulis langsung.
+- `player.service.ts` memvalidasi payload, meng-clamp Hearts/persentase, dan menyaring
+  transaksi rusak sebelum masuk UI.
+- `player.store.ts` menjadi cache bersama: topbar, beranda, profil, `/wallet`, dan HUD lesson
+  membaca snapshot yang sama. Store di-reset saat `user_id` berubah.
+- `/wallet` menampilkan level, Koin, Hearts/refill, Streak 14 hari, dan riwayat; layout
+  menampilkan ringkasan Koin/Hearts/Streak.
+- Level tidak disimpan di tabel pemain. `get_player_state` menjumlahkan XP ledger lalu
+  memetakan ke `player_levels`, sehingga client tidak bisa mengubah level.
 
 ## Mini-game renderer
 
@@ -178,6 +194,8 @@ mengubah `lesson-play.page.ts`.
 | Implicit auth flow | Tautan reset/verifikasi bekerja lintas perangkat. |
 | Column-level grants | RLS membatasi baris; grant membatasi kolom. |
 | RPC atomik untuk onboarding & lesson | Mengurangi state setengah jadi dan mencegah reward ganda. |
+| Hearts/Streak lewat trigger | Aturan berlaku untuk semua jalur tulis dan tidak bergantung pada client. |
+| Level dari ambang XP | Tidak ada angka level yang bisa dikirim atau diedit pemain. |
 | Seed generated + UUID deterministik | Konten dapat direview di Git dan dijalankan ulang tanpa duplikasi. |
 | Peta DOM dulu | Data dan unlock dapat diuji sebelum investasi scene Phaser. |
 
@@ -189,7 +207,8 @@ mengubah `lesson-play.page.ts`.
   broadcast nanti wajib lewat Edge Function/RPC dengan verifikasi role.
 - Satu course per mapel; UI memakai `courses[0]`.
 - Seluruh 12 tipe soal punya renderer; `unsupported` hanya jaring pengaman data rusak.
-- Friends Quest belum ada karena menunggu graf teman Tahap 7.
+- Friends Quest sudah ada sebagai co-op berbasis kode undangan; graf teman penuh
+  (friend request, friendships, activity feed) tetap Tahap 7.
 - Audio model memakai text-to-speech browser; belum ada aset rekaman.
 - Timer latihan berjalan di client untuk tampilan; skor, combo, dan XP dihitung ulang
   server dari jawaban tersimpan (durasi menjawab dibatasi 0–600 detik).

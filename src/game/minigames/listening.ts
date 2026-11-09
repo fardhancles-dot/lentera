@@ -10,7 +10,9 @@ function optionLetter(index: number): string {
 export function createListening({ question, onChange }: MiniGameProps): MiniGameView {
   const audioMedia = question.media.find((media) => media.kind === 'audio');
   const speech = question.scene?.speech ?? '';
+  const lang = question.scene?.lang ?? 'id-ID';
   const canSpeak = speechSynthesisSupported() && Boolean(speech);
+  let speechVolume = 1;
   const audio = audioMedia
     ? el('audio', {
         class: 'play-audio__element',
@@ -34,7 +36,7 @@ export function createListening({ question, onChange }: MiniGameProps): MiniGame
       return;
     }
     if (canSpeak) {
-      if (speak(speech, rate)) {
+      if (speak(speech, rate, lang, speechVolume)) {
         status.textContent = rate < 1 ? 'Memutar versi lambat…' : 'Memutar audio…';
       } else {
         status.textContent = 'Browser menolak memutar audio. Periksa pengaturan suara.';
@@ -76,7 +78,8 @@ export function createListening({ question, onChange }: MiniGameProps): MiniGame
     },
   });
   volume.addEventListener('input', () => {
-    if (audio) audio.volume = Number(volume.value);
+    speechVolume = Number(volume.value);
+    if (audio) audio.volume = speechVolume;
   });
 
   const audioPanel = el('div', { class: 'play-audio' }, [
@@ -184,7 +187,9 @@ export function createListening({ question, onChange }: MiniGameProps): MiniGame
           button.classList.add('play-option--correct');
         }
       }
-      typedFallback.classList.add(isCorrect ? 'play-input--correct' : 'play-input--wrong');
+      if (buttons.length === 0) {
+        typedFallback.classList.add(isCorrect ? 'play-input--correct' : 'play-input--wrong');
+      }
     },
   };
 }

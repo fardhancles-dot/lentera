@@ -38,9 +38,9 @@ export const PRACTICE_MODES: PracticeModeInfo[] = [
     mode: 'ramp_up',
     title: 'Ramp Up',
     description:
-      'Soal naik tingkat kesulitannya setiap kali kamu benar. Setiap soal punya batas 20 detik.',
+      'Soal disusun dari tingkat mudah ke sulit. Setiap soal punya batas 20 detik dan combo menambah poin.',
     icon: 'chart',
-    meta: '10 soal · 20 detik per soal · tingkat bertambah',
+    meta: '10 soal · 20 detik per soal · mudah ke sulit',
   },
   {
     mode: 'timed',

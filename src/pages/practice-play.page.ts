@@ -11,8 +11,9 @@ import {
   type PracticeStart,
   type PracticeSummary,
 } from '../services/practice.service';
+import { playerStore } from '../stores/player.store';
 import { sessionStore } from '../stores/session.store';
-import { el } from '../utils/dom';
+import { el, formatNumber } from '../utils/dom';
 
 const meta = { title: 'Latihan' };
 
@@ -263,6 +264,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
 
     try {
       summary = await practiceService.complete(start.sessionId);
+      await playerStore.load(true);
       if (disposed) return;
       renderSummary();
     } catch (error) {
@@ -594,6 +596,10 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
       : summary.passed
         ? 'XP tidak diberikan lagi untuk sesi ini.'
         : 'XP hanya diberikan bila akurasi minimal 60%. Ini hanya sesi latihan, progres lesson tidak berubah.';
+    const player = playerStore.getState().data;
+    const progressNote = player
+      ? `Level ${player.level.level} · ${formatNumber(player.totalXp)} XP · Streak ${player.streak.current} hari`
+      : null;
 
     ctx.outlet.replaceChildren(
       el('div', { class: 'play-result-shell' }, [
@@ -630,6 +636,9 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
                   el('span', { class: 'play-reward__label', text: 'XP' }),
                 ]),
               ])
+            : null,
+          progressNote
+            ? el('p', { class: 'play-result__progress', text: progressNote })
             : null,
           el('p', { class: 'play-result__note', text: note }),
           el('div', { class: 'play-result__actions' }, [

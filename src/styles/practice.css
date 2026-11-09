@@ -223,6 +223,35 @@
   gap: var(--space-3);
 }
 
+.play-dialogue__transcript {
+  display: grid;
+  gap: var(--space-3);
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.play-dialogue__progress {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  font-weight: 800;
+  color: var(--muted-strong);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.play-options--dialogue {
+  margin-top: var(--space-1);
+}
+
+.play-bubble--reaction {
+  background: #fffdf2;
+  border-color: #f0e2b6;
+  border-bottom-left-radius: var(--radius-lg);
+  border-top-left-radius: 6px;
+}
+
 .play-dialogue__avatar {
   display: grid;
   place-items: center;
@@ -338,6 +367,40 @@
 
 .play-story__line {
   font-size: var(--text-lg);
+}
+
+.play-story__choices {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.play-story__choice {
+  min-height: 46px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.play-story__choice:hover:not(:disabled) {
+  border-color: var(--green-400);
+  background: var(--green-50);
+}
+
+.play-story__choice.is-chosen {
+  border-color: var(--green-500);
+  background: var(--green-50);
+}
+
+.play-story__choice:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .play-feedback__combo {
@@ -527,9 +590,251 @@
   }
 }
 
+/* Friends Quest */
+.friend-quest-cta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.friend-quest-cta:hover {
+  border-color: var(--green-300);
+  background: var(--green-50);
+}
+
+.friend-quest-cta__icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-md);
+  background: var(--green-100);
+  color: var(--green-700);
+}
+
+.friend-quest-cta__text {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+}
+
+.friend-quest-cta__title {
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.friend-quest-cta__body {
+  font-size: var(--text-sm);
+  color: var(--muted-strong);
+  font-weight: 600;
+}
+
+.friend-quest-forms,
+.friend-quest-grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.friend-quest-form {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.friend-quest-form__title {
+  font-size: var(--text-lg);
+}
+
+.friend-quest-form__body {
+  color: var(--muted-strong);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.friend-quest-form__row {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.friend-quest-list-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: var(--space-6) 0 var(--space-3);
+}
+
+.friend-quest-list-title {
+  font-size: var(--text-xl);
+}
+
+.friend-quest-list-hint {
+  color: var(--muted-strong);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.friend-quest {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.friend-quest__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.friend-quest__eyebrow {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  color: var(--muted-strong);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.friend-quest__title {
+  font-size: var(--text-lg);
+}
+
+.friend-quest__code-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.friend-quest__code {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--background-deep);
+  border: 1px dashed var(--border-strong, var(--border));
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.friend-quest__count {
+  margin-left: auto;
+  color: var(--muted-strong);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.friend-quest__progress-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.friend-quest__members {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.friend-quest__member {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--background);
+  border: 1px solid var(--border);
+}
+
+.friend-quest__member-meta {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.friend-quest__member-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.friend-quest__owner {
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--green-100);
+  color: var(--green-700);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.friend-quest__member-handle {
+  font-size: var(--text-xs);
+  color: var(--muted-strong);
+  font-weight: 600;
+}
+
+.friend-quest__member-xp {
+  font-size: var(--text-sm);
+  font-weight: 800;
+  color: var(--green-700);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.friend-quest__rewards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.friend-quest__reward {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--yellow-100, #fff6d9);
+  color: #8a5f00;
+  font-size: var(--text-xs);
+  font-weight: 800;
+}
+
+.friend-quest__note {
+  color: var(--muted-strong);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+@media (min-width: 760px) {
+  .friend-quest-forms,
+  .friend-quest-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 520px) {
   .practice-hud {
     gap: 4px;
+  }
+
+  .friend-quest-form__row {
+    grid-template-columns: 1fr;
   }
 
   .practice-hud .play-counter {

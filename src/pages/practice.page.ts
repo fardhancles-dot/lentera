@@ -54,6 +54,17 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
         }),
       ]),
     ]),
+    el('a', { class: 'card friend-quest-cta', attrs: { href: '/friends-quest' } }, [
+      el('span', { class: 'friend-quest-cta__icon' }, [icon('users', 24)]),
+      el('span', { class: 'friend-quest-cta__text' }, [
+        el('span', { class: 'friend-quest-cta__title', text: 'Friends Quest' }),
+        el('span', {
+          class: 'friend-quest-cta__body',
+          text: 'Kejar target XP bersama teman. Kontribusi dihitung dari lesson dan latihan.',
+        }),
+      ]),
+      icon('chevron-right', 20),
+    ]),
     toolbar,
     listSlot,
   ]);

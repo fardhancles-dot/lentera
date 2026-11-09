@@ -1,11 +1,11 @@
-import { conversation, listening, matching, speaking, story, translation } from './helpers';
+import { conversation, fill, listening, matching, speaking, story, translation } from './helpers';
 import type { SeedQuestion, SeedSubject } from './types';
 
 /**
- * Stage 4 content for the dialogue-driven and production mini-games. It lives in
- * the English beginner unit so the mechanics can be played end to end, and the
- * stored scenes keep the transcript that browser text-to-speech reads aloud.
- * None of the scene data contains a graded answer.
+ * Stage 4 content for the dialogue-driven and production mini-games. English
+ * content opts into en-US; Indonesian content opts into id-ID so listening,
+ * speaking, and recognition use the right locale. None of the scene data
+ * contains a graded answer.
  */
 const ADDITIONS: Array<{ subject: string; lesson: string; questions: SeedQuestion[] }> = [
   {
@@ -26,6 +26,7 @@ const ADDITIONS: Array<{ subject: string; lesson: string; questions: SeedQuestio
         0,
         'Instruksi yang diucapkan adalah "Please open your book to page ten", yaitu membuka buku ke halaman sepuluh.',
         'Perhatikan kata "open" dan angka "ten".',
+        'en-US',
       ),
       listening(
         'en-listening-greeting',
@@ -41,6 +42,7 @@ const ADDITIONS: Array<{ subject: string; lesson: string; questions: SeedQuestio
         0,
         'Kalimat "Good morning, how are you today?" berarti selamat pagi, apa kabar hari ini.',
         'Fokus pada "Good morning" dan "how are you".',
+        'en-US',
       ),
       speaking(
         'en-speaking-greeting',
@@ -50,6 +52,7 @@ const ADDITIONS: Array<{ subject: string; lesson: string; questions: SeedQuestio
         ['good morning how are you', 'good morning, how are you?'],
         'Sapaan yang benar adalah "Good morning, how are you?". Penilaian memeriksa apakah ucapan dikenali, bukan memberi skor pengucapan buatan.',
         'Ucapkan dengan jelas dan perlahan.',
+        'en-US',
       ),
       translation(
         'en-translation-library',
@@ -75,6 +78,13 @@ const ADDITIONS: Array<{ subject: string; lesson: string; questions: SeedQuestio
         0,
         'Respons sopan membalas sapaan pagi dan menjawab pertanyaan kabar: "Good morning, Ma\'am. We are fine, thank you."',
         'Balas sapaan terlebih dahulu, lalu jawab pertanyaan kabarnya.',
+        [
+          'Bu Rani smiles. "I am fine too, thank you. Please sit down."',
+          'Bu Rani frowns. "It is still morning, not night."',
+          'Bu Rani waits. "I asked how you are, not who you are."',
+          'Bu Rani looks puzzled. "A book cannot answer me."',
+        ],
+        'en-US',
       ),
       story(
         'en-story-kiko-garden',
@@ -88,6 +98,17 @@ const ADDITIONS: Array<{ subject: string; lesson: string; questions: SeedQuestio
           {
             speaker: 'Kiko',
             line: 'Taman ini terlalu gelap. Teman-teman tidak bisa membaca nama tanaman.',
+            choices: [
+              {
+                label: 'Bantu Kiko mencari lampu',
+                reply:
+                  'Kamu menyalakan lampu taman bersama Kiko. Taman kembali terang dan nama tanaman bisa dibaca.',
+              },
+              {
+                label: 'Tunggu sampai besok',
+                reply: 'Kiko menghela napas. "Besok taman akan lebih gelap lagi."',
+              },
+            ],
           },
           {
             narration:
@@ -103,6 +124,7 @@ const ADDITIONS: Array<{ subject: string; lesson: string; questions: SeedQuestio
         0,
         'Cerita menyebut langit mendung dan lampu taman mati, sehingga Kiko membawa lentera agar taman terang kembali.',
         'Perhatikan alasan yang Kiko ucapkan sendiri.',
+        'id-ID',
       ),
       matching(
         'en-matching-school',
@@ -132,6 +154,131 @@ const ADDITIONS: Array<{ subject: string; lesson: string; questions: SeedQuestio
         ],
         'read = membaca, write = menulis, listen = mendengarkan, speak = berbicara, study = belajar.',
         'Kata kerja dasar yang sering dipakai di kelas.',
+      ),
+    ],
+  },
+  {
+    subject: 'bahasa-indonesia',
+    lesson: 'ejaan-dasar',
+    questions: [
+      listening(
+        'id-listening-ejaan',
+        'Listening',
+        'Apa instruksi yang kamu dengar?',
+        'Bacalah buku itu dengan saksama.',
+        [
+          'Membaca buku dengan saksama',
+          'Menutup buku dan keluar kelas',
+          'Menulis judul buku di papan tulis',
+          'Mengembalikan buku ke lemari',
+        ],
+        0,
+        'Instruksi "Bacalah buku itu dengan saksama" meminta kita membaca buku dengan teliti.',
+        'Perhatikan kata "bacalah" dan "saksama".',
+        'id-ID',
+      ),
+      speaking(
+        'id-speaking-perpustakaan',
+        'Speaking',
+        'Ucapkan kalimat: "Saya membaca buku di perpustakaan."',
+        'Saya membaca buku di perpustakaan.',
+        ['saya membaca buku di perpustakaan', 'saya membaca buku di perpustakaan.'],
+        'Kalimat yang benar adalah "Saya membaca buku di perpustakaan". Penilaian memeriksa apakah ucapan dikenali, bukan memberi skor pengucapan buatan.',
+        'Ucapkan setiap kata dengan jelas.',
+        'id-ID',
+      ),
+      fill(
+        'id-fill-dua-rumpang',
+        'Kalimat',
+        'Ani __ buku di perpustakaan dan __ catatan di rumah.',
+        ['membaca menulis'],
+        'Kata kerja yang tepat adalah membaca untuk buku dan menulis untuk catatan. Kedua rumpang diisi sesuai kegiatan yang dilakukan.',
+        'Gunakan kata kerja yang sesuai dengan objeknya.',
+      ),
+      conversation(
+        'id-conversation-guru',
+        'Conversation',
+        'Bu Sari menanyakan tugas membaca. Pilih respons yang paling tepat.',
+        { name: 'Bu Sari', role: 'Guru bahasa Indonesia' },
+        [
+          {
+            speaker: 'Bu Sari',
+            line: 'Selamat pagi. Apakah kamu sudah membaca teks tentang ejaan?',
+          },
+        ],
+        [
+          'Sudah, Bu. Saya sudah membaca dan mencatat kata bakunya.',
+          'Belum, Bu. Saya tidak membawa buku.',
+          'Selamat malam, Bu. Sampai jumpa.',
+          'Teks itu sangat panjang.',
+        ],
+        0,
+        'Respons yang tepat menjawab pertanyaan guru dengan jujur dan menyebut kegiatan membaca serta mencatat kata baku.',
+        'Jawab pertanyaan "apakah sudah membaca" terlebih dahulu.',
+        [
+          'Bu Sari tersenyum. "Bagus. Sekarang jelaskan satu kata baku yang kamu temukan."',
+          'Bu Sari mengangguk. "Baik, baca sekarang, lalu kita bahas bersama."',
+          'Bu Sari mengingatkan. "Ini masih pagi, bukan malam."',
+          'Bu Sari menanggapi. "Panjang bukan alasan untuk tidak membaca."',
+        ],
+        'id-ID',
+      ),
+      story(
+        'id-story-kalimat-efektif',
+        'Reading',
+        'Mengapa Rani menulis ulang kalimatnya?',
+        [
+          {
+            narration:
+              'Rani menulis kalimat "para siswa-siswa berkumpul di lapangan" di papan tulis.',
+          },
+          {
+            speaker: 'Rani',
+            line: 'Guruku bilang kata "para" sudah menunjukkan banyak. Kenapa kalimatku masih terasa berlebihan?',
+            choices: [
+              {
+                label: 'Hapus salah satu penanda jamak',
+                reply:
+                  'Rani menghapus bentuk ulang "siswa-siswa". Kalimatnya menjadi "Para siswa berkumpul di lapangan."',
+              },
+              {
+                label: 'Tambahkan kata "sangat"',
+                reply: 'Rani menambahkan "sangat", tetapi kalimatnya justru makin berlebihan.',
+              },
+              {
+                label: 'Ubah menjadi kalimat tanya',
+                reply: 'Rani mengubahnya menjadi pertanyaan, padahal maksudnya memberi informasi.',
+              },
+            ],
+          },
+          {
+            narration:
+              'Rani menulis ulang kalimat menjadi "Para siswa berkumpul di lapangan." Kalimat itu ringkas dan tidak mengulang makna jamak.',
+          },
+        ],
+        [
+          'Karena kata "para" dan "siswa-siswa" sama-sama menyatakan jamak.',
+          'Karena kalimatnya terlalu pendek.',
+          'Karena Rani ingin membuat puisi.',
+          'Karena guru meminta semua kalimat dihapus.',
+        ],
+        0,
+        'Kata "para" dan bentuk ulang "siswa-siswa" sama-sama menandai jamak, sehingga salah satunya harus dihilangkan agar kalimat efektif.',
+        'Perhatikan dua penanda jamak dalam kalimat Rani.',
+        'id-ID',
+      ),
+      matching(
+        'id-matching-ejaan',
+        'Ejaan',
+        'Cocokkan istilah dengan keterangannya.',
+        [
+          { left: 'praktik', right: 'bentuk baku' },
+          { left: 'praktek', right: 'bentuk tidak baku' },
+          { left: 'karena', right: 'konjungsi sebab' },
+          { left: 'titik', right: 'akhir kalimat berita' },
+        ],
+        'Praktik adalah bentuk baku, praktek tidak baku, karena menandai sebab, dan titik mengakhiri kalimat berita.',
+        'Gunakan KBBI sebagai acuan bentuk baku.',
       ),
     ],
   },

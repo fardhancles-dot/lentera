@@ -25,6 +25,13 @@ export type SeedQuestionType =
   | 'conversation'
   | 'story';
 
+export interface SeedSceneChoice {
+  /** Response the player can pick while the story is playing. */
+  label: string;
+  /** NPC or narrator reaction shown after the choice. */
+  reply: string;
+}
+
 export interface SeedSceneScreen {
   /** Character name shown above the bubble. */
   speaker?: string;
@@ -32,17 +39,23 @@ export interface SeedSceneScreen {
   line: string;
   /** Optional narration rendered instead of a speech bubble. */
   narration?: string;
+  /** Ungraded response choices shown after this story screen. */
+  choices?: SeedSceneChoice[];
 }
 
 /**
  * Dialogue script and speech data for listening, conversation, and story
  * questions. It never contains the graded answer; grading always uses
- * question_options or question_answers.
+ * question_options or question_answers. `responses` is aligned with the option
+ * order, so the NPC reaction never reveals which option the database accepts.
  */
 export interface SeedScene {
+  /** BCP-47 language used by browser speech synthesis and recognition. */
+  lang?: string;
   speech?: string;
   npc?: { name: string; role?: string };
   screens?: SeedSceneScreen[];
+  responses?: string[];
 }
 
 export type SeedLessonKind = 'lesson' | 'practice' | 'review' | 'challenge' | 'legendary';

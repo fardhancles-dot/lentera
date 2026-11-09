@@ -3,6 +3,12 @@
 Laporan ini dibuat dengan membaca kode aktual, bukan hanya nama file atau catatan lama.
 Semua angka diambil dari migration seed dan eksekusi test pada tanggal tersebut.
 
+> **Catatan status (10 November 2026):** laporan ini adalah snapshot sebelum Tahap 4
+> ditutup. Untuk status final Tahap 4, bukti pengujian, dan batasan terbaru, lihat
+> **[STAGE4_COMPLETION.md](STAGE4_COMPLETION.md)**. Tahap 5 (Hearts, Streak, level, wallet)
+> sudah ditambahkan setelah snapshot ini; lihat bagian Sesi 9 di
+> **[PROJECT_HISTORY.md](PROJECT_HISTORY.md)** dan ringkasan di README/DATABASE.
+
 > **Pembaruan sesi 6 — Tahap 4 hampir tuntas:** 19 dari 20 mini-game punya mekanik nyata.
 > Lima tipe soal baru ditambahkan (Listening, Speaking, Translation, Conversation, Story)
 > beserta scene dialog di database, dan tujuh mode latihan berjalan lewat sesi server

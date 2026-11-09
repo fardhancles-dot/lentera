@@ -4,10 +4,11 @@ import { kikoMarkup, lampMarkup } from '../components/brandArt';
 import { icon, type IconName } from '../components/icons';
 import { showToast } from '../components/toast';
 import { brand } from '../config/brand';
+import { playerStore, type PlayerStoreState } from '../stores/player.store';
 import { sessionStore } from '../stores/session.store';
-import { el } from '../utils/dom';
+import { el, formatNumber } from '../utils/dom';
 
-export type NavKey = 'home' | 'learn' | 'practice' | 'profile' | 'settings';
+export type NavKey = 'home' | 'learn' | 'practice' | 'wallet' | 'profile' | 'settings';
 
 interface NavItem {
   key: NavKey;
@@ -21,6 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'home', href: '/app', label: 'Beranda', shortLabel: 'Beranda', icon: 'home' },
   { key: 'learn', href: '/learn', label: 'Belajar', shortLabel: 'Belajar', icon: 'map' },
   { key: 'practice', href: '/practice', label: 'Latihan', shortLabel: 'Latihan', icon: 'target' },
+  { key: 'wallet', href: '/wallet', label: 'Wallet', shortLabel: 'Wallet', icon: 'bag' },
   { key: 'profile', href: '/profile', label: 'Profil', shortLabel: 'Profil', icon: 'user' },
   { key: 'settings', href: '/settings', label: 'Pengaturan', shortLabel: 'Atur', icon: 'settings' },
 ];
@@ -114,6 +116,57 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
     ]),
   ]);
 
+  const coinValue = el('span', { class: 'resource-chip__value', text: '—' });
+  const heartsValue = el('span', { class: 'resource-chip__value', text: '—' });
+  const streakValue = el('span', { class: 'resource-chip__value', text: '—' });
+  const heartsChip = el(
+    'a',
+    {
+      class: 'resource-chip resource-chip--hearts',
+      attrs: { href: '/wallet', 'aria-label': 'Buka Hearts di wallet', title: 'Hearts' },
+    },
+    [icon('heart', 16), heartsValue],
+  );
+
+  const resourceBar = el('div', { class: 'resource-bar', attrs: { 'aria-label': 'Ringkasan progres' } }, [
+    el(
+      'a',
+      {
+        class: 'resource-chip resource-chip--coin',
+        attrs: { href: '/wallet', 'aria-label': 'Buka Koin di wallet', title: 'Koin' },
+      },
+      [icon('coin', 16), coinValue],
+    ),
+    heartsChip,
+    el(
+      'a',
+      {
+        class: 'resource-chip resource-chip--streak',
+        attrs: { href: '/wallet', 'aria-label': 'Buka Streak di wallet', title: 'Streak harian' },
+      },
+      [icon('flame', 16), streakValue],
+    ),
+  ]);
+
+  const paintResources = (state: PlayerStoreState) => {
+    const data = state.data;
+    coinValue.textContent = data ? formatNumber(data.coins) : '—';
+    heartsValue.textContent = data ? `${data.hearts.current}/${data.hearts.max}` : '—';
+    streakValue.textContent = data ? String(data.streak.current) : '—';
+    heartsChip.classList.toggle('resource-chip--low', Boolean(data && data.hearts.current <= 1));
+    heartsChip.setAttribute(
+      'title',
+      data
+        ? `Hearts ${data.hearts.current}/${data.hearts.max}`
+        : 'Hearts',
+    );
+  };
+
+  paintResources(playerStore.getState());
+  const unsubscribePlayer = playerStore.subscribe(paintResources);
+  ctx.onCleanup(unsubscribePlayer);
+  void playerStore.load();
+
   const topbar = el('header', { class: 'topbar' }, [
     el('a', { class: 'topbar__mobile-brand', attrs: { href: '/app' } }, [
       el('span', { class: 'brand__mark', html: lampMarkup(24) }),
@@ -121,6 +174,7 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
     ]),
     el('span', { class: 'topbar__title', text: options.title }),
     el('div', { class: 'topbar__actions' }, [
+      resourceBar,
       el(
         'a',
         {

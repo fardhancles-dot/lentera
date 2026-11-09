@@ -11,8 +11,9 @@ import {
   type LessonStart,
   type LessonSummary,
 } from '../services/lesson.service';
+import { playerStore, type PlayerStoreState } from '../stores/player.store';
 import { sessionStore } from '../stores/session.store';
-import { el } from '../utils/dom';
+import { el, formatNumber } from '../utils/dom';
 
 const meta = { title: 'Lesson' };
 
@@ -29,9 +30,16 @@ function errorView(
   body: string,
   backHref: string,
   onRetry?: () => void,
+  extraAction?: { href: string; label: string; icon: 'heart' | 'bag' },
 ): HTMLElement {
   const actions = el('div', { class: 'state-card__actions' }, [
-    el('a', { class: 'btn', attrs: { href: backHref } }, [
+    extraAction
+      ? el('a', { class: 'btn', attrs: { href: extraAction.href } }, [
+          icon(extraAction.icon, 18),
+          extraAction.label,
+        ])
+      : null,
+    el('a', { class: 'btn btn--secondary', attrs: { href: backHref } }, [
       icon('arrow-left', 18),
       'Kembali ke peta',
     ]),
@@ -70,10 +78,35 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
   let answeredCount = 0;
   let busy = false;
   let summary: LessonSummary | null = null;
+  let heartsSlot: HTMLElement | null = null;
 
+  const paintHearts = (state: PlayerStoreState) => {
+    if (!heartsSlot) return;
+    const enabled = start?.lesson.heartsEnabled ?? false;
+    const data = state.data;
+    heartsSlot.hidden = !enabled;
+    if (!enabled) return;
+
+    heartsSlot.classList.toggle('play-hearts--low', Boolean(data && data.hearts.current <= 1));
+    heartsSlot.replaceChildren(
+      icon('heart', 17),
+      el('span', {
+        text: data ? `${data.hearts.current}/${data.hearts.max}` : '—',
+      }),
+    );
+    heartsSlot.setAttribute(
+      'title',
+      data
+        ? `Hearts ${data.hearts.current}/${data.hearts.max}. Buka wallet untuk mengisi.`
+        : 'Hearts',
+    );
+  };
+
+  ctx.onCleanup(playerStore.subscribe(paintHearts));
   ctx.onCleanup(() => {
     disposed = true;
   });
+  void playerStore.load();
 
   const host = el('div', { class: 'play-loading' }, [
     el('span', { class: 'spinner' }),
@@ -81,9 +114,14 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
   ]);
   ctx.outlet.append(host);
 
-  const fail = (title: string, body: string, onRetry?: () => void) => {
+  const fail = (
+    title: string,
+    body: string,
+    onRetry?: () => void,
+    extraAction?: { href: string; label: string; icon: 'heart' | 'bag' },
+  ) => {
     if (disposed) return;
-    ctx.outlet.replaceChildren(errorView(title, body, backHref, onRetry));
+    ctx.outlet.replaceChildren(errorView(title, body, backHref, onRetry, extraAction));
   };
 
   const load = () => {
@@ -124,10 +162,16 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
         renderGame();
       } catch (error) {
         if (disposed) return;
+        const message =
+          error instanceof Error ? error.message : 'Terjadi kesalahan saat memuat lesson.';
+        const heartsEmpty = /hearts/i.test(message);
         fail(
-          'Lesson gagal dimuat',
-          error instanceof Error ? error.message : 'Terjadi kesalahan saat memuat lesson.',
-          load,
+          heartsEmpty ? 'Hearts habis' : 'Lesson gagal dimuat',
+          heartsEmpty
+            ? 'Isi Hearts di wallet, atau tunggu pemulihan otomatis. Lesson yang sedang berjalan tetap bisa diselesaikan.'
+            : message,
+          heartsEmpty ? undefined : load,
+          heartsEmpty ? { href: '/wallet', label: 'Isi Hearts', icon: 'heart' } : undefined,
         );
       }
     })();
@@ -177,13 +221,20 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
           el('p', { class: 'play-top__eyebrow', text: start.lesson.title }),
           progress,
         ]),
-        counter,
+        el('div', { class: 'play-top__resources' }, [
+          (heartsSlot = el('a', {
+            class: 'play-hearts',
+            attrs: { href: '/wallet', 'aria-label': 'Buka Hearts di wallet' },
+          })),
+          counter,
+        ]),
       ]),
       el('main', { class: 'play-main' }, [body, live]),
       footer,
     ]);
 
     ctx.outlet.replaceChildren(shell);
+    paintHearts(playerStore.getState());
     setProgress(progressBar, progress, answeredCount, start.questions.length);
 
     const question = start.questions[index]!;
@@ -278,6 +329,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
           busy = false;
           answeredCount = result.answeredCount;
           setProgress(progressBar, progress, answeredCount, start!.questions.length);
+          if (!result.isCorrect) void playerStore.load(true);
           showFeedback(result, view!, live, footer, progressBar, progress);
         } catch (error) {
           if (disposed) return;
@@ -405,6 +457,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
 
     try {
       summary = await lessonService.complete(start.attemptId);
+      await playerStore.load(true);
       if (disposed) return;
       renderResult();
     } catch (error) {
@@ -456,6 +509,10 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
         : summary.xpAwarded === 0
           ? 'Lesson ini sudah pernah diselesaikan sebelumnya, jadi hadiah tambahan tidak diberikan.'
           : null;
+    const player = playerStore.getState().data;
+    const progressNote = player
+      ? `Level ${player.level.level} · ${formatNumber(player.totalXp)} XP · Streak ${player.streak.current} hari`
+      : null;
 
     const retry = el('button', { class: 'btn btn--secondary', attrs: { type: 'button' } }, [
       icon('refresh', 18),
@@ -486,6 +543,9 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
           ),
         ]),
         rewards,
+        progressNote
+          ? el('p', { class: 'play-result__progress', text: progressNote })
+          : null,
         note ? el('p', { class: 'play-result__note', text: note }) : null,
         el('div', { class: 'play-result__actions' }, [
           el('a', { class: 'btn btn--block', attrs: { href: pathHref } }, [

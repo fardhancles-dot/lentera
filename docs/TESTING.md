@@ -1,19 +1,21 @@
 # Testing
 
-## Bukti eksekusi terakhir — 9 November 2026
+## Bukti eksekusi terakhir — 10 November 2026
 
 | Pemeriksaan | Perintah | Hasil |
 | --- | --- | --- |
 | TypeScript strict | `npm run typecheck` | Lulus, 0 error. |
-| Unit test | `npm test` | 34 test lulus (3 file). |
-| Migration + RPC + RLS + practice | `npm run test:sql` | 106 smoke check lulus di PGlite. |
-| Build produksi | `npm run build` | Lulus; Phaser menjadi chunk terpisah. |
+| Unit test | `npm test` | **49 test lulus (5 file)**. |
+| Migration + RPC + RLS + practice + Friends Quest + progression | `npm run test:sql` | **167 smoke check lulus** di PGlite. |
+| Build produksi | `npm run build` | Lulus; Phaser, Friends Quest, dan wallet menjadi chunk terpisah. |
 | Browser smoke | Chrome headless | Landing, auth, guard route, 404 (sesi 1). |
-| Supabase nyata | `npm run verify:supabase` | **29 check lulus** (lesson 20 soal, 4 scene, Practice Hub, XP idempoten, RLS) di project `xvrnmxbrxhtzzavmrlvy`. |
+| Supabase nyata | `npm run verify:supabase` | **43 check lulus** (lesson 20 soal, 4 scene, Practice Hub, Friends Quest, progression, XP idempoten, RLS) di project `xvrnmxbrxhtzzavmrlvy`. |
 | Playwright/E2E | — | Belum ada. |
 
 PGlite membuktikan SQL dan RPC konsisten. Verifikasi Supabase nyata kini juga sudah
 dijalankan lewat Auth + PostgREST, tetapi belum mencakup UI browser, email, dan redirect.
+Sepuluh migration (termasuk progression/economy) dan seed 231 soal sudah diterapkan ke
+project nyata.
 
 ## Verifikasi API Supabase nyata
 
@@ -32,18 +34,23 @@ npm run verify:supabase
 
 Skrip `scripts/verify-supabase.mjs` login dengan akun uji, memeriksa role, mencari lesson
 `greetings-vocabulary`, memulai attempt, memeriksa payload (20 soal, tanpa kunci/relasi
-atau scene yang membocorkan jawaban),
-menjawab seluruh soal dengan kunci uji, menyelesaikan lesson, dan memastikan
-`question_pairs` tidak bisa dibaca tanpa sesi. Ini menguji Auth + PostgREST + RPC nyata,
-**bukan** tampilan browser; uji klik tetap harus dilakukan terpisah.
+atau scene yang membocorkan jawaban), menjawab seluruh soal dengan kunci uji,
+menyelesaikan lesson, lalu membuat Friends Quest. Skrip menjalankan beberapa sesi Match
+Madness sampai target XP quest tercapai, memastikan kontribusi dihitung server, mengklaim
+hadiah, dan memastikan klaim kedua tidak menambah hadiah. Terakhir skrip memastikan
+`question_pairs`, `practice_sessions`, dan `user_hearts` tidak bisa dibaca tanpa sesi. Skrip
+juga memanggil `get_player_state`, `get_my_wallet`, membaca 30 baris `player_levels`, menguji
+refill saat Hearts penuh tanpa memotong Koin, dan memastikan pemain tidak dapat mengubah
+Hearts langsung. Ini menguji Auth + PostgREST + RPC nyata, **bukan** tampilan browser; uji
+klik tetap harus dilakukan terpisah.
 
 ## Cakupan `npm run test:sql`
 
 `scripts/test-sql.mjs` membuat database PostgreSQL in-memory, lalu:
 
-1. Menjalankan kedelapan migration berurutan, termasuk `question_scenes` dan
-   `practice_engine`.
-2. Memeriksa 8 mapel aktif, 57 lesson, 225 soal, 12 tipe soal, 15 pasangan matching,
+1. Menjalankan kesepuluh migration berurutan, termasuk `question_scenes`,
+   `practice_engine`, `friends_quest`, dan `progression_economy`.
+2. Memeriksa 8 mapel aktif, 57 lesson, 231 soal, 12 tipe soal, 19 pasangan matching,
    3 media gambar, dan 6 jenis node.
 3. Memeriksa 7 node practice, 7 checkpoint, dan 7 legendary; semuanya punya lesson
    dengan minimal 3 soal aktif.
@@ -87,6 +94,28 @@ menjawab seluruh soal dengan kunci uji, menyelesaikan lesson, dan memastikan
     `mistakes` menemukan jawaban salah sebelumnya.
 28. Memastikan RLS menyembunyikan sesi latihan pemain lain dan pemain tidak dapat
     menulis `practice_sessions` langsung.
+29. Menguji Fill in the Blank dua rumpang: jawaban berurutan diterima, urutan terbalik
+    ditolak.
+30. Memeriksa scene Conversation menyimpan reaksi NPC per opsi, Story menyimpan pilihan
+    respons, dan locale listening Inggris `en-US` serta Indonesia `id-ID`.
+31. Memeriksa lima soal Stage 4 Bahasa Indonesia masuk seed, termasuk conversation dengan
+    empat reaksi dan story dengan tiga pilihan.
+32. Friends Quest: kode undangan dibuat, pembuat menjadi anggota pertama, non-anggota
+    tidak dapat melihat quest, anggota kedua bergabung dengan kode, XP practice dan lesson
+    kedua anggota dijumlahkan, target 30 XP menyelesaikan quest, klaim memberi 25 XP + 10
+    Koin, klaim kedua ditolak, ledger hadiah hanya satu baris, dan non-anggota ditolak.
+33. Memastikan pemain biasa bukan staff dan payload pratinjau mini-game tetap tidak
+    membocorkan kunci.
+34. Progression: pemain baru mulai dengan 5 Hearts, Streak 0, dan Koin 0; 100 XP mencapai
+    level 2 berjudul “Penjelajah”.
+35. Hearts: 0 Hearts menolak `start_lesson` (`hearts_empty`); jawaban salah mengurangi satu
+    Heart; duplicate answer dan jawaban benar tidak mengurangi lagi.
+36. Streak dan level: XP ledger 100 menaikkan level dan membuat Streak 1; XP practice di hari
+    yang sama tidak menggandakan Streak; XP `friend_quest_reward` masuk total XP tetapi tidak
+    memperpanjang Streak; persentase level memakai jarak ambang berikutnya.
+37. Wallet: refill tanpa Koin cukup ditolak, Hearts tidak berubah; refill 3 Hearts memotong
+    30 Koin, menulis transaksi `heart_refill`, mengembalikan riwayat XP; refill saat penuh
+    tidak memotong Koin; RLS hanya membuka Hearts/Streak sendiri dan menolak update langsung.
 
 ## Unit test Vitest
 
@@ -96,6 +125,10 @@ menjawab seluruh soal dengan kunci uji, menyelesaikan lesson, dan memastikan
   kebocoran pesan backend mentah.
 - `tests/practice.test.ts` — format countdown latihan, batas bawah nol, dan multiplier
   combo untuk tampilan. Skor sebenarnya tetap dihitung server.
+- `tests/minigames.test.ts` — parsing prompt Fill in the Blank tanpa rumpang, satu, dua,
+  dan tiga rumpang; penggabungan jawaban berurutan; penolakan jawaban kosong.
+- `tests/player.test.ts` — parsing state/wallet dari RPC, clamp Hearts/persentase, fallback
+  payload kosong, filter transaksi rusak, dan format countdown refill.
 
 ## Yang belum dapat diuji
 
@@ -109,7 +142,10 @@ menjawab seluruh soal dengan kunci uji, menyelesaikan lesson, dan memastikan
 - Audio memakai text-to-speech browser; belum ada pengujian suara nyata di perangkat.
 - Speaking belum diuji dengan mikrofon sungguhan; Web Speech Recognition berbeda tiap
   browser.
-- Friends Quest belum ada sehingga tidak dapat diuji.
+- Friends Quest sudah diuji lewat PGlite dan API Supabase, tetapi UI dua akun nyata
+  (buat quest, salin kode, bergabung, klaim) belum diuji di browser.
+- Wallet, HUD Hearts di lesson, kartu progres beranda/profil, dan countdown refill belum
+  diuji di browser dengan akun nyata; RPC dan RLS-nya sudah diuji.
 - Belum ada PWA.
 
 ## Checklist manual setelah Supabase aktif
@@ -153,6 +189,16 @@ menjawab seluruh soal dengan kunci uji, menyelesaikan lesson, dan memastikan
 - [ ] Gagal (<60%) tidak memberi hadiah tetapi progres attempt tercatat.
 - [ ] Refresh di tengah lesson tidak menggandakan reward.
 
+### Friends Quest
+
+- [ ] Akun A membuat quest; kode 6 karakter muncul dan dapat disalin.
+- [ ] Akun B membuka `/friends-quest`, memasukkan kode, dan melihat progres yang sama.
+- [ ] XP lesson/latihan akun A dan B menambah kontribusi masing-masing di server.
+- [ ] Quest berubah selesai saat total mencapai target.
+- [ ] Tombol klaim memberi XP/Koin satu kali; klik kedua menolak klaim ganda.
+- [ ] Akun C yang bukan anggota tidak melihat quest dan tidak dapat mengklaim.
+- [ ] Pemain dengan 3 quest aktif mendapat pesan batas, bukan error mentah.
+
 ### Latihan (Practice Hub)
 
 - [ ] `/practice` menampilkan tujuh mode dan selector mata pelajaran.
@@ -169,9 +215,21 @@ menjawab seluruh soal dengan kunci uji, menyelesaikan lesson, dan memastikan
 - [ ] Speaking: izin mikrofon, transkrip muncul, alternatif menulis saat tidak didukung.
 - [ ] Conversation/Story: bubble dan audio tampil, pilihan respons dinilai.
 
+### Hearts, Streak, level, dan wallet
+
+- [ ] Topbar, beranda, dan profil menampilkan Koin/Hearts/Streak yang sama dengan `/wallet`.
+- [ ] Lesson dengan Hearts 0 menampilkan tautan “Isi Hearts” ke `/wallet`.
+- [ ] Jawaban salah mengurangi satu Heart; jawaban ulang soal yang sama tidak mengurangi.
+- [ ] Refill 3 Hearts memotong 30 Koin dan menambah riwayat transaksi.
+- [ ] Refill saat Hearts penuh tidak memotong Koin.
+- [ ] Refill tanpa Koin cukup menampilkan pesan, bukan error mentah.
+- [ ] Streak bertambah setelah lesson/latihan di hari baru; hadiah quest tidak menambah.
+- [ ] Naik level setelah total XP melewati ambang 100 XP.
+- [ ] Countdown Heart berjalan dan menyegarkan state setelah habis.
+
 ### RLS
 
-- [ ] Akun A tidak dapat `select` settings/attempt/wallet milik B.
+- [ ] Akun A tidak dapat `select` settings/attempt/wallet/Hearts/Streak milik B.
 - [ ] Akun A tidak dapat `update` profil B meski tahu UUID B.
 - [ ] Akun A tidak dapat menulis `user_roles`, `user_wallets`, atau tabel soal.
 - [ ] `complete_lesson_attempt` milik pengguna lain ditolak.

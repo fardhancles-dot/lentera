@@ -9,7 +9,6 @@ export const authRepository = {
       password,
       options: {
         data: { display_name: displayName },
-        emailRedirectTo: `${appOrigin}/login?verified=1`,
       },
     });
   },
@@ -41,15 +40,12 @@ export const authRepository = {
     });
   },
 
-  updatePassword(password: string) {
-    return requireSupabase().auth.updateUser({ password });
+  /** Validates the 6-digit recovery code Supabase emails for password resets. */
+  verifyRecoveryOtp(email: string, token: string) {
+    return requireSupabase().auth.verifyOtp({ email, token, type: 'recovery' });
   },
 
-  resendConfirmation(email: string) {
-    return requireSupabase().auth.resend({
-      type: 'signup',
-      email,
-      options: { emailRedirectTo: `${appOrigin}/login?verified=1` },
-    });
+  updatePassword(password: string) {
+    return requireSupabase().auth.updateUser({ password });
   },
 };

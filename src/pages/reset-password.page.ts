@@ -1,5 +1,5 @@
 import type { PageModule } from '../app/router';
-import { createButton, createField, createPasswordMeter } from '../components/forms';
+import { bindPasswordLengthHint, createButton, createField } from '../components/forms';
 import { icon } from '../components/icons';
 import { showToast } from '../components/toast';
 import { renderAuthLayout } from '../layouts/authLayout';
@@ -35,14 +35,14 @@ async function render(ctx: Parameters<PageModule['render']>[0]): Promise<void> {
     card.replaceChildren(
       el('div', { class: 'auth-success' }, [
         el('span', { class: 'auth-success__icon' }, [icon('key', 30)]),
-        el('h1', { class: 'auth-card__title', text: 'Tautan tidak valid' }),
+        el('h1', { class: 'auth-card__title', text: 'Sesi reset tidak valid' }),
         el('p', {
           class: 'auth-card__subtitle',
-          text: 'Tautan reset sudah kedaluwarsa atau sudah dipakai. Minta tautan baru untuk melanjutkan.',
+          text: 'Kode atau tautan reset sudah kedaluwarsa atau sudah dipakai. Minta kode baru untuk melanjutkan.',
         }),
         el('div', { style: { marginTop: '1rem', width: '100%' } }, [
           el('a', { class: 'btn btn--block', attrs: { href: '/forgot-password' } }, [
-            'Minta tautan baru',
+            'Minta kode baru',
           ]),
         ]),
         el('a', { class: 'small', attrs: { href: '/login' } }, ['Kembali ke halaman masuk']),
@@ -55,16 +55,13 @@ async function render(ctx: Parameters<PageModule['render']>[0]): Promise<void> {
       label: 'Password baru',
       name: 'password',
       type: 'password',
-      placeholder: 'Minimal 8 karakter',
+      placeholder: 'Minimal 6 karakter',
       autocomplete: 'new-password',
-      hint: 'Gunakan minimal 8 karakter berisi huruf dan angka.',
+      hint: 'Password minimal 6 karakter.',
       withPasswordToggle: true,
       required: true,
     });
-
-    const meter = createPasswordMeter();
-    passwordField.root.append(meter.root);
-    passwordField.input.addEventListener('input', () => meter.update(passwordField.input.value));
+    bindPasswordLengthHint(passwordField);
 
     const confirmField = createField({
       label: 'Ulangi password baru',
@@ -129,17 +126,31 @@ async function render(ctx: Parameters<PageModule['render']>[0]): Promise<void> {
             ? '/app'
             : '/onboarding';
 
-        showToast('Password berhasil diperbarui.', 'success');
+        showToast('Password berhasil diubah.', 'success');
+
+        const signInAgain = el('button', {
+          class: 'btn btn--ghost btn--block',
+          attrs: { type: 'button' },
+          text: 'Masuk dengan password baru',
+        });
+        signInAgain.addEventListener('click', () => {
+          void (async () => {
+            await sessionStore.signOut();
+            ctx.navigate('/login?reset=1', { replace: true });
+          })();
+        });
+
         card.replaceChildren(
           el('div', { class: 'auth-success' }, [
             el('span', { class: 'auth-success__icon' }, [icon('check', 32)]),
-            el('h1', { class: 'auth-card__title', text: 'Password tersimpan' }),
+            el('h1', { class: 'auth-card__title', text: 'Password berhasil diubah' }),
             el('p', {
               class: 'auth-card__subtitle',
-              text: 'Kamu bisa melanjutkan belajar dengan password baru.',
+              text: 'Password baru sudah tersimpan. Kamu bisa masuk kembali dengan password tersebut.',
             }),
-            el('div', { style: { marginTop: '1rem', width: '100%' } }, [
+            el('div', { style: { marginTop: '1rem', width: '100%', display: 'grid', gap: '0.5rem' } }, [
               el('a', { class: 'btn btn--block', attrs: { href: target } }, ['Lanjutkan']),
+              signInAgain,
             ]),
           ]),
         );

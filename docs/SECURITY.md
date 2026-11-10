@@ -82,7 +82,7 @@ Ini harus diselesaikan sebelum fitur terkait dinyatakan selesai:
 | Privasi profil | Profil dasar (username, nama, avatar, bio) publik; statistik mengikuti `private`/`friends`/`public` lewat RPC | Email tidak pernah dibagikan; audit ulang bila menambah kolom profil baru. |
 | CSRF | SPA + Bearer token Supabase, tanpa cookie sesi aplikasi | Tidak ada form server-rendered. Tinjau ulang jika cookie dipakai. |
 | CSP | Belum diatur | Tambahkan header CSP di Vercel setelah daftar origin final. |
-| Email provider | Mengandalkan email bawaan Supabase | Konfigurasi SMTP saat produksi. |
+| Email provider | Brevo SMTP dipakai untuk email reset password | Kunci SMTP hanya disimpan di konfigurasi Supabase; rotasi bila bocor. Pembatasan IP SMTP dinonaktifkan karena server Supabase memakai IP dinamis. |
 | PWA/offline write | Belum ada | Antrian attempt lokal + validasi server saat sync. |
 
 ## Operasional

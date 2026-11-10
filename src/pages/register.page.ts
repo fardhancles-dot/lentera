@@ -1,5 +1,5 @@
 import type { PageModule } from '../app/router';
-import { createButton, createField, createPasswordMeter } from '../components/forms';
+import { bindPasswordLengthHint, createButton, createField } from '../components/forms';
 import { icon } from '../components/icons';
 import { showToast } from '../components/toast';
 import { appEnv } from '../config/env';
@@ -34,16 +34,13 @@ async function render(ctx: Parameters<PageModule['render']>[0]): Promise<void> {
     label: 'Password',
     name: 'password',
     type: 'password',
-    placeholder: 'Minimal 8 karakter',
+    placeholder: 'Minimal 6 karakter',
     autocomplete: 'new-password',
-    hint: 'Gunakan minimal 8 karakter berisi huruf dan angka.',
+    hint: 'Password minimal 6 karakter.',
     withPasswordToggle: true,
     required: true,
   });
-
-  const meter = createPasswordMeter();
-  passwordField.root.append(meter.root);
-  passwordField.input.addEventListener('input', () => meter.update(passwordField.input.value));
+  bindPasswordLengthHint(passwordField);
 
   const confirmField = createField({
     label: 'Ulangi password',
@@ -136,7 +133,19 @@ async function render(ctx: Parameters<PageModule['render']>[0]): Promise<void> {
       }
 
       if (result.data.needsEmailConfirmation) {
-        showEmailConfirmation(card, emailField.value().trim());
+        submit.setLoading(false);
+        bannerSlot.append(
+          el('div', { class: 'banner banner--error', attrs: { role: 'alert' } }, [
+            icon('alert', 20),
+            el('div', {}, [
+              el('p', { class: 'banner__title', text: 'Konfirmasi email masih aktif' }),
+              el('p', {
+                class: 'banner__body',
+                text: 'Akun dibuat, tetapi project Supabase masih meminta verifikasi email. Matikan opsi Confirm email di Dashboard Supabase agar pemain langsung bisa masuk.',
+              }),
+            ]),
+          ]),
+        );
         return;
       }
 
@@ -159,37 +168,6 @@ async function render(ctx: Parameters<PageModule['render']>[0]): Promise<void> {
   });
 
   await renderAuthLayout(ctx, card);
-}
-
-function showEmailConfirmation(card: HTMLElement, email: string): void {
-  const resend = createButton({
-    label: 'Kirim ulang email',
-    variant: 'secondary',
-    block: true,
-  });
-
-  const panel = el('div', { class: 'auth-success' }, [
-    el('span', { class: 'auth-success__icon' }, [icon('mail', 30)]),
-    el('h1', { class: 'auth-card__title', text: 'Cek kotak masukmu' }),
-    el('p', {
-      class: 'auth-card__subtitle',
-      text: `Kami mengirim tautan verifikasi ke ${email}. Buka tautan tersebut, lalu masuk ke akunmu.`,
-    }),
-    el('div', { style: { width: '100%', marginTop: '1rem' } }, [resend.button]),
-    el('a', { class: 'small', attrs: { href: '/login' } }, ['Kembali ke halaman masuk']),
-  ]);
-
-  resend.button.addEventListener('click', () => {
-    void (async () => {
-      resend.setLoading(true);
-      const result = await authService.resendConfirmation(email);
-      resend.setLoading(false);
-      if (result.ok) showToast('Email verifikasi dikirim ulang.', 'success');
-      else showToast(result.message, 'error');
-    })();
-  });
-
-  card.replaceChildren(panel);
 }
 
 export { meta, render };

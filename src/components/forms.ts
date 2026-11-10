@@ -1,5 +1,5 @@
 import { iconMarkup } from './icons';
-import { passwordStrength } from '../utils/validation';
+import { MIN_PASSWORD_LENGTH } from '../utils/validation';
 
 export interface FieldOptions {
   label: string;
@@ -112,6 +112,29 @@ export function createField(options: FieldOptions): FieldHandle {
   return { root, input, setError, value: () => input.value };
 }
 
+/**
+ * Keeps the password hint in sync with the only rule we enforce: length.
+ * Shows the green valid state as soon as the minimum is reached.
+ */
+export function bindPasswordLengthHint(
+  field: FieldHandle,
+  minLength = MIN_PASSWORD_LENGTH,
+): void {
+  const hint = field.root.querySelector<HTMLParagraphElement>('.field__hint');
+  if (!hint) return;
+
+  const update = () => {
+    const valid = field.input.value.length >= minLength;
+    hint.dataset.valid = String(valid);
+    hint.textContent = valid
+      ? `Panjang password sudah memenuhi syarat (minimal ${minLength} karakter).`
+      : `Password minimal ${minLength} karakter.`;
+  };
+
+  field.input.addEventListener('input', update);
+  update();
+}
+
 export interface ButtonOptions {
   label: string;
   type?: 'button' | 'submit';
@@ -171,31 +194,4 @@ export function createButton(options: ButtonOptions): ButtonHandle {
   };
 
   return { button, setLoading };
-}
-
-export interface PasswordMeterHandle {
-  root: HTMLDivElement;
-  update: (password: string) => void;
-}
-
-export function createPasswordMeter(): PasswordMeterHandle {
-  const root = document.createElement('div');
-  root.className = 'password-meter';
-  root.setAttribute('aria-hidden', 'true');
-  const bars = [0, 1, 2].map(() => {
-    const bar = document.createElement('span');
-    bar.className = 'password-meter__bar';
-    root.append(bar);
-    return bar;
-  });
-
-  return {
-    root,
-    update: (password: string) => {
-      const level = passwordStrength(password);
-      bars.forEach((bar, index) => {
-        bar.dataset.level = String(index < level ? level : 0);
-      });
-    },
-  };
 }

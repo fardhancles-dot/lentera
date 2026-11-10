@@ -113,12 +113,12 @@ async function render(ctx: Parameters<PageModule['render']>[0]): Promise<void> {
           ]),
         ])
       : null,
-    ctx.query.get('verified') === '1'
+    ctx.query.get('reset') === '1'
       ? el('div', { style: { marginTop: '1rem' } }, [
           notice(
             'info',
-            'Email berhasil diverifikasi',
-            'Akunmu sudah aktif. Silakan masuk untuk melanjutkan.',
+            'Password berhasil diubah',
+            'Masuk kembali menggunakan password baru kamu.',
             'check',
           ),
         ])

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
-  passwordStrength,
   suggestUsername,
   validateBio,
   validateDailyGoal,
   validateDisplayName,
   validateEmail,
+  validateOtpCode,
   validatePassword,
   validatePasswordConfirmation,
   validateTimezone,
@@ -28,25 +28,38 @@ describe('validateEmail', () => {
 });
 
 describe('validatePassword', () => {
-  it('accepts a password with letters and numbers', () => {
-    expect(validatePassword('belajar123')).toEqual({ ok: true, value: 'belajar123' });
-  });
+  it.each(['abcdef', '123456', 'dhan123', 'password', 'abc123'])(
+    'accepts %j with only a 6-character minimum',
+    (input) => {
+      expect(validatePassword(input)).toEqual({ ok: true, value: input });
+    },
+  );
 
-  it('rejects short, letter-only, number-only, and overlong values', () => {
-    expect(validatePassword('a1').ok).toBe(false);
-    expect(validatePassword('hanyaHuruf').ok).toBe(false);
-    expect(validatePassword('12345678').ok).toBe(false);
-    expect(validatePassword(`${'a1'.repeat(40)}`).ok).toBe(false);
+  it.each(['abc12', '12345', '', 'a'.repeat(73)])(
+    'rejects %j',
+    (input) => {
+      expect(validatePassword(input).ok).toBe(false);
+    },
+  );
+
+  it('does not require letters, digits, capitals, or symbols', () => {
+    expect(validatePassword('abcdef').ok).toBe(true);
+    expect(validatePassword('123456').ok).toBe(true);
+    expect(validatePassword('!!!!!!').ok).toBe(true);
   });
 });
 
-describe('passwordStrength', () => {
-  it('reports empty, weak, fair, and strong values', () => {
-    expect(passwordStrength('')).toBe(0);
-    expect(passwordStrength('abc')).toBe(1);
-    expect(passwordStrength('belajar123')).toBe(2);
-    expect(passwordStrength('Belajar123!panjang')).toBe(3);
+describe('validateOtpCode', () => {
+  it('accepts exactly six digits', () => {
+    expect(validateOtpCode(' 483921 ')).toEqual({ ok: true, value: '483921' });
   });
+
+  it.each(['', '12345', '1234567', 'abcdef', '12 34 56'])(
+    'rejects %j',
+    (input) => {
+      expect(validateOtpCode(input).ok).toBe(false);
+    },
+  );
 });
 
 describe('validatePasswordConfirmation', () => {

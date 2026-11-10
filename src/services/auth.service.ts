@@ -1,9 +1,9 @@
 import { authRepository } from '../repositories/auth.repository';
 import type { ServiceResult } from '../types/auth';
 import {
-  normalizeEmail,
   validateDisplayName,
   validateEmail,
+  validateOtpCode,
   validatePassword,
   validatePasswordConfirmation,
 } from '../utils/validation';
@@ -110,6 +110,33 @@ export const authService = {
     }
   },
 
+  /**
+   * Exchanges the emailed 6-digit recovery code for a short-lived recovery
+   * session. Supabase verifies the code server-side; the app never sees it.
+   */
+  async verifyRecoveryOtp(email: string, token: string): Promise<ServiceResult<null>> {
+    const validEmail = validateEmail(email);
+    if (!validEmail.ok) return { ok: false, message: validEmail.message, field: 'email' };
+
+    const validToken = validateOtpCode(token);
+    if (!validToken.ok) return { ok: false, message: validToken.message, field: 'password' };
+
+    try {
+      const { data, error } = await authRepository.verifyRecoveryOtp(
+        validEmail.value,
+        validToken.value,
+      );
+      if (error) return { ok: false, message: mapAuthError(error) };
+      if (!data.session) {
+        return { ok: false, message: 'Kode tidak dapat diverifikasi. Minta kode baru.' };
+      }
+      return { ok: true, data: null };
+    } catch (error) {
+      console.error('[auth] verify recovery code failed', error);
+      return { ok: false, message: 'Tidak dapat menghubungi server. Coba lagi.' };
+    }
+  },
+
   async updatePassword(password: string, confirmation: string): Promise<ServiceResult<null>> {
     const validPassword = validatePassword(password);
     if (!validPassword.ok) return { ok: false, message: validPassword.message, field: 'password' };
@@ -124,20 +151,6 @@ export const authService = {
     } catch (error) {
       console.error('[auth] update password failed', error);
       return { ok: false, message: 'Tidak dapat menyimpan password baru. Coba lagi.' };
-    }
-  },
-
-  async resendConfirmation(email: string): Promise<ServiceResult<null>> {
-    const validEmail = validateEmail(email);
-    if (!validEmail.ok) return { ok: false, message: validEmail.message, field: 'email' };
-
-    try {
-      const { error } = await authRepository.resendConfirmation(normalizeEmail(email));
-      if (error) return { ok: false, message: mapAuthError(error) };
-      return { ok: true, data: null };
-    } catch (error) {
-      console.error('[auth] resend confirmation failed', error);
-      return { ok: false, message: 'Tidak dapat mengirim ulang email verifikasi.' };
     }
   },
 };

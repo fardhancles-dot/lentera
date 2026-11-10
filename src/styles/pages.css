@@ -879,32 +879,6 @@
   color: var(--green-700);
 }
 
-.password-meter {
-  display: flex;
-  gap: 6px;
-  margin-top: 2px;
-}
-
-.password-meter__bar {
-  height: 5px;
-  flex: 1;
-  border-radius: var(--radius-pill);
-  background: var(--background-deep);
-  transition: background-color 0.2s var(--ease-out);
-}
-
-.password-meter__bar[data-level='1'] {
-  background: var(--red-500);
-}
-
-.password-meter__bar[data-level='2'] {
-  background: var(--yellow-400);
-}
-
-.password-meter__bar[data-level='3'] {
-  background: var(--green-500);
-}
-
 /* ---------- Setup guide ---------- */
 .setup-list {
   display: grid;

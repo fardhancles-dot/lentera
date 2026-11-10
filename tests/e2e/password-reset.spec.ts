@@ -17,7 +17,8 @@ test('recovery link lets a player set a new password', async ({ page }) => {
 
   const email = `qa.reset.${Date.now()}@lentera.test`;
   const oldPassword = `Lama-${randomUUID()}`;
-  const newPassword = 'ResetUji!2026';
+  // Minimal 6 characters, no character-composition requirement.
+  const newPassword = 'abc123';
 
   const user = await createTemporaryUser(admin, email, oldPassword, true);
   try {
@@ -34,7 +35,7 @@ test('recovery link lets a player set a new password', async ({ page }) => {
     await page.locator('input[name="confirmPassword"]').fill(newPassword);
     await page.getByRole('button', { name: 'Simpan password baru' }).click();
 
-    await expect(page.locator('.auth-success')).toContainText('Password tersimpan', {
+    await expect(page.locator('.auth-success')).toContainText('Password berhasil diubah', {
       timeout: 30_000,
     });
 

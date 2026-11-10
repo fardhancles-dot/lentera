@@ -47,13 +47,15 @@ export function validateEmail(raw: string): ValidationResult<string> {
   return { ok: true, value };
 }
 
+export const MIN_PASSWORD_LENGTH = 6;
+
 export function validatePassword(raw: string): ValidationResult<string> {
   if (!raw) return { ok: false, message: 'Password wajib diisi.' };
-  if (raw.length < 8) return { ok: false, message: 'Password minimal 8 karakter.' };
-  if (raw.length > 72) return { ok: false, message: 'Password maksimal 72 karakter.' };
-  if (!/[a-zA-Z]/.test(raw) || !/\d/.test(raw)) {
-    return { ok: false, message: 'Gunakan minimal satu huruf dan satu angka.' };
+  if (raw.length < MIN_PASSWORD_LENGTH) {
+    return { ok: false, message: `Password minimal ${MIN_PASSWORD_LENGTH} karakter.` };
   }
+  // 72 bytes is the bcrypt limit Supabase Auth uses; longer values are truncated.
+  if (raw.length > 72) return { ok: false, message: 'Password maksimal 72 karakter.' };
   return { ok: true, value: raw };
 }
 
@@ -67,18 +69,15 @@ export function validatePasswordConfirmation(
   return { ok: true, value: confirmation };
 }
 
-/** 0 = empty, 1 = weak, 2 = fair, 3 = strong. */
-export function passwordStrength(password: string): 0 | 1 | 2 | 3 {
-  if (!password) return 0;
-  let score = 0;
-  if (password.length >= 8) score += 1;
-  if (password.length >= 12) score += 1;
-  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 1;
-  if (/[a-zA-Z]/.test(password) && /\d/.test(password)) score += 1;
-  if (/[^a-zA-Z0-9]/.test(password)) score += 1;
-  if (score <= 1) return 1;
-  if (score <= 3) return 2;
-  return 3;
+export const OTP_CODE_LENGTH = 6;
+
+export function validateOtpCode(raw: string): ValidationResult<string> {
+  const value = raw.trim();
+  if (!value) return { ok: false, message: 'Kode verifikasi wajib diisi.' };
+  if (!new RegExp(`^\\d{${OTP_CODE_LENGTH}}$`).test(value)) {
+    return { ok: false, message: `Kode verifikasi terdiri dari ${OTP_CODE_LENGTH} angka.` };
+  }
+  return { ok: true, value };
 }
 
 export function validateUsername(raw: string): ValidationResult<string> {

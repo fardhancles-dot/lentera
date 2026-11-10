@@ -33,10 +33,54 @@ npm install
 Di dashboard Supabase → **Authentication → Providers**:
 
 - **Email**: aktifkan.
-- **Confirm email**: disarankan aktif agar alamat email terverifikasi. Jika aktif,
-  pengguna baru menerima email verifikasi sebelum bisa login.
+- **Confirm email**: **nonaktifkan**. Pendaftaran tidak boleh meminta verifikasi email;
+  akun baru langsung mendapat sesi dan bisa bermain. Jika opsi ini aktif, halaman registrasi
+  menampilkan peringatan bahwa project masih mewajibkan konfirmasi.
+- **Minimum password length**: `6`. **Password requirements**: kosongkan (jangan wajibkan
+  huruf besar, angka, atau simbol). Aturan ini sudah dipasang di project dan berlaku sama
+  dengan validasi frontend.
+- **Email OTP expiration**: `300` detik (5 menit). **Email OTP length**: `6`.
 - **Google**: biarkan nonaktif sampai Client ID/Secret tersedia. Aplikasi belum
   menampilkan tombol Google, jadi tidak ada tombol mati.
+
+### Template email reset password (wajib untuk OTP)
+
+Halaman lupa password memakai OTP 6 angka resmi Supabase (`verifyOtp` tipe `recovery`).
+Agar kode ikut terkirim, template **Reset Password** harus memuat `{{ .Token }}`, misalnya:
+
+```html
+<p>Kode verifikasi Anda: {{ .Token }}</p>
+<p><a href="{{ .ConfirmationURL }}">Atur ulang password</a></p>
+```
+
+Pada paket gratis dengan email bawaan Supabase, perubahan template ditolak
+(`Email template modification is not available for free tier projects using the default
+email provider`). Konfigurasi yang diperlukan:
+
+1. **Authentication → Emails → SMTP Settings**: pasang SMTP kustom (Resend, Postmark,
+   Brevo, dsb.), lalu verifikasi domain pengirim.
+2. Buka **Authentication → Emails → Reset Password**, tambahkan baris `{{ .Token }}`, simpan.
+3. Kirim satu email uji dan pastikan kode 6 angka terlihat. Selama langkah ini belum
+   selesai, email reset bawaan hanya berisi tautan; halaman reset tetap bisa dipakai lewat
+   tautan tersebut, tetapi input kode belum bisa diisi.
+
+**Status project pengembangan ini:** SMTP produksi memakai **Brevo** dan sudah diuji
+dengan email sungguhan ke Gmail: kode 6 angka diterima, password baru bisa dipakai login,
+dan kode yang sama ditolak saat dipakai ulang. Konfigurasi yang dipakai:
+
+- Host `smtp-relay.brevo.com`, port `587`.
+- **Login** disalin dari **Settings → SMTP & API → SMTP → Login**, formatnya
+  `...@smtp-brevo.com` — **bukan** email akun Brevo.
+- **Password** adalah SMTP key (`xsmtpsib-...`), bukan API key (`xkeysib-...`).
+- Pengirim harus sudah diverifikasi di **Senders**.
+- **Settings → Security → Authorized IPs**: pembatasan IP untuk **SMTP keys** harus
+  nonaktif. Server Supabase memakai IP yang berubah, dan bila pembatasan aktif pengiriman
+  gagal dengan `525 Unauthorized IP address`.
+- Batas kirim email auth dinaikkan ke 30/jam.
+
+Kunci SMTP hanya disimpan di konfigurasi Supabase — jangan commit ke repo. Saat SMTP
+diganti, template reset dapat kembali ke default sehingga `{{ .Token }}` perlu
+ditambahkan lagi.
 
 Di **Authentication → URL Configuration**:
 
@@ -195,10 +239,13 @@ npm run dev
 ```
 
 1. Buka `http://localhost:5173/register`.
-2. Isi nama, email, password (minimal 8 karakter, ada huruf dan angka).
-3. Kirim. Jika konfirmasi email aktif, buka tautan di email lalu login.
-4. Setelah login pertama, onboarding muncul: avatar, username, target harian, zona waktu.
+2. Isi nama, email, password minimal 6 karakter (tidak wajib huruf besar, angka, atau
+   simbol), lalu ulangi password.
+3. Kirim. Akun langsung aktif tanpa verifikasi email dan kamu diarahkan ke onboarding.
+4. Onboarding muncul: avatar, username, target harian, zona waktu.
 5. Selesai → beranda. Profil dan pengaturan tersimpan di database.
+6. Uji lupa password: `/forgot-password` → email → kode 6 angka (setelah template email
+   dikonfigurasi seperti bagian 4) → password baru minimal 6 karakter → login ulang.
 
 Jika registrasi gagal dengan pesan profil belum siap, migration belum dijalankan.
 
@@ -269,7 +316,8 @@ karena skrip ini memanggil API, bukan mengklik UI.
 6. Deploy.
 7. Tambahkan domain Vercel ke **Redirect URLs** Supabase, lalu set **Site URL** ke domain
    produksi.
-8. Uji register, verifikasi email, reset password di domain produksi.
+8. Uji register (langsung masuk), lupa password dengan OTP, dan login ulang di domain
+   produksi.
 
 `vercel.json` sudah berisi rewrite SPA agar refresh di `/profile` tidak 404.
 
@@ -279,15 +327,18 @@ karena skrip ini memanggil API, bukan mengklik UI.
 | --- | --- | --- |
 | Halaman `/setup` muncul | env belum terisi | Isi `.env`, restart `npm run dev`. |
 | “Profil belum dapat dimuat” setelah login | migration belum dijalankan / trigger gagal | Jalankan migration; cek log Postgres. |
-| Email verifikasi tidak masuk | SMTP bawaan Supabase dibatasi | Cek spam; atur SMTP kustom di Auth → SMTP jika perlu. |
-| Tautan reset “tidak valid” | redirect URL tidak terdaftar / tautan kedaluwarsa | Perbaiki Redirect URLs, minta tautan baru. |
-| Email sudah terdaftar tetapi tidak bisa login | konfirmasi email belum diklik | Kirim ulang verifikasi dari halaman registrasi. |
+| Email reset tidak berisi kode 6 angka | Template memakai email bawaan paket gratis | Pasang SMTP kustom, lalu tambahkan `{{ .Token }}` ke template Reset Password. |
+| Email reset gagal, log `525 Unauthorized IP address` | Pembatasan Authorized IPs aktif untuk SMTP | **Settings → Security → Authorized IPs → Deactivate for SMTP keys**. |
+| Email reset gagal, log `535 Authentication failed` | Login memakai email akun atau key yang salah | Salin **Login** `...@smtp-brevo.com` dan **SMTP key** (bukan API key). |
+| Kode reset “salah atau kedaluwarsa” | kode salah, sudah dipakai, atau lewat 5 menit | Minta kode baru; satu kode hanya berlaku sekali. |
+| Tautan reset “tidak valid” | redirect URL tidak terdaftar / tautan kedaluwarsa | Perbaiki Redirect URLs, minta kode baru. |
+| Registrasi meminta konfirmasi email | `Confirm email` masih aktif di dashboard | Matikan **Authentication → Providers → Email → Confirm email**. |
 | `npm run build` gagal di Node lama | Phaser 4 butuh Node 22+ | Upgrade Node. |
 | Role developer tidak berubah | sesi lama | Logout lalu login. |
 
 ## Biaya dan batasan
 
-- Paket gratis cukup untuk pengembangan. Email bawaan Supabase memiliki batas kirim per
-  jam; untuk produksi gunakan SMTP sendiri (Resend, Postmark, dsb.) setelah tersedia.
+- Paket gratis cukup untuk pengembangan. Email auth memakai SMTP Brevo dengan batas
+  kirim 30/jam; naikkan bila pemakaian nyata menuntut, dan pantau kuota harian Brevo.
 - Push notification, pembayaran, dan AI belum dikonfigurasi. Jangan mengklaim aktif
   sebelum kredensial dan provider benar-benar terpasang.

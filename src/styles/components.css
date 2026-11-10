@@ -130,6 +130,11 @@
   color: var(--muted);
 }
 
+.field__hint[data-valid='true'] {
+  color: var(--green-600);
+  font-weight: 700;
+}
+
 .field__error {
   display: flex;
   align-items: center;

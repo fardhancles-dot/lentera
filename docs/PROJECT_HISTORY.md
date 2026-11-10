@@ -1263,5 +1263,5 @@ lulus.
   menyajikan aplikasi dengan benar.
 - Repository kini publik agar Pages tersedia; jangan pernah commit `.env`, service role key,
   atau kunci SMTP.
-- Akun `developer@lentera.test` masih ada dan masih berrole developer; belum dihapus karena
-  tidak termasuk permintaan sesi ini.
+- Akun uji `developer@lentera.test` dihapus pada 11 November 2026 setelah permintaan
+  pemilik, sehingga hanya akun pemilik yang tersisa.

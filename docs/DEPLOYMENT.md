@@ -27,7 +27,7 @@ Karena itu:
 | Target | URL |
 | --- | --- |
 | GitHub Pages | `https://fardhancles-dot.github.io/lentera/` |
-| Vercel | `<isi setelah project Vercel dibuat>` |
+| Vercel | `https://lentera-phi.vercel.app` |
 
 ## Perbedaan build
 
@@ -86,13 +86,14 @@ nama yang sama dari Secrets sebagai fallback.
 Redirect URL yang sudah didaftarkan (Authentication → URL Configuration):
 
 - `https://fardhancles-dot.github.io/lentera/**`
+- `https://lentera-phi.vercel.app/**`
+- `https://lentera-*.vercel.app/**` (preview deployment)
 - `http://localhost:5173/**`
 - `http://localhost:4173/**`
 - `http://localhost:3000/**`
 
-Site URL diarahkan ke `https://fardhancles-dot.github.io/lentera/`. Setelah domain Vercel
-diketahui, tambahkan `https://<domain-vercel>/**` ke daftar tersebut; tanpa itu tautan
-reset password yang dibuat dari Vercel akan ditolak.
+Site URL diarahkan ke `https://lentera-phi.vercel.app`. Kedua domain tetap dapat memakai
+reset password karena aplikasi mengirim `redirect_to` sesuai origin yang sedang dibuka.
 
 ## Akun lintas domain
 
@@ -119,15 +120,19 @@ role key tidak boleh pernah masuk ke frontend.
 - Repository variables `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` sudah diisi.
 - Workflow berhasil membangun dan men-deploy; situs live di
   `https://fardhancles-dot.github.io/lentera/`.
+- Project Vercel `dhancles/lentera` dibuat, environment variables diisi untuk
+  Production/Preview/Development, dan production live di
+  `https://lentera-phi.vercel.app`. Domain ini juga sudah masuk redirect URL Supabase.
 
 ## Langkah manual yang masih diperlukan
 
-1. **Buat/import project Vercel:** login ke akun Vercel yang benar, import
-   `fardhancles-dot/lentera`, framework Vite, build `npm run build`, output `dist`, isi
-   env vars di atas, deploy.
-2. **Daftarkan domain Vercel** ke redirect URL Supabase: tambahkan
-   `https://<domain-vercel>/**`.
-3. Verifikasi login, profil, dan reset password di domain Vercel.
+**Hubungkan repository GitHub ke project Vercel** agar push ke `main` otomatis
+men-deploy Vercel (saat ini deployment Vercel dibuat lewat CLI). Buka dashboard Vercel →
+project `lentera` → **Settings → Git → Connect Git Repository**, lalu izinkan akses ke
+`fardhancles-dot/lentera`. CLI mencoba `vercel git connect` tetapi ditolak karena integrasi
+GitHub belum diberi akses ke repository tersebut.
+
+Setelah terhubung, satu push ke `main` akan memicu dua pipeline: Vercel dan GitHub Pages.
 
 ## Verifikasi yang sudah dilakukan
 
@@ -140,6 +145,12 @@ role key tidak boleh pernah masuk ke frontend.
   `redirect_to=http://localhost:4180/lentera/reset-password`.
 - Simulasi lokal Vercel di root: aset di `/assets/`, navigasi ke `/login`, deep link
   `/forgot-password`, dan `redirect_to=http://localhost:4181/reset-password` benar.
+- **Live Vercel:** aset dimuat dari `/assets/`, deep link `/profile` merespons 200,
+  login akun uji berhasil, dan request reset mengirim
+  `redirect_to=https://lentera-phi.vercel.app/reset-password`.
+- **Lintas situs:** login dengan akun yang sama di Vercel dan GitHub Pages menghasilkan
+  data identik — `@qaxvrnmxbrxhtzzavm`, Lv 4, 556 XP, 110 Koin, 5/5 Hearts, Streak 2 hari —
+  tanpa error console di kedua situs.
 - **Live GitHub Pages:** aset dimuat dari `/lentera/assets/`; login akun uji berhasil dan
   diarahkan ke `/lentera/app`; deep link `/lentera/profile` menampilkan halaman Profil
   dengan sesi yang bertahan; request reset mengirim

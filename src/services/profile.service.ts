@@ -36,6 +36,7 @@ export interface ProfileSettingsInput {
   voiceVolume: number;
   reducedMotion: boolean;
   emailOptIn: boolean;
+  profileVisibility: 'public' | 'friends' | 'private';
 }
 
 export interface OnboardingInput {
@@ -125,6 +126,10 @@ export const profileService = {
       return { ok: false, message: 'Bahasa tidak dikenali.' };
     }
 
+    if (!['public', 'friends', 'private'].includes(input.profileVisibility)) {
+      return { ok: false, message: 'Pengaturan privasi tidak dikenali.' };
+    }
+
     const patch: SettingsUpdate = {
       locale: input.locale,
       timezone: timezone.value,
@@ -134,6 +139,7 @@ export const profileService = {
       voice_volume: input.voiceVolume,
       reduced_motion: input.reducedMotion,
       email_opt_in: input.emailOptIn,
+      profile_visibility: input.profileVisibility,
     };
 
     try {

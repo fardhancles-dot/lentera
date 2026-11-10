@@ -121,6 +121,17 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
   );
   localeSelect.value = settings.locale;
 
+  const visibilitySelect = el(
+    'select',
+    { class: 'select', attrs: { id: 'profile-visibility' } },
+    [
+      el('option', { attrs: { value: 'friends' } }, ['Teman saja']),
+      el('option', { attrs: { value: 'public' } }, ['Semua pemain']),
+      el('option', { attrs: { value: 'private' } }, ['Privat']),
+    ],
+  );
+  visibilitySelect.value = settings.profile_visibility;
+
   const music = sliderRow(
     'Musik latar',
     'Mengatur volume musik saat berada di permainan.',
@@ -185,11 +196,27 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       el('h2', { class: 'settings-section__title', text: 'Audio' }),
       el('p', {
         class: 'settings-section__description',
-        text: 'Preferensi ini langsung dipakai sistem audio setelah aset suara ditambahkan (tahap karakter & audio).',
+        text: 'Musik latar, efek suara, dan suara dialog memakai volume ini. Perubahan berlaku setelah disimpan dan tersimpan di akunmu.',
       }),
       music.root,
       sfx.root,
       voice.root,
+    ]),
+
+    el('section', { class: 'card settings-section' }, [
+      el('h2', { class: 'settings-section__title', text: 'Privasi' }),
+      el('p', {
+        class: 'settings-section__description',
+        text: 'Atur siapa yang boleh melihat XP, streak, lesson selesai, dan pencapaianmu. Nama dan avatar tetap tampil di papan peringkat publik.',
+      }),
+      el('div', { class: 'field' }, [
+        el('label', { class: 'field__label', attrs: { for: 'profile-visibility' } }, ['Visibilitas statistik']),
+        visibilitySelect,
+        el('p', {
+          class: 'form-hint',
+          text: 'Privat menyembunyikan statistik dan aktivitas dari semua pemain lain.',
+        }),
+      ]),
     ]),
 
     el('section', { class: 'card settings-section' }, [
@@ -221,6 +248,10 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
         voiceVolume: voice.value(),
         reducedMotion: reducedMotion.value(),
         emailOptIn: emailOptIn.value(),
+        profileVisibility:
+          visibilitySelect.value === 'public' || visibilitySelect.value === 'private'
+            ? visibilitySelect.value
+            : 'friends',
       });
       save.setLoading(false);
 

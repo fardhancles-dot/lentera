@@ -6,7 +6,8 @@
 > Conversation memakai dialog bertahap dengan respons NPC berbeda, Story meminta pilihan
 > respons sebelum lanjut, dan Fill in the Blank mendukung beberapa rumpang. Tujuh mode
 > latihan memakai sesi server dengan timer, combo, dan XP idempoten. **Friends Quest**
-> tersedia sebagai co-op berbasis kode undangan; graf teman penuh tetap Tahap 7.
+> tersedia sebagai co-op berbasis kode undangan. Tahap 7 menambahkan **pertemanan,
+> notifikasi, 10 tier liga, leaderboard, event mingguan, dan privasi profil**.
 > **Hearts, Streak, level akun, wallet, reward level, milestone Streak, quest,
 > achievement, toko, dan inventory** sudah aktif dan dihitung di server. **Mastery per
 > soal dan review terjadwal** juga sudah aktif. Tahap 6 menambahkan **peta petualangan
@@ -340,7 +341,8 @@ Klaim ditulis `claim_reward_node` secara atomik dengan `pg_advisory_xact_lock`, 
 - Reward khusus legendary di luar XP latihan.
 - Koin/XP dari review terjadwal mengikuti aturan XP latihan (akurasi ≥ 60%), bukan bonus
   tambahan khusus review.
-- Graf teman penuh, friend request, activity feed, dan leaderboard (Tahap 7).
+- Hadiah liga/event memakai Koin dan XP mingguan; tidak ada bonus skor khusus di dalam
+  sesi lesson/latihan.
 
 ## Batasan konten yang perlu diketahui
 

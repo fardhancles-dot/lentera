@@ -189,6 +189,23 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     ),
   ]);
 
+  const communityCard = el('section', { class: 'card card--padded' }, [
+    el('div', { class: 'card__header' }, [
+      el('div', {}, [
+        el('h2', { class: 'card__title', text: 'Komunitas' }),
+        el('p', {
+          class: 'card__subtitle',
+          text: 'Naik liga, berteman, dan ikuti event mingguan.',
+        }),
+      ]),
+    ]),
+    el('div', { class: 'social-shortcuts' }, [
+      socialShortcut('/leaderboard', 'trophy', 'Liga & Peringkat', 'XP mingguan dan hadiah periode'),
+      socialShortcut('/friends', 'users', 'Teman', 'Cari pemain dan lihat aktivitas'),
+      socialShortcut('/notifications', 'bell', 'Notifikasi', 'Permintaan teman dan hasil liga'),
+    ]),
+  ]);
+
   const accountCard = el('section', { class: 'card card--padded' }, [
     el('div', { class: 'card__header' }, [
       el('div', {}, [
@@ -234,12 +251,28 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
   const content = el('div', {}, [
     greetingCard,
     el('div', { class: 'dashboard-grid', style: { marginTop: '1.25rem' } }, [
-      el('div', { class: 'dashboard-main' }, [progressionCard, goalCard, roadmapCard]),
+      el('div', { class: 'dashboard-main' }, [progressionCard, goalCard, communityCard, roadmapCard]),
       el('div', { class: 'dashboard-aside' }, [accountCard, statusCard, tipCard]),
     ]),
   ]);
 
   renderAppLayout(ctx, { active: 'home', title: 'Beranda', content });
+}
+
+function socialShortcut(
+  href: string,
+  iconName: Parameters<typeof icon>[0],
+  title: string,
+  body: string,
+): HTMLElement {
+  return el('a', { class: 'social-shortcut', attrs: { href } }, [
+    el('span', { class: 'social-shortcut__icon' }, [icon(iconName, 20)]),
+    el('span', { class: 'social-shortcut__copy' }, [
+      el('strong', { text: title }),
+      el('span', { text: body }),
+    ]),
+    icon('chevron-right', 18),
+  ]);
 }
 
 function statusItem(text: string): HTMLElement {

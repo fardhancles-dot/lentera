@@ -175,6 +175,11 @@ export const curriculumService = {
         .filter((row) => row.status === 'completed')
         .map((row) => row.node_id),
     );
+    const startedNodeIds = new Set(
+      progressRows
+        .filter((row) => row.status === 'in_progress')
+        .map((row) => row.node_id),
+    );
     const claimedRewardIds = new Set(rewardClaims.map((claim) => claim.node_id));
 
     const unitsByLevel = groupBy(units, (unit) => unit.course_level_id);
@@ -210,7 +215,7 @@ export const curriculumService = {
     const statuses = resolveNodeStatuses(
       playableNodes.map((node) => node.id),
       completedNodeIds,
-      { developerPreview: options.developerPreview },
+      { developerPreview: options.developerPreview, startedNodeIds },
     );
     const statusByNode = new Map(
       playableNodes.map((node, index) => [node.id, statuses[index]!] as const),

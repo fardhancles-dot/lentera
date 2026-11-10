@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { computeMapPositions } from '../src/game/adventure/layout';
-import { MAP_HEIGHT, MAP_VIEWPORTS, MAP_WIDTH } from '../src/game/adventure/types';
+import {
+  AREA_PALETTES,
+  areaPaletteFor,
+  MAP_HEIGHT,
+  MAP_VIEWPORTS,
+  MAP_WIDTH,
+} from '../src/game/adventure/types';
 
 describe('adventure map layout', () => {
   it('returns no positions for an empty level', () => {
@@ -51,6 +57,15 @@ describe('adventure map layout', () => {
       expect(point.y).toBeGreaterThan(compact.top - 1);
       expect(point.y).toBeLessThan(compact.height);
     }
+  });
+
+  it('gives every chapter its own scenery palette and wraps for long courses', () => {
+    expect(AREA_PALETTES.length).toBeGreaterThanOrEqual(4);
+    expect(areaPaletteFor(0)).toBe(AREA_PALETTES[0]);
+    expect(areaPaletteFor(1)).not.toBe(areaPaletteFor(0));
+    expect(areaPaletteFor(1).sky).not.toBe(areaPaletteFor(0).sky);
+    expect(areaPaletteFor(AREA_PALETTES.length)).toBe(AREA_PALETTES[0]);
+    expect(areaPaletteFor(-3)).toBe(AREA_PALETTES[0]);
   });
 
   it('compresses rows instead of overflowing when a level is long', () => {

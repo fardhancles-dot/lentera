@@ -887,6 +887,236 @@ try {
     ok('RLS Streak hanya mengembalikan milik sendiri');
   }
 
+  const { data: ownProfile } = await supabase
+    .from('profiles')
+    .select('username, display_name')
+    .eq('id', auth.user.id)
+    .maybeSingle();
+
+  const { data: search, error: searchError } = await supabase.rpc('search_players', {
+    p_query: 'an',
+  });
+  if (searchError) {
+    fail('search_players', searchError.message);
+  } else if (
+    Array.isArray(search) &&
+    search.every(
+      (item) =>
+        typeof item.username === 'string' &&
+        ['friend', 'outgoing', 'incoming', 'none'].includes(item.relation),
+    )
+  ) {
+    ok(`search_players mengembalikan ${search.length} hasil dengan status relasi`);
+  } else {
+    fail('search_players mengembalikan hasil dengan status relasi', JSON.stringify(search));
+  }
+
+  const { data: shortSearch, error: shortSearchError } = await supabase.rpc('search_players', {
+    p_query: 'a',
+  });
+  if (shortSearchError?.message.includes('search_query_too_short')) {
+    ok('search_players menolak kata kunci kurang dari dua huruf');
+  } else {
+    fail(
+      'search_players menolak kata kunci kurang dari dua huruf',
+      shortSearchError?.message ?? JSON.stringify(shortSearch),
+    );
+  }
+
+  const { data: friendsRpc, error: friendsRpcError } = await supabase.rpc('get_my_friends');
+  if (friendsRpcError) {
+    fail('get_my_friends', friendsRpcError.message);
+  } else if (
+    Array.isArray(friendsRpc?.friends) &&
+    Array.isArray(friendsRpc?.incoming) &&
+    Array.isArray(friendsRpc?.outgoing)
+  ) {
+    ok('get_my_friends mengembalikan teman, permintaan masuk, dan keluar');
+  } else {
+    fail('get_my_friends mengembalikan teman, permintaan masuk, dan keluar', JSON.stringify(friendsRpc));
+  }
+
+  const { data: activityRpc, error: activityRpcError } = await supabase.rpc(
+    'get_friend_activity',
+    { p_limit: 10 },
+  );
+  if (activityRpcError) {
+    fail('get_friend_activity', activityRpcError.message);
+  } else if (Array.isArray(activityRpc)) {
+    ok('get_friend_activity mengembalikan daftar aktivitas teman');
+  } else {
+    fail('get_friend_activity mengembalikan daftar aktivitas teman', JSON.stringify(activityRpc));
+  }
+
+  if (ownProfile?.username) {
+    const { data: ownFriendProfile, error: ownFriendProfileError } = await supabase.rpc(
+      'get_friend_profile',
+      { p_username: ownProfile.username },
+    );
+    if (ownFriendProfileError) {
+      fail('get_friend_profile profil sendiri', ownFriendProfileError.message);
+    } else if (
+      ownFriendProfile?.isSelf === true &&
+      ownFriendProfile?.statsVisible === true &&
+      ownFriendProfile?.username === ownProfile.username
+    ) {
+      ok('get_friend_profile menampilkan statistik profil sendiri');
+    } else {
+      fail('get_friend_profile menampilkan statistik profil sendiri', JSON.stringify(ownFriendProfile));
+    }
+  } else {
+    fail('baca profil sendiri untuk get_friend_profile');
+  }
+
+  const { data: globalBoard, error: globalBoardError } = await supabase.rpc('get_leaderboard', {
+    p_scope: 'global',
+  });
+  if (globalBoardError) {
+    fail('get_leaderboard global', globalBoardError.message);
+  } else if (
+    Array.isArray(globalBoard?.entries) &&
+    globalBoard.entries.every(
+      (entry) =>
+        typeof entry.rank === 'number' &&
+        typeof entry.weeklyXp === 'number' &&
+        typeof entry.username === 'string',
+    ) &&
+    globalBoard.entries.some((entry) => entry.isViewer === true)
+  ) {
+    ok('get_leaderboard global memuat peringkat dan baris pemain');
+  } else {
+    fail('get_leaderboard global memuat peringkat dan baris pemain', JSON.stringify(globalBoard));
+  }
+
+  const { data: friendBoard, error: friendBoardError } = await supabase.rpc('get_leaderboard', {
+    p_scope: 'friends',
+  });
+  if (friendBoardError) {
+    fail('get_leaderboard teman', friendBoardError.message);
+  } else if (
+    Array.isArray(friendBoard?.entries) &&
+    friendBoard.entries.every((entry) => entry.isViewer === true || entry.isFriend === true)
+  ) {
+    ok('get_leaderboard teman hanya memuat pemain sendiri dan teman');
+  } else {
+    fail('get_leaderboard teman hanya memuat pemain sendiri dan teman', JSON.stringify(friendBoard));
+  }
+
+  const { data: invalidBoard, error: invalidBoardError } = await supabase.rpc(
+    'get_leaderboard',
+    { p_scope: 'sekolah' },
+  );
+  if (invalidBoardError?.message.includes('leaderboard_scope_invalid') || !invalidBoard) {
+    ok('get_leaderboard menolak cakupan tak dikenal');
+  } else {
+    fail('get_leaderboard menolak cakupan tak dikenal', JSON.stringify(invalidBoard));
+  }
+
+  const { data: leagueRpc, error: leagueRpcError } = await supabase.rpc('get_my_league');
+  if (leagueRpcError) {
+    fail('get_my_league', leagueRpcError.message);
+  } else if (
+    typeof leagueRpc?.tier === 'number' &&
+    leagueRpc.tier >= 1 &&
+    leagueRpc.tier <= 10 &&
+    typeof leagueRpc?.tierName === 'string' &&
+    Array.isArray(leagueRpc?.members) &&
+    leagueRpc.members.some((member) => member.isViewer === true) &&
+    typeof leagueRpc?.promotionCount === 'number' &&
+    typeof leagueRpc?.weeklyXp === 'number' &&
+    Array.isArray(leagueRpc?.history)
+  ) {
+    ok(`get_my_league membuat grup ${leagueRpc.tierName} dengan ${leagueRpc.memberCount} anggota`);
+  } else {
+    fail('get_my_league membuat grup liga dengan anggota dan zona promosi', JSON.stringify(leagueRpc));
+  }
+
+  const { data: eventRpc, error: eventRpcError } = await supabase.rpc('get_active_event');
+  if (eventRpcError) {
+    fail('get_active_event', eventRpcError.message);
+  } else if (
+    typeof eventRpc?.id === 'string' &&
+    typeof eventRpc?.title === 'string' &&
+    typeof eventRpc?.targetXp === 'number' &&
+    typeof eventRpc?.progress === 'number' &&
+    eventRpc.progress <= eventRpc.targetXp &&
+    typeof eventRpc?.canClaim === 'boolean'
+  ) {
+    ok('get_active_event mengembalikan event mingguan dan progres XP');
+  } else {
+    fail('get_active_event mengembalikan event mingguan dan progres XP', JSON.stringify(eventRpc));
+  }
+
+  const { data: notificationsRpc, error: notificationsRpcError } = await supabase.rpc(
+    'get_my_notifications',
+  );
+  if (notificationsRpcError) {
+    fail('get_my_notifications', notificationsRpcError.message);
+  } else if (
+    Array.isArray(notificationsRpc?.items) &&
+    typeof notificationsRpc?.unreadCount === 'number' &&
+    notificationsRpc.items.every((item) => typeof item.read === 'boolean')
+  ) {
+    ok('get_my_notifications mengembalikan notifikasi dan jumlah belum dibaca');
+  } else {
+    fail('get_my_notifications mengembalikan notifikasi dan jumlah belum dibaca', JSON.stringify(notificationsRpc));
+  }
+
+  const { data: markRead, error: markReadError } = await supabase.rpc(
+    'mark_notifications_read',
+  );
+  if (markReadError) {
+    fail('mark_notifications_read', markReadError.message);
+  } else if (typeof markRead?.updated === 'number') {
+    ok('mark_notifications_read menandai notifikasi milik sendiri');
+  } else {
+    fail('mark_notifications_read menandai notifikasi milik sendiri', JSON.stringify(markRead));
+  }
+
+  const { data: tiers, error: tiersError } = await supabase
+    .from('league_tiers')
+    .select('tier, name, accent')
+    .order('tier');
+  if (tiersError || tiers?.length !== 10) {
+    fail('tabel league_tiers berisi sepuluh tier', tiersError?.message ?? String(tiers?.length));
+  } else if (tiers[0]?.tier === 1 && tiers[9]?.tier === 10) {
+    ok('tabel league_tiers berisi sepuluh tier berurutan');
+  } else {
+    fail('tabel league_tiers berisi sepuluh tier berurutan');
+  }
+
+  const { data: ownFriendships, error: ownFriendshipsError } = await supabase
+    .from('friendships')
+    .select('id, requester_id, addressee_id');
+  if (
+    ownFriendshipsError ||
+    !ownFriendships?.every(
+      (row) => row.requester_id === auth.user.id || row.addressee_id === auth.user.id,
+    )
+  ) {
+    fail(
+      'RLS friendships hanya mengembalikan relasi sendiri',
+      ownFriendshipsError?.message ?? 'ada baris milik pemain lain',
+    );
+  } else {
+    ok('RLS friendships hanya mengembalikan relasi sendiri');
+  }
+
+  const { data: ownNotifications, error: ownNotificationsError } = await supabase
+    .from('notifications')
+    .select('id, user_id');
+  if (
+    ownNotificationsError ||
+    !ownNotifications?.every((row) => row.user_id === auth.user.id)
+  ) {
+    fail(
+      'RLS notifications hanya mengembalikan milik sendiri',
+      ownNotificationsError?.message ?? 'ada baris milik pemain lain',
+    );
+  } else {
+    ok('RLS notifications hanya mengembalikan milik sendiri');
+  }
+
   const anon = createClient(url, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });

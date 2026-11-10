@@ -57,17 +57,21 @@ function renderDetail(detail: LessonDetail, history: LessonAttemptSummary[]): HT
           ? 'badge'
           : node.status === 'preview'
             ? 'badge badge--yellow'
-            : node.status === 'locked'
-              ? 'badge badge--muted'
-              : 'badge badge--blue',
+            : node.status === 'in_progress'
+              ? 'badge badge--progress'
+              : node.status === 'locked'
+                ? 'badge badge--muted'
+                : 'badge badge--blue',
       text:
         node.status === 'completed'
           ? 'Selesai'
           : node.status === 'preview'
             ? 'Pratinjau developer'
-            : node.status === 'locked'
-              ? 'Terkunci'
-              : 'Siap dimainkan',
+            : node.status === 'in_progress'
+              ? 'Sedang dikerjakan'
+              : node.status === 'locked'
+                ? 'Terkunci'
+                : 'Siap dimainkan',
     }),
   ]);
 

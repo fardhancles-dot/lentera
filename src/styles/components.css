@@ -317,6 +317,11 @@
   color: var(--blue-600);
 }
 
+.badge--progress {
+  background: #fff1de;
+  color: #a85b00;
+}
+
 .badge--muted {
   background: var(--background-deep);
   color: var(--muted-strong);

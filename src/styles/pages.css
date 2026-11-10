@@ -1478,6 +1478,12 @@ a.path-node:hover {
   box-shadow: 0 3px 0 #c9eeb2;
 }
 
+.path-node--in_progress .path-node__marker {
+  background: #fff1de;
+  color: #a85b00;
+  box-shadow: 0 3px 0 #f2cf9f;
+}
+
 .path-node--locked .path-node__marker {
   background: var(--background-deep);
   color: var(--muted);
@@ -1528,6 +1534,11 @@ a.path-node:hover {
 .path-node__status--completed {
   background: var(--green-100);
   color: var(--green-700);
+}
+
+.path-node__status--in_progress {
+  background: #fff1de;
+  color: #a85b00;
 }
 
 .path-node__status--available {
@@ -3862,12 +3873,29 @@ a.path-node:hover {
   gap: var(--space-3);
 }
 
+.adventure-map__eyebrow-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .adventure-map__eyebrow {
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--green-600);
+}
+
+.adventure-map__area {
+  padding: 2px 9px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--muted-strong);
+  background: var(--background-deep);
+  border: 1px solid var(--border);
+  border-radius: 999px;
 }
 
 .adventure-map__title {
@@ -3967,6 +3995,10 @@ a.path-node:hover {
   background: var(--green-500);
 }
 
+.adventure-map__dot--in_progress {
+  background: #ff9f43;
+}
+
 .adventure-map__dot--available {
   background: #ffc83d;
 }
@@ -3988,7 +4020,16 @@ a.path-node:hover {
     padding: var(--space-3);
   }
 
+  .adventure-map__level {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 8px 16px;
+    font-size: 0.86rem;
+  }
+
   .adventure-map__frame {
     min-height: 180px;
   }
 }
+

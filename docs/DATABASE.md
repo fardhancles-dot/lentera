@@ -2,12 +2,13 @@
 
 Database: PostgreSQL di Supabase. Migration ada di `supabase/migrations/`.
 
-> **Status:** ketiga belas migration sudah diterapkan ke project Supabase nyata
+> **Status:** keempat belas migration sudah diterapkan ke project Supabase nyata
 > (`xvrnmxbrxhtzzavmrlvy`, region Singapura), termasuk perbaikan view katalog
-> `20261110150000_subject_overview_owner.sql` yang diterapkan lewat Management API. Smoke
-> test PGlite (206 check) dan verifikasi API Supabase (61 check) lulus, termasuk Friends
-> Quest, progression/economy, serta reward/quest/achievement/toko. Pengujian UI browser
-> terpisah.
+> `20261110150000_subject_overview_owner.sql` dan migration sosial/liga
+> `20261111100000_social_league.sql` yang diterapkan lewat Management API. Smoke test
+> PGlite (245 check) dan verifikasi API Supabase (76 check) lulus, termasuk Friends Quest,
+> progression/economy, reward/quest/achievement/toko, pertemanan, liga, event, notifikasi,
+> dan privasi profil. Pengujian UI browser terpisah.
 >
 > Untuk menerapkan migration baru tanpa CLI ter-link, gunakan
 > `SUPABASE_ACCESS_TOKEN=sbp_xxx npm run db:apply-catalog-fix` (`--dry-run` untuk melihat
@@ -30,6 +31,7 @@ Database: PostgreSQL di Supabase. Migration ada di `supabase/migrations/`.
 | `20261110130000_tahap5_rewards.sql` | Reward level, milestone Streak + freeze, quest, achievement, katalog toko, inventory, RPC klaim/pembelian/pakai, RLS. |
 | `20261110140000_mastery_review_rewards.sql` | Mastery per soal, jadwal review, mode `scheduled_review`, node `reward` per level, RPC klaim hadiah, RLS. |
 | `20261110150000_subject_overview_owner.sql` | Menjalankan `subject_overview` dengan hak owner agar katalog tidak gagal saat `questions` di-revoke dari pemain. |
+| `20261111100000_social_league.sql` | Pertemanan, notifikasi, 10 tier liga + grup/ hasil mingguan, leaderboard, event mingguan, privasi profil, RPC sosial, trigger XP liga, dan RLS. |
 
 Seed dihasilkan dari `scripts/content/**/*.ts` dengan `npm run seed:build`. Jangan mengedit
 file seed secara manual; ubah sumber TypeScript lalu regenerasi. UUID bersifat deterministik
@@ -89,8 +91,19 @@ Email tidak disimpan di `profiles`; email hidup di `auth.users` dan hanya dibaca
 - `friend_quest_claims` — klaim hadiah per anggota; PK `(quest_id, user_id)` mencegah klaim
   ganda.
 
-Tabel ini sengaja belum menjadi graf pertemanan penuh. Friend request, friendships,
-activity feed, dan leaderboard tetap Tahap 7.
+### Sosial dan liga
+
+- `friendships` — satu baris per pasangan (`least`/`greatest`), status `pending`/
+  `accepted`/`declined`, `requester_id`, `addressee_id`, waktu dibuat/direspons.
+- `notifications` — notifikasi per pemain (`friend_request`, `friend_accepted`,
+  `league_result`, `info`), tautan internal, dan `read_at`.
+- `league_tiers` — 10 tier dari Benih sampai Lentera beserta accent.
+- `league_groups`, `league_members` — grup mingguan per tier (maks. 30 pemain) dan XP
+  mingguan anggota; tanpa grant baca langsung ke pemain.
+- `league_results` — hasil finalisasi per pemain/minggu: rank, jumlah anggota, outcome,
+  tier berikutnya, hadiah, dan waktu klaim.
+- `game_events`, `user_event_claims` — event mingguan (100 XP → 25 Koin) dan klaim
+  idempoten per pemain/event.
 
 ### Ekonomi dan progres pemain
 
@@ -194,6 +207,20 @@ membaca `questions` sebagai pemain dan gagal dengan `permission denied`. Migrati
 | `start_scheduled_review(course_id)` | Membuat sesi dari maksimal 10 soal yang jatuh tempo; menolak `practice_no_due_reviews`. |
 | `get_my_mastery()` | RPC mastery: ringkasan + agregat per course (terlacak, dikuasai, jatuh tempo, akurasi). |
 | `claim_reward_node(node_id)` | Memeriksa seluruh lesson level selesai, lalu menulis Koin/XP sekali; idempoten. |
+| `search_players(query)` | Cari maksimal 10 pemain (kecuali diri sendiri) + status relasi; query minimal 2 karakter. |
+| `send_friend_request(username)` | Membuat/mengaktifkan relasi `pending`, menolak diri sendiri dan relasi yang sudah ada; mengirim notifikasi. |
+| `respond_friend_request(request_id, accept)` | Hanya addressee; mengubah status `accepted`/`declined` dan memberi notifikasi ke pengirim bila diterima. |
+| `remove_friend(user_id)` | Menghapus relasi dua arah; idempoten. |
+| `get_my_friends()` | Teman (XP mingguan, total XP, level, streak bersama) + permintaan masuk/keluar. |
+| `get_friend_profile(username)` | Profil + statistik yang difilter `profile_visibility` dan relasi teman. |
+| `get_friend_activity(limit)` | Aktivitas XP/pencapaian terbaru teman yang statistiknya terlihat. |
+| `get_leaderboard(scope)` | 50 peringkat XP mingguan global/teman + posisi pemain; privat dikecualikan dari global. |
+| `get_my_league()` | Membuat/membaca grup mingguan, finalisasi minggu lalu, peringkat anggota, zona promosi/degradasi, hasil terakhir, dan riwayat. |
+| `claim_league_reward(week_start)` | Membayar hadiah hasil liga sekali; klaim kedua `alreadyClaimed`. |
+| `get_active_event()` | Event mingguan berjalan, progres XP terbatas target, status klaim. |
+| `claim_event_reward()` | Membayar Koin event sekali setelah target XP tercapai; idempoten. |
+| `get_my_notifications()` | 30 notifikasi terbaru + jumlah belum dibaca. |
+| `mark_notifications_read(id)` | Menandai satu atau semua notifikasi milik sendiri sebagai dibaca. |
 
 Semua fungsi `security definer` memakai `set search_path` eksplisit. Fungsi engine di-revoke
 dari `public`/`anon` dan hanya dapat dieksekusi `authenticated`.
@@ -278,6 +305,28 @@ dari `public`/`anon` dan hanya dapat dieksekusi `authenticated`.
    sebelum kedaluwarsa. Klaim ditulis ke `friend_quest_claims`, `user_xp_ledger`, dan
    `coin_transactions` dengan kunci unik; klaim kedua mengembalikan `alreadyClaimed: true`.
 
+## Alur sosial, liga, dan event
+
+1. `search_players` hanya mengembalikan username, nama tampilan, avatar, dan bio pendek;
+   email tidak pernah dibaca dari `auth.users`. Status relasi dihitung dari `friendships`.
+2. Permintaan teman disimpan satu baris per pasangan (unique pada pasangan `least`/
+   `greatest`). Hanya addressee yang boleh menerima/menolak; `remove_friend` menghapus
+   relasi sehingga kedua pihak langsung kehilangan akses statistik teman.
+3. `get_friend_profile` membuka statistik bila pemain adalah dirinya sendiri, visibilitas
+   `public`, atau visibilitas `friends` dan relasinya `accepted`. Mode `private` selalu
+   menyembunyikan statistik dari pemain lain, termasuk teman.
+4. `get_leaderboard` menghitung XP dari `user_xp_ledger` sumber `lesson`/`practice` pada
+   minggu UTC berjalan. Cakupan global mengecualikan profil `private`; cakupan teman hanya
+   memuat diri sendiri dan teman.
+5. Liga memakai sepuluh tier (Benih sampai Lentera). `get_my_league` membuat grup maksimal
+   30 pemain per tier/minggu dan memfinalisasi grup minggu lalu saat dibaca: 5 teratas naik
+   tier (kecuali tier 10), 5 terbawah turun tier bila grup berisi minimal 10 pemain, dan
+   hadiah Koin `10 + tier × 5` ditulis ke `league_results`. Klaim hadiah idempoten.
+6. Event mingguan default adalah Festival Lentera: 100 XP → 25 Koin. Progres memakai XP
+   mingguan yang sama; klaim idempoten lewat `user_event_claims` dan transaksi Koin.
+7. Notifikasi dibuat trigger/RPC untuk permintaan teman, penerimaan, hasil liga, dan
+   event; `mark_notifications_read` hanya menyentuh baris milik pemanggil.
+
 ## RLS dan grant
 
 | Tabel | SELECT | Tulis |
@@ -295,8 +344,15 @@ dari `public`/`anon` dan hanya dapat dieksekusi `authenticated`.
 | `user_quest_claims`, `user_achievements`, `user_inventory`, `shop_purchases` | baris sendiri | tidak ada; hanya RPC. |
 | `friend_quests`, `friend_quest_members` | hanya anggota quest | tidak ada; hanya RPC. |
 | `friend_quest_claims` | hanya klaim sendiri | tidak ada; hanya RPC. |
+| `friendships` | relasi yang melibatkan pemain | tidak ada; hanya RPC. |
+| `notifications` | baris sendiri | tidak ada; hanya RPC/trigger. |
+| `league_tiers` | semua authenticated | tidak ada; katalog baca-saja. |
+| `league_results`, `user_event_claims` | baris sendiri | tidak ada; hanya RPC. |
+| `league_groups`, `league_members` | **tidak ada** grant | server-side RPC saja. |
+| `game_events` | semua authenticated untuk event aktif | tidak ada; server-side RPC. |
 
-`anon` tidak punya akses ke tabel kurikulum, progres, ekonomi, atau Friends Quest.
+`anon` tidak punya akses ke tabel kurikulum, progres, ekonomi, Friends Quest, sosial,
+liga, atau notifikasi.
 `service_role` dan secret key tidak boleh berada di browser.
 
 ## Menjalankan migration
@@ -316,10 +372,15 @@ Jalankan berurutan sesuai nama file di `supabase/migrations/`:
 9. `20261110100000_friends_quest.sql`
 10. `20261110120000_progression_economy.sql`
 11. `20261110130000_tahap5_rewards.sql`
+12. `20261110140000_mastery_review_rewards.sql`
+13. `20261110150000_subject_overview_owner.sql`
+14. `20261111100000_social_league.sql`
 
 Pastikan tidak ada error, lalu cek Table Editor: `subjects`, `lessons`, `questions`,
 `lesson_attempts`, `user_wallets`, `user_hearts`, `user_streaks`, `player_levels`,
-`practice_sessions`, `friend_quests`, `quest_definitions`, `shop_items`, `user_inventory`.
+`practice_sessions`, `friend_quests`, `quest_definitions`, `shop_items`, `user_inventory`,
+`friendships`, `notifications`, `league_tiers`, `league_groups`, `league_members`,
+`league_results`, `game_events`, `user_event_claims`.
 
 ### Opsi B — Supabase CLI
 
@@ -354,8 +415,6 @@ Jangan memberi role lewat form frontend atau menyimpan password developer di kod
 
 ## Rencana skema berikutnya
 
-- Mastery, review schedule, mistake history.
-- Graf pertemanan penuh (friend request, friendships, friend streak), activity feed,
-  leaderboard, liga, event, notifikasi, inbox.
+- Inbox/notifikasi lanjutan (paginasi, preferensi per jenis).
 - Reward Center developer + audit log.
 - Entitlement premium dan produk.

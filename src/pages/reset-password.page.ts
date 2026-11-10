@@ -14,6 +14,9 @@ async function render(ctx: Parameters<PageModule['render']>[0]): Promise<void> {
   await renderAuthLayout(ctx, card);
 
   let unsubscribe: (() => void) | null = null;
+  // Auth events (recovery session, cleared recovery flag) re-run update(); once
+  // the password is saved they must not replace the success card with the form.
+  let completed = false;
   ctx.onCleanup(() => {
     unsubscribe?.();
     unsubscribe = null;
@@ -116,10 +119,13 @@ async function render(ctx: Parameters<PageModule['render']>[0]): Promise<void> {
           return;
         }
 
+        completed = true;
+        unsubscribe?.();
+        unsubscribe = null;
         sessionStore.clearRecoveryMode();
         const state = sessionStore.getState();
         const target =
-          state.status === 'authenticated' && state.user?.profile.onboarding_completed
+          state.status === 'authenticated' && state.user?.profile?.onboarding_completed
             ? '/app'
             : '/onboarding';
 
@@ -151,6 +157,7 @@ async function render(ctx: Parameters<PageModule['render']>[0]): Promise<void> {
   };
 
   const update = () => {
+    if (completed) return;
     const state = sessionStore.getState();
     if (state.status === 'authenticated') {
       renderForm();

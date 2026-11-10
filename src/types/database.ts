@@ -7,6 +7,9 @@ export type Json =
   | Json[];
 
 export type AppRole = 'player' | 'admin' | 'developer';
+export type ProfileVisibility = 'public' | 'friends' | 'private';
+export type FriendshipStatus = 'pending' | 'accepted' | 'declined';
+export type LeagueOutcome = 'promoted' | 'stayed' | 'demoted';
 export type SubjectStatus = 'active' | 'development' | 'inactive';
 export type DifficultyBand =
   | 'beginner'
@@ -62,6 +65,7 @@ export type UserSettingsRow = {
   voice_volume: number;
   reduced_motion: boolean;
   email_opt_in: boolean;
+  profile_visibility: ProfileVisibility;
   created_at: string;
   updated_at: string;
 };
@@ -270,6 +274,7 @@ export type UserXpLedgerRow = {
   source: string;
   lesson_attempt_id: string | null;
   reward_claim_id: string | null;
+  reference_id: string | null;
   created_at: string;
 };
 
@@ -395,6 +400,85 @@ export type UserHeartsRow = {
   updated_at: string;
 };
 
+export type FriendshipRow = {
+  id: string;
+  requester_id: string;
+  addressee_id: string;
+  status: FriendshipStatus;
+  created_at: string;
+  responded_at: string | null;
+};
+
+export type NotificationRow = {
+  id: string;
+  user_id: string;
+  kind: string;
+  title: string;
+  body: string;
+  link: string;
+  created_at: string;
+  read_at: string | null;
+};
+
+export type LeagueTierRow = {
+  tier: number;
+  name: string;
+  accent: string;
+  sort_order: number;
+};
+
+export type LeagueGroupRow = {
+  id: string;
+  tier: number;
+  week_start: string;
+  created_at: string;
+  finalized_at: string | null;
+};
+
+export type LeagueMemberRow = {
+  group_id: string;
+  user_id: string;
+  week_start: string;
+  weekly_xp: number;
+  joined_at: string;
+};
+
+export type LeagueResultRow = {
+  user_id: string;
+  week_start: string;
+  tier: number;
+  rank: number;
+  member_count: number;
+  outcome: LeagueOutcome;
+  next_tier: number;
+  reward_coins: number;
+  reward_xp: number;
+  claimed_at: string | null;
+  created_at: string;
+};
+
+export type GameEventRow = {
+  id: string;
+  week_start: string;
+  title: string;
+  description: string;
+  target_xp: number;
+  reward_coins: number;
+  reward_xp: number;
+  starts_at: string;
+  ends_at: string;
+  is_active: boolean;
+  created_at: string;
+};
+
+export type UserEventClaimRow = {
+  user_id: string;
+  event_id: string;
+  coins: number;
+  xp: number;
+  claimed_at: string;
+};
+
 export type UserStreakRow = {
   user_id: string;
   current_streak: number;
@@ -439,6 +523,7 @@ export type Database = {
           voice_volume?: number;
           reduced_motion?: boolean;
           email_opt_in?: boolean;
+          profile_visibility?: ProfileVisibility;
         };
         Update: {
           locale?: 'id' | 'en';
@@ -449,6 +534,7 @@ export type Database = {
           voice_volume?: number;
           reduced_motion?: boolean;
           email_opt_in?: boolean;
+          profile_visibility?: ProfileVisibility;
         };
         Relationships: [];
       };
@@ -586,6 +672,54 @@ export type Database = {
       };
       player_levels: {
         Row: PlayerLevelRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      friendships: {
+        Row: FriendshipRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      notifications: {
+        Row: NotificationRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      league_tiers: {
+        Row: LeagueTierRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      league_groups: {
+        Row: LeagueGroupRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      league_members: {
+        Row: LeagueMemberRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      league_results: {
+        Row: LeagueResultRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      game_events: {
+        Row: GameEventRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      user_event_claims: {
+        Row: UserEventClaimRow;
         Insert: Record<string, unknown>;
         Update: Record<string, unknown>;
         Relationships: [];
@@ -788,6 +922,62 @@ export type Database = {
       };
       claim_reward_node: {
         Args: { p_node_id: string };
+        Returns: Json;
+      };
+      search_players: {
+        Args: { p_query: string };
+        Returns: Json;
+      };
+      send_friend_request: {
+        Args: { p_username: string };
+        Returns: Json;
+      };
+      respond_friend_request: {
+        Args: { p_request_id: string; p_accept: boolean };
+        Returns: Json;
+      };
+      remove_friend: {
+        Args: { p_user_id: string };
+        Returns: Json;
+      };
+      get_my_friends: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      get_friend_profile: {
+        Args: { p_username: string };
+        Returns: Json;
+      };
+      get_friend_activity: {
+        Args: { p_limit?: number };
+        Returns: Json;
+      };
+      get_leaderboard: {
+        Args: { p_scope?: string };
+        Returns: Json;
+      };
+      get_my_league: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      claim_league_reward: {
+        Args: { p_week_start: string };
+        Returns: Json;
+      };
+      get_active_event: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      claim_event_reward: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      get_my_notifications: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      mark_notifications_read: {
+        Args: { p_id?: string | null };
         Returns: Json;
       };
     };

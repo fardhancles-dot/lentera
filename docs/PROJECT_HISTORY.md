@@ -994,3 +994,106 @@ lulus.
   dianggap gagal.
 - Audio belum diverifikasi secara audible dan pembaca layar sungguhan belum dipakai.
 - Tidak ada commit atau push Git.
+
+## Sesi 15 — 11 November 2026 — Penutupan celah Stage 6 dan uji Auth
+
+### Yang dikerjakan
+
+- **Audit ulang Stage 6 terhadap spesifikasi.** Tiga celah nyata ditemukan: status node
+  “sedang dikerjakan” belum pernah ditampilkan walau `user_node_progress` menyimpannya,
+  area/level peta belum dibedakan secara visual, dan kanvas compact masih memakai
+  koordinat peta wide sehingga node kanan terpotong di ponsel.
+- **Status node sedang dikerjakan:** `resolveNodeStatuses` menerima `startedNodeIds`,
+  `curriculumService` mengisinya dari baris progres `in_progress`, lalu status itu dipakai
+  oleh peta Phaser (warna oranye, ikon jam, legenda) dan daftar lesson DOM (penanda,
+  badge, serta badge di halaman detail lesson). Node yang belum menjadi kepala rantai
+  tetap terkunci.
+- **Area/chapter peta:** `AREA_PALETTES` memberi setiap level langit, bukit, tanah, jalan,
+  dan matahari sendiri; scene menggambar ulang scenery tiap level, menampilkan
+  “Area n · nama palet” di kanvas, dan memudarkan scenery serta node saat pindah area.
+  Label “Area n dari m” juga muncul di kartu peta DOM.
+- **Perbaikan responsif:** layout compact memakai `computeMapPositions(..., viewport)`
+  (2 kolom, bukan 3 kolom wide), `bottom` compact diturunkan ke 500 agar label baris
+  terakhir tidak terpotong, ukuran label naik ke 16px logis, tombol area minimal 44px,
+  dan bottom nav dipangkas menjadi 6 tujuan (Beranda, Belajar, Latihan, Misi, Toko,
+  Profil) supaya label tidak mengecil; Wallet dan Pengaturan tetap dapat dibuka dari
+  topbar.
+- **Audio:** teks pengaturan yang masih menyebut “setelah aset suara ditambahkan”
+  diperbarui. Tambah E2E yang membungkus `AudioContext` untuk membuktikan konteks dibuat,
+  berstatus `running`, dan menjadwalkan osilator setelah gesture.
+- **Auth:** pekerjaan yang sudah ada di working tree diselesaikan dan diverifikasi —
+  helper Supabase Admin API (`tests/e2e/admin.ts`), test konfirmasi pendaftaran lewat
+  tautan resmi, serta pengaman di halaman reset password agar kartu sukses tidak
+  tertimpa form ketika event recovery selesai. `router.ts` memakai optional chaining
+  untuk profil yang belum termuat.
+
+### Pengujian
+
+| Perintah | Hasil |
+| --- | --- |
+| `npm run typecheck` | Lulus 0 error. |
+| `npm test` | **78 test lulus** (11 file; tambah 5 test learning path + 1 test palet area). |
+| `npm run build` | Lulus. |
+| `npm run test:e2e` | **11 lulus, 1 skip**: rute, lesson, latihan, profil/pengaturan, konfirmasi email, reset password, maskot, audio, dan peta (area, keyboard, compact 420, bottom nav). |
+| Pemeriksaan visual | Peta 1280×900, 768×1024, 390×844; area 1/2 berbeda palet; tanpa overflow horizontal. |
+
+### Batasan
+
+- Audio belum didengar manusia; test hanya membuktikan osilator dijadwalkan.
+- `test:sql` dan `verify:supabase` tidak dijalankan ulang sesi ini karena tidak ada
+  perubahan migration atau RPC.
+- Tidak ada commit atau push Git.
+
+## Sesi 16 — 11 November 2026 — Tahap 7: sosial, liga, leaderboard, event, notifikasi
+
+### Yang dikerjakan
+
+- **Migration `20261111100000_social_league.sql`**: tabel `friendships`, `notifications`,
+  10 tier `league_tiers`, `league_groups`, `league_members`, `league_results`,
+  `game_events`, dan `user_event_claims`; RPC pencarian/permintaan/terima/hapus teman,
+  profil pemain, activity feed, leaderboard, liga, klaim hadiah, event, dan notifikasi;
+  trigger XP mingguan; RLS dan grant terbatas.
+- **Privasi profil**: kolom `user_settings.profile_visibility` (`private`/`friends`/
+  `public`). Statistik hanya dibuka RPC sesuai pengaturan dan relasi; leaderboard global
+  mengecualikan profil privat. Pilihan privasi ditambahkan ke `/settings`.
+- **Halaman baru**: `/friends` (cari, permintaan masuk/keluar, teman, aktivitas),
+  `/leaderboard` (tab Liga/Teman/Global, kartu tier, zona promosi/degradasi, event,
+  riwayat, klaim), `/notifications` (tandai satu/semua dibaca), dan
+  `/players/:username` (profil publik + aksi sesuai relasi).
+- **Integrasi**: empat route baru, item nav Teman/Liga/Kabar, kartu Komunitas di beranda,
+  dan `src/styles/social.css`.
+- **Tipe dan client**: `src/types/social.ts`, perluasan `src/types/database.ts`,
+  `social.repository.ts`, dan `social.service.ts` dengan parser payload defensif.
+- **Perbaikan keamanan**: `showToast` memakai `textContent`, bukan `innerHTML`; judul quest
+  yang memuat HTML tidak dieksekusi (diuji E2E).
+- **Pengujian**: migration diperluas ke `scripts/test-sql.mjs` (245 check), verifikasi
+  Supabase ditambah check sosial/liga/event/notifikasi/privasi (76 check), dan E2E dua akun
+  baru `tests/e2e/social.spec.ts`. Migration diterapkan ke project nyata lewat Management
+  API dengan pola skrip yang ada.
+
+### Koreksi selama pengujian
+
+- Alias `offset` di SQL diganti `day_offset` agar tidak bentrok dengan kata kunci.
+- `get_active_event` dijadikan `volatile` karena membuat event mingguan.
+- `user_xp_ledger.reference_id` ditambahkan untuk kunci idempoten hadiah event.
+- Overlap grup liga dummy pada smoke test diperbaiki (slice 0–8 vs 6–12 → 9–16).
+
+### Pengujian
+
+| Perintah | Hasil |
+| --- | --- |
+| `npm run typecheck` | Lulus 0 error. |
+| `npm test` | **78 test lulus** (11 file). |
+| `npm run build` | Lulus. |
+| `npm run test:e2e` | **13 lulus**: rute, lesson, latihan, profil/pengaturan, konfirmasi email, reset password, maskot, audio, peta, Friends Quest dua akun, sosial/liga/privasi dua akun. |
+| `npm run test:sql` | **245 check lulus** di PGlite. |
+| `npm run verify:supabase` | **76 check lulus** di project `xvrnmxbrxhtzzavmrlvy`. |
+| E2E sosial | Lulus 38,4 dtk dengan dua akun sementara; liga/event, cari + permintaan, notifikasi, terima, privasi `private`/`friends`/`public`, hapus teman. |
+
+### Batasan
+
+- Uji browser memakai akun sementara; **uji dengan akun pemilik di-skip** atas kesepakatan
+  sesi ini karena password tidak tersedia dan tidak diminta lewat chat. Liga penuh 30
+  pemain dan promosi/degradasi penuh baru diuji di PGlite.
+- Notifikasi dibatasi 30 terbaru dan aktivitas 20 terbaru; belum ada paginasi.
+- Belum ada commit atau push Git.

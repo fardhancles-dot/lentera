@@ -2,10 +2,12 @@ import Phaser from 'phaser';
 import { computeMapPositions, type MapPoint } from '../adventure/layout';
 import { preloadSceneAssets } from '../assets/load';
 import {
+  areaPaletteFor,
   MAP_VIEWPORTS,
   type AdventureMapLevel,
   type AdventureMapNode,
   type AdventureMapOptions,
+  type AreaPalette,
   type MapViewport,
 } from '../adventure/types';
 import { audioEngine } from '../audio/audioEngine';
@@ -13,6 +15,7 @@ import { createKiko, type KikoCharacter } from '../characters/kiko';
 
 const NODE_COLOR: Record<AdventureMapNode['status'], number> = {
   completed: 0x58cc02,
+  in_progress: 0xff9f43,
   available: 0xffc83d,
   locked: 0xd8e2d5,
   preview: 0x4ca8e8,
@@ -20,6 +23,7 @@ const NODE_COLOR: Record<AdventureMapNode['status'], number> = {
 
 const LABEL_COLOR: Record<AdventureMapNode['status'], string> = {
   completed: '#2F8F24',
+  in_progress: '#A85B00',
   available: '#303A32',
   locked: '#89928A',
   preview: '#2C7CB8',
@@ -60,6 +64,8 @@ class AdventureMapScene extends Phaser.Scene {
   private kiko!: KikoCharacter;
   private playerMarker!: Phaser.GameObjects.Container;
   private levelLayer!: Phaser.GameObjects.Container;
+  private sceneryLayer!: Phaser.GameObjects.Container;
+  private palette: AreaPalette = areaPaletteFor(0);
   private ready = false;
   private pendingLevelIndex: number | null = null;
   private levelIndex = 0;
@@ -85,8 +91,7 @@ class AdventureMapScene extends Phaser.Scene {
 
     this.levelIndex = this.clampLevelIndex(this.options.initialLevelIndex ?? 0);
 
-    this.drawBackground();
-
+    this.sceneryLayer = this.add.container(0, 0).setDepth(0);
     this.levelLayer = this.add.container(0, 0).setDepth(5);
 
     this.kiko = createKiko(this, {
@@ -169,7 +174,10 @@ class AdventureMapScene extends Phaser.Scene {
     this.busy = false;
     this.currentIndex = 0;
 
-    this.positions = computeMapPositions(level.nodes.length);
+    // The compact logical canvas is narrower than the wide one; using its own
+    // columns keeps every node and label inside the visible frame on phones.
+    this.positions = computeMapPositions(level.nodes.length, this.viewport);
+    this.paintScenery(level, index);
     this.drawDecor(level);
     this.drawPath();
 
@@ -230,7 +238,14 @@ class AdventureMapScene extends Phaser.Scene {
 
     if (!this.options.reducedMotion) {
       this.levelLayer.setAlpha(0);
+      this.sceneryLayer.setAlpha(0.2);
       this.tweens.add({ targets: this.levelLayer, alpha: 1, duration: 220, ease: 'Sine.easeOut' });
+      this.tweens.add({
+        targets: this.sceneryLayer,
+        alpha: 1,
+        duration: 320,
+        ease: 'Sine.easeOut',
+      });
     }
     this.showBubble(level.title, 1800);
     this.time.delayedCall(1500, () => {
@@ -240,22 +255,30 @@ class AdventureMapScene extends Phaser.Scene {
 
   // --- Scenery -----------------------------------------------------------
 
-  private drawBackground(): void {
+  /** Repaints the sky, hills and ground for one chapter of the adventure. */
+  private paintScenery(level: AdventureMapLevel, index: number): void {
+    const palette = areaPaletteFor(index);
+    this.palette = palette;
+    this.sceneryLayer.removeAll(true);
+    this.drawBackground(level, index, palette);
+  }
+
+  private drawBackground(level: AdventureMapLevel, index: number, palette: AreaPalette): void {
     const vp = this.viewport;
-    const random = createRandom(hashString(this.options.subjectLabel));
+    const random = createRandom(hashString(level.id));
     const width = vp.width;
     const height = vp.height;
     const horizon = height * 0.65;
 
     const sky = this.add.graphics();
-    sky.fillStyle(0xf3faee, 1);
+    sky.fillStyle(palette.sky, 1);
     sky.fillRect(0, 0, width, height);
-    sky.fillStyle(0xe8f6ff, 1);
+    sky.fillStyle(palette.skyTop, 1);
     sky.fillRect(0, 0, width, horizon * 0.5);
 
-    sky.fillStyle(0xfff1c2, 0.85);
+    sky.fillStyle(palette.sun, 0.85);
     sky.fillCircle(width * 0.87, height * 0.16, 44);
-    sky.fillStyle(0xffe08a, 0.5);
+    sky.fillStyle(palette.sunGlow, 0.5);
     sky.fillCircle(width * 0.87, height * 0.16, 60);
 
     for (let i = 0; i < 3; i += 1) {
@@ -268,19 +291,19 @@ class AdventureMapScene extends Phaser.Scene {
     }
 
     const hills = this.add.graphics();
-    hills.fillStyle(0xd9efc4, 1);
+    hills.fillStyle(palette.hill, 1);
     hills.fillEllipse(width * 0.2, horizon * 0.78, width * 0.62, height * 0.5);
     hills.fillEllipse(width * 0.72, horizon * 0.82, width * 0.68, height * 0.52);
-    hills.fillStyle(0xc7e8ac, 1);
+    hills.fillStyle(palette.hillDark, 1);
     hills.fillEllipse(width * 0.5, horizon, width * 1.05, height * 0.56);
 
     const ground = this.add.graphics();
-    ground.fillStyle(0xe9f7dc, 1);
+    ground.fillStyle(palette.ground, 1);
     ground.fillRect(0, horizon, width, height - horizon);
-    ground.fillStyle(0xdff2cc, 1);
+    ground.fillStyle(palette.groundShade, 1);
     ground.fillEllipse(width / 2, height + 30, width * 1.15, 140);
 
-    this.add
+    const subjectLabel = this.add
       .text(24, 20, this.options.subjectLabel, {
         fontFamily: 'Nunito, system-ui, sans-serif',
         fontSize: `${vp.titleSize}px`,
@@ -288,6 +311,19 @@ class AdventureMapScene extends Phaser.Scene {
         fontStyle: 'bold',
       })
       .setAlpha(0.9);
+
+    const areaText = `Area ${index + 1} · ${palette.name}`;
+    const areaLabel = this.add
+      .text(vp.width - 24, 22, areaText, {
+        fontFamily: 'Nunito, system-ui, sans-serif',
+        fontSize: `${vp.key === 'compact' ? 13 : 12}px`,
+        color: '#5A665B',
+        fontStyle: 'bold',
+      })
+      .setOrigin(1, 0);
+
+    this.sceneryLayer.add([sky, hills, ground, subjectLabel, areaLabel]);
+    this.sceneryLayer.setAlpha(1);
   }
 
   private drawDecor(level: AdventureMapLevel): void {
@@ -338,7 +374,7 @@ class AdventureMapScene extends Phaser.Scene {
 
     const width = Math.max(26, Math.round(this.viewport.nodeRadius * 0.85));
     const path = this.add.graphics();
-    path.lineStyle(width, 0xdff0cc, 1);
+    path.lineStyle(width, this.palette.path, 1);
     path.beginPath();
     path.moveTo(this.positions[0]!.x, this.positions[0]!.y);
     for (const point of this.positions.slice(1)) {
@@ -347,13 +383,13 @@ class AdventureMapScene extends Phaser.Scene {
     path.strokePath();
 
     for (const point of this.positions) {
-      path.fillStyle(0xdff0cc, 1);
+      path.fillStyle(this.palette.path, 1);
       path.fillCircle(point.x, point.y, width / 2);
     }
     this.levelLayer.add(path);
 
     const dots = this.add.graphics();
-    dots.fillStyle(0xffffff, 0.9);
+    dots.fillStyle(this.palette.pathDot, 0.9);
     for (let index = 0; index < this.positions.length - 1; index += 1) {
       const from = this.positions[index]!;
       const to = this.positions[index + 1]!;
@@ -488,6 +524,18 @@ class AdventureMapScene extends Phaser.Scene {
       return icon;
     }
 
+    if (node.status === 'in_progress') {
+      icon.lineStyle(5, 0xffffff, 1);
+      icon.strokeCircle(0, 0, 12);
+      icon.beginPath();
+      icon.moveTo(0, 0);
+      icon.lineTo(0, -7);
+      icon.moveTo(0, 0);
+      icon.lineTo(6, 2);
+      icon.strokePath();
+      return icon;
+    }
+
     if (node.nodeType === 'reward') {
       icon.fillStyle(0xffffff, 1);
       icon.fillRoundedRect(-13, -6, 26, 18, 4);
@@ -516,9 +564,11 @@ class AdventureMapScene extends Phaser.Scene {
     if (!level || !next) return;
 
     this.showBubble(
-      next.status === 'available'
-        ? `Ayo lanjut: ${next.title}`
-        : `Ketuk node untuk mulai belajar, ${next.title}`,
+      next.status === 'in_progress'
+        ? `Lanjutkan: ${next.title}`
+        : next.status === 'available'
+          ? `Ayo lanjut: ${next.title}`
+          : `Ketuk node untuk mulai belajar, ${next.title}`,
       2800,
     );
     this.kiko.setAnimation('encouraging');
@@ -630,12 +680,29 @@ class AdventureMapScene extends Phaser.Scene {
     background.fillRoundedRect(-width / 2, -height / 2, width, height, 14);
     background.lineStyle(2, 0xe5ebe2, 1);
     background.strokeRoundedRect(-width / 2, -height / 2, width, height, 14);
-    background.fillStyle(0xffffff, 0.98);
-    background.fillTriangle(-9, height / 2, 9, height / 2, 0, height / 2 + 11);
 
-    const bubble = this.add
-      .container(this.kiko.root.x, this.kiko.root.y - 88, [background, label])
-      .setDepth(60);
+    // Keep the bubble above Kiko's head when the row has room; otherwise place
+    // it below him so the top row of a tall phone map never clips the text.
+    const aboveY = this.kiko.root.y - 96 - height / 2;
+    const showAbove = aboveY > 12;
+    const bubbleY = showAbove ? aboveY : this.kiko.root.y + 82 + height / 2;
+    background.fillStyle(0xffffff, 0.98);
+    if (showAbove) {
+      background.fillTriangle(-9, height / 2, 9, height / 2, 0, height / 2 + 11);
+    } else {
+      background.fillTriangle(-9, -height / 2, 9, -height / 2, 0, -height / 2 - 11);
+    }
+
+    // The map is narrow on phones, so a long bubble next to the right column
+    // must stay inside the canvas instead of being cut by the frame.
+    const vp = this.viewport;
+    const bubbleX = Phaser.Math.Clamp(
+      this.kiko.root.x,
+      width / 2 + 8,
+      Math.max(width / 2 + 8, vp.width - width / 2 - 8),
+    );
+
+    const bubble = this.add.container(bubbleX, bubbleY, [background, label]).setDepth(60);
     bubble.setAlpha(0);
     this.tweens.add({ targets: bubble, alpha: 1, y: bubble.y - 6, duration: 160, ease: 'Sine.easeOut' });
     this.bubble = bubble;

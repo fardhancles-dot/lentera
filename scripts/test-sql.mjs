@@ -64,6 +64,7 @@ try {
   await run('supabase/migrations/20261110130000_tahap5_rewards.sql');
   await run('supabase/migrations/20261110140000_mastery_review_rewards.sql');
   await run('supabase/migrations/20261110150000_subject_overview_owner.sql');
+  await run('supabase/migrations/20261111100000_social_league.sql');
 
   const content = await db.query(`
     select
@@ -1618,6 +1619,423 @@ try {
     'update public.user_question_mastery set mastery_level = 5 where user_id = $1',
     [user4],
     'permission denied',
+  );
+  await db.exec('reset role');
+
+  // -------------------------------------------------------------------------
+  // Tahap 7: pertemanan, privasi, leaderboard, liga, event, dan notifikasi.
+  // -------------------------------------------------------------------------
+  await db.query(
+    `update public.profiles set onboarding_completed = true
+     where id = any($1::uuid[])`,
+    [[user1, user2, user3, user4]],
+  );
+  const stage7Profiles = await db.query(
+    `select id, username from public.profiles where id = any($1::uuid[])`,
+    [[user1, user2, user3, user4]],
+  );
+  const usernameOf = (id) =>
+    stage7Profiles.rows.find((row) => row.id === id)?.username;
+  const user2Name = usernameOf(user2);
+  const user4Name = usernameOf(user4);
+
+  await db.exec('set role authenticated');
+  await asUser(user1);
+  const search = await db.query('select public.search_players($1) as payload', [user2Name]);
+  check(
+    search.rows[0].payload.length === 1 && search.rows[0].payload[0].relation === 'none',
+    'player search finds another player with no relation',
+    JSON.stringify(search.rows[0].payload),
+  );
+  await expectError(
+    'player search rejects a one-character query',
+    "select public.search_players('p')",
+    [],
+    'search_query_too_short',
+  );
+
+  const sentRequest = await db.query(
+    'select public.send_friend_request($1) as payload',
+    [user2Name],
+  );
+  check(
+    sentRequest.rows[0].payload.status === 'pending' &&
+      Boolean(sentRequest.rows[0].payload.requestId),
+    'friend request is stored as pending',
+    JSON.stringify(sentRequest.rows[0].payload),
+  );
+  const requestId = sentRequest.rows[0].payload.requestId;
+
+  await db.exec('reset role');
+  const requestNotification = await db.query(
+    `select count(*)::int as count from public.notifications
+     where user_id = $1 and kind = 'friend_request' and read_at is null`,
+    [user2],
+  );
+  check(
+    requestNotification.rows[0].count === 1,
+    'friend request creates one unread notification for the recipient',
+    String(requestNotification.rows[0].count),
+  );
+
+  await db.exec('set role authenticated');
+  await asUser(user2);
+  const incoming = await db.query('select public.get_my_friends() as payload');
+  check(
+    incoming.rows[0].payload.incoming.length === 1 &&
+      incoming.rows[0].payload.incoming[0].requestId === requestId,
+    'recipient sees the incoming friend request',
+    JSON.stringify(incoming.rows[0].payload.incoming),
+  );
+  const accepted = await db.query(
+    'select public.respond_friend_request($1, true) as payload',
+    [requestId],
+  );
+  check(accepted.rows[0].payload.status === 'accepted', 'recipient can accept the request');
+
+  await asUser(user1);
+  const friends = await db.query('select public.get_my_friends() as payload');
+  const friendPayload = friends.rows[0].payload;
+  check(
+    friendPayload.friends.length === 1 &&
+      friendPayload.friends[0].userId === user2 &&
+      friendPayload.incoming.length === 0,
+    'accepted request appears in both friends lists',
+    JSON.stringify(friendPayload),
+  );
+  check(
+    friendPayload.friends[0].friendStreak >= 1,
+    'friends who both earned XP today share a one-day friend streak',
+    String(friendPayload.friends[0].friendStreak),
+  );
+  await expectError(
+    'a duplicate friend request is rejected',
+    'select public.send_friend_request($1)',
+    [user2Name],
+    'already_friends',
+  );
+
+  const friendProfile = await db.query(
+    'select public.get_friend_profile($1) as payload',
+    [user2Name],
+  );
+  check(
+    friendProfile.rows[0].payload.statsVisible === true &&
+      friendProfile.rows[0].payload.isFriend === true,
+    'a friend can see profile stats under the default friends-only visibility',
+    JSON.stringify(friendProfile.rows[0].payload),
+  );
+
+  await asUser(user3);
+  const strangerProfile = await db.query(
+    'select public.get_friend_profile($1) as payload',
+    [user2Name],
+  );
+  check(
+    strangerProfile.rows[0].payload.statsVisible === false &&
+      strangerProfile.rows[0].payload.totalXp === null,
+    'a stranger cannot see a friends-only profile',
+    JSON.stringify(strangerProfile.rows[0].payload),
+  );
+
+  await db.exec('reset role');
+  await db.query(
+    "update public.user_settings set profile_visibility = 'private' where user_id = $1",
+    [user2],
+  );
+  await db.exec('set role authenticated');
+  await asUser(user1);
+  const privateFriend = await db.query(
+    'select public.get_friend_profile($1) as payload',
+    [user2Name],
+  );
+  check(
+    privateFriend.rows[0].payload.statsVisible === false,
+    'a private profile hides stats even from a friend',
+  );
+  await db.exec('reset role');
+  await db.query(
+    "update public.user_settings set profile_visibility = 'public' where user_id = $1",
+    [user2],
+  );
+  await db.exec('set role authenticated');
+  await asUser(user3);
+  const publicProfile = await db.query(
+    'select public.get_friend_profile($1) as payload',
+    [user2Name],
+  );
+  check(
+    publicProfile.rows[0].payload.statsVisible === true,
+    'a public profile is visible to any signed-in player',
+  );
+
+  await db.exec('reset role');
+  await db.query(
+    "update public.user_settings set profile_visibility = 'private' where user_id = $1",
+    [user3],
+  );
+  await db.exec('set role authenticated');
+  await asUser(user1);
+
+  const leaderboard = await db.query("select public.get_leaderboard('global') as payload");
+  check(
+    leaderboard.rows[0].payload.entries.some((entry) => entry.userId === user1),
+    'global leaderboard includes a player with weekly XP',
+    JSON.stringify(leaderboard.rows[0].payload.entries.slice(0, 3)),
+  );
+  check(
+    !leaderboard.rows[0].payload.entries.some((entry) => entry.userId === user3),
+    'global leaderboard excludes private profiles',
+  );
+  const friendBoard = await db.query("select public.get_leaderboard('friends') as payload");
+  check(
+    friendBoard.rows[0].payload.entries.every(
+      (entry) => entry.userId === user1 || entry.isFriend || entry.isViewer,
+    ) && friendBoard.rows[0].payload.entries.some((entry) => entry.userId === user2),
+    'friends leaderboard contains the viewer and accepted friends only',
+    JSON.stringify(friendBoard.rows[0].payload.entries),
+  );
+
+  const league = await db.query('select public.get_my_league() as payload');
+  const leaguePayload = league.rows[0].payload;
+  check(
+    leaguePayload.tier === 1 && leaguePayload.members.length === 1 &&
+      leaguePayload.rank === 1 && leaguePayload.canClaimReward === false,
+    'a new player starts alone in the first league with no reward to claim',
+    JSON.stringify(leaguePayload),
+  );
+
+  // Sepuluh anggota untuk menguji promosi dan degradasi secara deterministik.
+  await db.exec('reset role');
+  const dummyUsers = await db.query(
+    `insert into auth.users (email)
+     select 'league-dummy-' || n || '@example.com' from generate_series(1, 16) n
+     returning id`,
+  );
+  const dummies = dummyUsers.rows.map((row) => row.id);
+  const currentWeek = await db.query('select public.league_week_start(now()) as week');
+  const previousWeek = currentWeek.rows[0].week;
+  const prevWeekDate = new Date(previousWeek);
+  prevWeekDate.setUTCDate(prevWeekDate.getUTCDate() - 7);
+  const prevWeek = prevWeekDate.toISOString().slice(0, 10);
+
+  await db.exec('reset role');
+  const tierOneGroup = await db.query(
+    `insert into public.league_groups (tier, week_start) values (1, $1) returning id`,
+    [prevWeek],
+  );
+  const tierFiveGroup = await db.query(
+    `insert into public.league_groups (tier, week_start) values (5, $1) returning id`,
+    [prevWeek],
+  );
+  const tierOneMembers = [user1, ...dummies.slice(0, 9)];
+  for (let index = 0; index < tierOneMembers.length; index += 1) {
+    await db.query(
+      `insert into public.league_members (group_id, user_id, week_start, weekly_xp)
+       values ($1, $2, $3, $4)`,
+      [tierOneGroup.rows[0].id, tierOneMembers[index], prevWeek, 100 - index * 10],
+    );
+  }
+  const tierFiveMembers = [user2, user3, user4, ...dummies.slice(9, 16)];
+  for (let index = 0; index < tierFiveMembers.length; index += 1) {
+    await db.query(
+      `insert into public.league_members (group_id, user_id, week_start, weekly_xp)
+       values ($1, $2, $3, $4)`,
+      [tierFiveGroup.rows[0].id, tierFiveMembers[index], prevWeek, 100 - index * 10],
+    );
+  }
+
+  await db.query('select public.finalize_league_group($1)', [tierOneGroup.rows[0].id]);
+  await db.query('select public.finalize_league_group($1)', [tierFiveGroup.rows[0].id]);
+  const finalized = await db.query(
+    `select user_id, rank, outcome, next_tier, reward_coins
+     from public.league_results where week_start = $1 order by tier desc, rank`,
+    [prevWeek],
+  );
+  const firstPlace = finalized.rows.find((row) => row.user_id === user1);
+  const lastPlace = finalized.rows.find(
+    (row) => row.user_id === dummies[15],
+  );
+  check(
+    firstPlace?.rank === 1 && firstPlace?.outcome === 'promoted' && firstPlace?.next_tier === 2,
+    'first place is promoted to the next league tier',
+    JSON.stringify(firstPlace ?? null),
+  );
+  check(
+    lastPlace?.outcome === 'demoted' && lastPlace?.next_tier === 4,
+    'last place in a ten-player group is demoted one tier',
+    JSON.stringify(lastPlace ?? null),
+  );
+
+  // Hapus keanggotaan minggu ini agar penempatan minggu berikutnya memakai
+  // hasil finalisasi (juara tier 1 naik ke tier 2), bukan grup lama.
+  await db.exec('reset role');
+  await db.query(
+    `delete from public.league_members where user_id = $1
+       and week_start = public.league_week_start(now())`,
+    [user1],
+  );
+  await db.query(
+    `delete from public.league_groups g
+     where g.week_start = public.league_week_start(now())
+       and not exists (select 1 from public.league_members m where m.group_id = g.id)`,
+  );
+  await db.exec('set role authenticated');
+  await asUser(user1);
+  const leagueAfter = await db.query('select public.get_my_league() as payload');
+  const afterPayload = leagueAfter.rows[0].payload;
+  check(
+    afterPayload.tier === 2 && afterPayload.previousResult?.rank === 1 &&
+      afterPayload.previousResult?.outcome === 'promoted' &&
+      afterPayload.previousResult?.nextTier === 2,
+    'promotion places the player in the next tier and is shown as last week result',
+    JSON.stringify({ tier: afterPayload.tier, previous: afterPayload.previousResult }),
+  );
+  check(
+    afterPayload.canClaimReward === true &&
+      afterPayload.previousResult?.rewardCoins === 15,
+    'a finalized league result becomes claimable',
+    JSON.stringify({ canClaim: afterPayload.canClaimReward }),
+  );
+
+  const walletBeforeLeague = await db.query(
+    'select coins from public.user_wallets where user_id = $1',
+    [user1],
+  );
+  const leagueClaim = await db.query(
+    'select public.claim_league_reward($1) as payload',
+    [prevWeek],
+  );
+  check(
+    leagueClaim.rows[0].payload.alreadyClaimed === false &&
+      leagueClaim.rows[0].payload.coinsAwarded === 15,
+    'league reward is paid according to the tier',
+    JSON.stringify(leagueClaim.rows[0].payload),
+  );
+  const leagueClaimRepeat = await db.query(
+    'select public.claim_league_reward($1) as payload',
+    [prevWeek],
+  );
+  check(
+    leagueClaimRepeat.rows[0].payload.alreadyClaimed === true &&
+      leagueClaimRepeat.rows[0].payload.coinsAwarded === 0,
+    'league reward cannot be claimed twice',
+  );
+  await db.exec('reset role');
+  const walletAfterLeague = await db.query(
+    'select coins from public.user_wallets where user_id = $1',
+    [user1],
+  );
+  check(
+    walletAfterLeague.rows[0].coins === walletBeforeLeague.rows[0].coins + 15,
+    'league reward is written to the wallet once',
+    `${walletBeforeLeague.rows[0].coins} -> ${walletAfterLeague.rows[0].coins}`,
+  );
+
+  // Event mingguan memakai XP mingguan yang sama dan klaim Koin sekali.
+  await db.query(
+    "insert into public.user_xp_ledger (user_id, amount, source) values ($1, 100, 'lesson')",
+    [user1],
+  );
+  await db.exec('set role authenticated');
+  await asUser(user1);
+  const event = await db.query('select public.get_active_event() as payload');
+  const eventPayload = event.rows[0].payload;
+  check(
+    eventPayload.targetXp === 100 && eventPayload.progress === 100 &&
+      eventPayload.canClaim === true && eventPayload.claimed === false,
+    'weekly event reports capped progress and a claimable reward',
+    JSON.stringify(eventPayload),
+  );
+  const eventClaim = await db.query('select public.claim_event_reward() as payload');
+  check(
+    eventClaim.rows[0].payload.alreadyClaimed === false &&
+      eventClaim.rows[0].payload.coinsAwarded === 25,
+    'weekly event awards its configured Coins',
+    JSON.stringify(eventClaim.rows[0].payload),
+  );
+  const eventRepeat = await db.query('select public.claim_event_reward() as payload');
+  check(
+    eventRepeat.rows[0].payload.alreadyClaimed === true &&
+      eventRepeat.rows[0].payload.coinsAwarded === 0,
+    'weekly event reward is idempotent',
+  );
+
+  const notifications = await db.query('select public.get_my_notifications() as payload');
+  check(
+    notifications.rows[0].payload.unreadCount >= 1 &&
+      notifications.rows[0].payload.items.length >= 1,
+    'notifications include unread friend and league events',
+    JSON.stringify({ unread: notifications.rows[0].payload.unreadCount }),
+  );
+  const marked = await db.query('select public.mark_notifications_read() as payload');
+  check(marked.rows[0].payload.updated >= 1, 'mark all notifications read updates unread items');
+  const afterMarked = await db.query('select public.get_my_notifications() as payload');
+  check(
+    afterMarked.rows[0].payload.unreadCount === 0,
+    'notification list has no unread items after marking all',
+  );
+
+  // Permintaan dari user1 ke user4 hanya boleh dijawab user4.
+  const fourth = await db.query(
+    'select public.send_friend_request($1) as payload',
+    [user4Name],
+  );
+  const fourthRequest = fourth.rows[0].payload.requestId;
+  await asUser(user3);
+  await expectError(
+    'a third player cannot answer someone else friend request',
+    'select public.respond_friend_request($1, true)',
+    [fourthRequest],
+    'friend_request_forbidden',
+  );
+  await asUser(user4);
+  const fourthAccepted = await db.query(
+    'select public.respond_friend_request($1, true) as payload',
+    [fourthRequest],
+  );
+  check(fourthAccepted.rows[0].payload.status === 'accepted', 'addressee can answer their own request');
+
+  await db.exec('reset role');
+  const hiddenLeague = await db.query(
+    'select count(*)::int as count from public.league_results where user_id <> $1',
+    [user3],
+  );
+  check(hiddenLeague.rows[0].count > 0, 'admin can see all league results');
+  await db.exec('set role authenticated');
+  await asUser(user3);
+  const ownLeague = await db.query('select count(*)::int as count from public.league_results');
+  check(
+    ownLeague.rows[0].count === 1,
+    'RLS exposes only the viewer league result',
+    String(ownLeague.rows[0].count),
+  );
+  const hiddenNotifications = await db.query(
+    'select count(*)::int as count from public.notifications where user_id <> $1',
+    [user3],
+  );
+  check(hiddenNotifications.rows[0].count === 0, 'RLS hides another player notifications');
+  await expectError(
+    'players cannot insert friendships directly',
+    `insert into public.friendships (requester_id, addressee_id) values ($1, $2)`,
+    [user1, user3],
+    'permission denied',
+  );
+  await expectError(
+    'players cannot update league members directly',
+    'update public.league_members set weekly_xp = 9999',
+    [],
+    'permission denied',
+  );
+  await db.exec('reset role');
+  await db.exec('set role authenticated');
+  await asUser(user1);
+  const removed = await db.query('select public.remove_friend($1) as payload', [user2]);
+  check(removed.rows[0].payload.removed === true, 'a player can remove a friend');
+  const afterRemove = await db.query('select public.get_my_friends() as payload');
+  check(
+    afterRemove.rows[0].payload.friends.every((friend) => friend.userId !== user2),
+    'removed friend disappears from the friends list',
   );
   await db.exec('reset role');
 

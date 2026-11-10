@@ -187,11 +187,18 @@ mengubah `lesson-play.page.ts`.
 
 ## Phaser dan DOM
 
-- Phaser **tidak** membungkus seluruh website. Form, peta, dan panel tetap DOM.
+- Phaser **tidak** membungkus seluruh website. Form dan panel tetap DOM; hanya kanvas
+  peta dan stage maskot yang memakai Phaser.
 - Stage maskot dimuat dengan `await import(...)`, sehingga `phaser` menjadi chunk terpisah.
 - Scene digambar dari vector (`Graphics`), bukan emoji atau aset berhak cipta.
 - `createMascotStage()` mengembalikan handle `destroy()` yang didaftarkan ke cleanup router.
-- Adventure map saat ini DOM; migrasi ke scene Phaser direncanakan Tahap 6.
+- Adventure map memakai scene Phaser (`src/game/scenes/adventureMapScene.ts`) dengan dua
+  kanvas logis: `wide` 900×460 untuk desktop dan `compact` 420×620 untuk ponsel. Kedua
+  viewport memakai koordinat, kolom, dan ukuran label sendiri supaya node tidak terpotong.
+  Pemilih area/level, legenda, dan daftar lesson tetap DOM agar dapat difokuskan dan
+  dioperasikan dengan keyboard serta pembaca layar.
+- Setiap level adalah area peta dengan palet langit/bukit/jalan sendiri
+  (`AREA_PALETTES`), dan perpindahan area memudarkan lapisan scenery serta node.
 
 ## Konfigurasi
 
@@ -213,7 +220,7 @@ mengubah `lesson-play.page.ts`.
 | Hearts/Streak lewat trigger | Aturan berlaku untuk semua jalur tulis dan tidak bergantung pada client. |
 | Level dari ambang XP | Tidak ada angka level yang bisa dikirim atau diedit pemain. |
 | Seed generated + UUID deterministik | Konten dapat direview di Git dan dijalankan ulang tanpa duplikasi. |
-| Peta DOM dulu | Data dan unlock dapat diuji sebelum investasi scene Phaser. |
+| Peta Phaser + kontrol DOM | Sensasi petualangan 2D tanpa mengorbankan aksesibilitas keyboard. |
 
 ## Utang teknis yang disengaja
 
@@ -223,9 +230,10 @@ mengubah `lesson-play.page.ts`.
   broadcast nanti wajib lewat Edge Function/RPC dengan verifikasi role.
 - Satu course per mapel; UI memakai `courses[0]`.
 - Seluruh 12 tipe soal punya renderer; `unsupported` hanya jaring pengaman data rusak.
-- Friends Quest sudah ada sebagai co-op berbasis kode undangan; graf teman penuh
-  (friend request, friendships, activity feed) tetap Tahap 7.
+- Friends Quest sudah ada sebagai co-op berbasis kode undangan; Tahap 7 menambahkan
+  friendships, activity feed, notifikasi, liga, leaderboard, dan event mingguan.
 - Audio model memakai text-to-speech browser; belum ada aset rekaman.
 - Timer latihan berjalan di client untuk tampilan; skor, combo, dan XP dihitung ulang
   server dari jawaban tersimpan (durasi menjawab dibatasi 0–600 detik).
-- Belum ada E2E Playwright; lihat `docs/TESTING.md`.
+- E2E Playwright mencakup rute utama, lesson, latihan, Auth, Friends Quest, dan
+  sosial/liga dengan dua akun; lihat `docs/TESTING.md`.

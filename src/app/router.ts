@@ -122,6 +122,26 @@ const routes: RouteDefinition[] = [
     load: () => import('../pages/friends-quest.page'),
   },
   {
+    pattern: '/friends',
+    access: 'onboarded',
+    load: () => import('../pages/friends.page'),
+  },
+  {
+    pattern: '/leaderboard',
+    access: 'onboarded',
+    load: () => import('../pages/leaderboard.page'),
+  },
+  {
+    pattern: '/notifications',
+    access: 'onboarded',
+    load: () => import('../pages/notifications.page'),
+  },
+  {
+    pattern: '/players/:username',
+    access: 'onboarded',
+    load: () => import('../pages/player.page'),
+  },
+  {
     pattern: '/profile',
     access: 'onboarded',
     load: () => import('../pages/profile.page'),
@@ -280,7 +300,7 @@ export class Router {
       return false;
     }
 
-    const onboarded = state.user?.profile.onboarding_completed ?? false;
+    const onboarded = state.user?.profile?.onboarding_completed ?? false;
 
     if (route.access === 'guest') {
       this.navigate(onboarded ? '/app' : '/onboarding', { replace: true });

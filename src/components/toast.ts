@@ -22,7 +22,13 @@ export function showToast(
   const toast = document.createElement('div');
   toast.className = `toast${variant === 'default' ? '' : ` toast--${variant}`}`;
   const glyph = variant === 'error' ? 'alert' : variant === 'success' ? 'check' : 'info';
-  toast.innerHTML = `<span class="toast__icon">${iconMarkup(glyph, 18)}</span><span>${message}</span>`;
+  const iconSlot = document.createElement('span');
+  iconSlot.className = 'toast__icon';
+  iconSlot.innerHTML = iconMarkup(glyph, 18);
+  const textSlot = document.createElement('span');
+  // Pesan dapat memuat judul quest atau pesan server; jangan pernah jadi HTML.
+  textSlot.textContent = message;
+  toast.append(iconSlot, textSlot);
 
   getRegion().append(toast);
 

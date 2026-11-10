@@ -17,6 +17,7 @@ export interface SettingsUpdate {
   voice_volume?: number;
   reduced_motion?: boolean;
   email_opt_in?: boolean;
+  profile_visibility?: 'public' | 'friends' | 'private';
 }
 
 function raise(error: { message: string; code?: string } | null): never {

@@ -32,6 +32,7 @@ const DIFFICULTY_LABEL: Record<string, string> = {
 
 const STATUS_LABEL: Record<LearningNodeStatus, string> = {
   completed: 'Selesai',
+  in_progress: 'Sedang dikerjakan',
   available: 'Siap dimainkan',
   locked: 'Terkunci',
   preview: 'Pratinjau developer',
@@ -99,6 +100,7 @@ function legendItem(status: AdventureNodeStatus, label: string): HTMLElement {
 
 function nodeMarker(status: LearningNodeStatus, index: number): HTMLElement {
   if (status === 'completed') return el('span', { class: 'path-node__marker' }, [icon('check', 20)]);
+  if (status === 'in_progress') return el('span', { class: 'path-node__marker' }, [icon('clock', 20)]);
   if (status === 'locked') return el('span', { class: 'path-node__marker' }, [icon('lock', 18)]);
   if (status === 'preview') return el('span', { class: 'path-node__marker' }, [icon('eye', 18)]);
   return el('span', { class: 'path-node__marker', text: String(index) });
@@ -187,6 +189,7 @@ function renderLevelPicker(
   titleEl: HTMLElement,
   countEl: HTMLElement,
   statusEl: HTMLElement,
+  areaEl: HTMLElement,
 ): LevelPicker {
   const buttons = levels.map((level, index) =>
     el('button', {
@@ -206,7 +209,8 @@ function renderLevelPicker(
     });
     titleEl.textContent = level.title;
     countEl.textContent = levelCountLabel(level);
-    statusEl.textContent = `Level ${level.title} dipilih, ${level.completedCount} dari ${level.nodeCount} lesson selesai.`;
+    areaEl.textContent = `Area ${index + 1} dari ${levels.length}`;
+    statusEl.textContent = `Area ${index + 1}, ${level.title}, dipilih. ${level.completedCount} dari ${level.nodeCount} lesson selesai.`;
   };
 
   apply(initialIndex);
@@ -227,15 +231,18 @@ function renderAdventureCard(
   titleEl: HTMLElement,
   countEl: HTMLElement,
   statusEl: HTMLElement,
+  areaEl: HTMLElement,
 ): HTMLElement {
   return el('section', { class: 'card adventure-map' }, [
     el('div', { class: 'adventure-map__header' }, [
       el('div', {}, [
-        el('span', { class: 'adventure-map__eyebrow', text: 'Peta petualangan' }),
-        titleEl,
-        el('p', {
+        el('div', { class: 'adventure-map__eyebrow-row' }, [
+          el('span', { class: 'adventure-map__eyebrow', text: 'Peta petualangan' }),
+          areaEl,
+        ]),
+        titleEl,        el('p', {
           class: 'adventure-map__subtitle',
-          text: 'Pilih level dengan tombol di bawah, lalu ketuk node untuk berjalan ke lesson.',
+          text: 'Pilih area dengan tombol di bawah, lalu ketuk node untuk berjalan ke lesson.',
         }),
       ]),
       countEl,
@@ -243,11 +250,11 @@ function renderAdventureCard(
     picker,
     host,
     statusEl,
-    el('ul', { class: 'adventure-map__legend' }, [
-      legendItem('completed', 'Selesai'),
-      legendItem('available', 'Siap dimainkan'),
-      legendItem('locked', 'Terkunci'),
-      legendItem('preview', 'Pratinjau'),
+    el('ul', { class: 'adventure-map__legend' }, [        legendItem('completed', 'Selesai'),
+        legendItem('in_progress', 'Sedang dikerjakan'),
+        legendItem('available', 'Siap dimainkan'),
+        legendItem('locked', 'Terkunci'),
+        legendItem('preview', 'Pratinjau'),
     ]),
     el('p', {
       class: 'adventure-map__note small muted',
@@ -385,16 +392,26 @@ function renderPath(path: SubjectPath, onSelectLevel: (index: number) => void): 
     class: 'sr-only',
     attrs: { role: 'status', 'aria-live': 'polite' },
   });
+  const mapArea = el('span', { class: 'adventure-map__area' });
   const picker =
     initialLevel && mapLevels.length > 1
-      ? renderLevelPicker(mapLevels, initialLevelIndex, onSelectLevel, mapTitle, mapCount, mapStatus)
+      ? renderLevelPicker(
+          mapLevels,
+          initialLevelIndex,
+          onSelectLevel,
+          mapTitle,
+          mapCount,
+          mapStatus,
+          mapArea,
+        )
       : null;
   if (picker) {
     picker.apply(initialLevelIndex);
   } else if (initialLevel) {
     mapTitle.textContent = initialLevel.title;
     mapCount.textContent = levelCountLabel(initialLevel);
-    mapStatus.textContent = `Level ${initialLevel.title} dipilih, ${initialLevel.completedCount} dari ${initialLevel.nodeCount} lesson selesai.`;
+    mapArea.textContent = 'Area 1 dari 1';
+    mapStatus.textContent = `Area 1, ${initialLevel.title}, dipilih. ${initialLevel.completedCount} dari ${initialLevel.nodeCount} lesson selesai.`;
   }
 
   if (initialLevel && mapHost) {
@@ -405,6 +422,7 @@ function renderPath(path: SubjectPath, onSelectLevel: (index: number) => void): 
         mapTitle,
         mapCount,
         mapStatus,
+        mapArea,
       ),
     );
   }

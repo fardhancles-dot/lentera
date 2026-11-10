@@ -78,7 +78,9 @@ Tersimpan sebagai `avatar_key` di database. Avatar adalah bagian karakter, bukan
 
 ## Layout
 
-- **Mobile first**: navigasi bawah, target sentuh minimal 48 px, safe-area iOS.
+- **Mobile first**: navigasi bawah 6 tujuan utama (Beranda, Belajar, Latihan, Misi,
+  Toko, Profil), target sentuh minimal 44–54 px, safe-area iOS. Wallet dan Pengaturan
+  tetap tersedia lewat chip sumber daya dan ikon gear di topbar.
 - **Tablet**: satu kolom nyaman dengan kartu lebar terbatas.
 - **Desktop**: sidebar 248 px, konten maksimum 1080 px, tip Kiko di sidebar.
 - Area Phaser selalu berada dalam kontainer ber-aspect-ratio, tidak menutupi form.
@@ -91,30 +93,39 @@ Tersimpan sebagai `avatar_key` di database. Avatar adalah bagian karakter, bukan
 - Animasi halaman masuk 350 ms, 8 px.
 - `prefers-reduced-motion` dan pengaturan pemain (`reduced_motion`) mematikan animasi.
 
-Efek gameplay (confetti, screen shake, floating XP) belum ada karena gameplay belum ada.
+Efek yang ada: sparkle saat Kiko merayakan, denyut node aktif di peta, fade antararea,
+naiknya angka hadiah, dan pulse Hearts rendah. Peta punya palet berbeda per area supaya
+perpindahan chapter terasa, tanpa memuat latar raster besar.
+
+Belum ada confetti layar penuh atau screen shake; keduanya menunggu kebutuhan gameplay
+lanjutan dan tetap harus menghormati `prefers-reduced-motion`.
 
 ## Audio
 
-Rencana:
+- Musik latar dan SFX disintesis Web Audio (osilator), tanpa file sampel pihak ketiga.
+- SFX: klik, langkah, benar, salah, lesson selesai, hadiah, dan node terkunci.
+- Volume musik, efek, dan suara karakter dibaca dari pengaturan tersimpan; mute lokal
+  tersedia di topbar tanpa menimpa pengaturan akun.
+- Audio hanya dimulai setelah gesture pengguna, berhenti saat tab disembunyikan, dan
+  tidak menumpuk karena SFX yang sama dibatasi 40 ms.
+- Suara dialog memakai browser Speech Synthesis bila tersedia; fitur yang tidak didukung
+  menampilkan alternatif, bukan skor palsu.
 
-- Musik latar lembut, loop, volume terpisah.
-- SFX: klik, benar, salah, level up, reward, hitungan waktu.
-- Suara karakter memakai rekaman atau TTS yang benar-benar tersedia; tidak ada audio palsu.
-- Audio tidak diputar sebelum interaksi pengguna (kebijakan browser).
-
-Status: **belum ada aset audio**. Pengaturan volume sudah tersimpan di database agar siap
-dipakai. Jangan menampilkan tombol putar yang tidak menghasilkan suara.
+Status: **implemented**; E2E membuktikan konteks audio berjalan dan osilator dijadwalkan,
+namun kualitas suara belum dinilai dengan telinga manusia.
 
 ## Pipeline aset
 
 Saat ini:
 
 ```text
-public/assets/        (belum dibuat; belum ada file gambar/audio)
+public/assets/pictures/   # tiga ilustrasi soal SVG orisinal
 ```
 
-Karakter, ikon, dan ilustrasi HTML dibuat sebagai SVG inline/Phaser Graphics supaya build
-ringan dan tajam di semua resolusi.
+Karakter, peta, ikon, dan audio dibuat sebagai SVG inline/Phaser Graphics/osilator supaya
+build ringan, tajam di semua resolusi, dan bebas lisensi pihak ketiga. Manifest di
+`src/game/assets/manifest.ts` mencatat scene pemakai serta lisensi setiap aset; rincian di
+`docs/ASSETS.md`.
 
 Saat aset raster/audio ditambahkan:
 

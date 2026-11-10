@@ -1,25 +1,26 @@
 # Testing
 
-## Bukti eksekusi terakhir — 10 November 2026
+## Bukti eksekusi terakhir — 11 November 2026
 
 | Pemeriksaan | Perintah | Hasil |
 | --- | --- | --- |
 | TypeScript strict | `npm run typecheck` | Lulus, 0 error. |
-| Unit test | `npm test` | **72 test lulus (10 file)**, termasuk audio, aset, dan layout compact. |
-| Migration + RPC + RLS + practice + Friends Quest + progression + reward + mastery | `npm run test:sql` | **206 smoke check lulus** di PGlite, termasuk akses `subject_overview` sebagai `authenticated`. |
+| Unit test | `npm test` | **78 test lulus (11 file)**, termasuk audio, aset, layout compact, dan status learning path. |
+| Migration + RPC + RLS + practice + Friends Quest + progression + reward + mastery + sosial/liga | `npm run test:sql` | **245 smoke check lulus** di PGlite, termasuk akses `subject_overview` sebagai `authenticated`, pertemanan, liga, event, notifikasi, dan RLS. |
 | Build produksi | `npm run build` | Lulus; Phaser, Friends Quest, quest, shop, dan wallet menjadi chunk terpisah. |
 | Browser smoke | Chrome headless | Landing, auth, guard route, 404 (sesi 1). |
-| Supabase nyata | `npm run verify:supabase` | **61 check lulus** (view katalog, lesson 20 soal, 4 scene, Practice Hub, Friends Quest, progression, reward/quest/achievement/toko, mastery/review/node hadiah, XP idempoten, RLS) di project `xvrnmxbrxhtzzavmrlvy`. |
-| Playwright/E2E | `npm run test:e2e` | **9 lulus, 1 skip** (9 rute, alur lesson, latihan, reset password, profil/pengaturan, overflow 390px, reduced motion, maskot, peta; Friends Quest skip tanpa akun kedua). |
+| Supabase nyata | `npm run verify:supabase` | **76 check lulus** (view katalog, lesson 20 soal, 4 scene, Practice Hub, Friends Quest, progression, reward/quest/achievement/toko, mastery/review/node hadiah, sosial/liga/event/notifikasi/privasi, XP idempoten, RLS) di project `xvrnmxbrxhtzzavmrlvy`. |
+| Playwright/E2E | `npm run test:e2e` | **13 lulus** (9 rute, alur lesson, latihan, konfirmasi email, reset password, profil/pengaturan, overflow 390px, reduced motion, maskot, audio, peta, Friends Quest dua akun, sosial/liga/privasi dua akun). |
 
 PGlite membuktikan SQL dan RPC konsisten. Verifikasi Supabase nyata kini juga sudah
 dijalankan lewat Auth + PostgREST. UI browser diuji Playwright memakai akun QA di `.env`
 (Chrome terpasang, bukan unduhan Playwright); email verifikasi dan redirect email belum.
-Ketiga belas migration sudah diterapkan ke project nyata, termasuk
-`20261110140000_mastery_review_rewards.sql` (mastery, review terjadwal, node hadiah) dan
-`20261110150000_subject_overview_owner.sql` (perbaikan view katalog). Migration terakhir
-diterapkan lewat `npm run db:apply-catalog-fix` (Management API) karena project tidak
-ter-link ke Supabase CLI di mesin pengembangan.
+Keempat belas migration sudah diterapkan ke project nyata, termasuk
+`20261110140000_mastery_review_rewards.sql` (mastery, review terjadwal, node hadiah),
+`20261110150000_subject_overview_owner.sql` (perbaikan view katalog), dan
+`20261111100000_social_league.sql` (pertemanan, liga, event, notifikasi, privasi).
+Migration sosial diterapkan lewat Management API dengan pola `db:apply-catalog-fix`
+karena project tidak ter-link ke Supabase CLI di mesin pengembangan.
 
 ## Verifikasi API Supabase nyata
 
@@ -51,16 +52,21 @@ delapan achievement, dua item toko, dan penolakan item/quest palsu; lalu memasti
 `user_inventory` tidak dapat diubah langsung. Sesi 11 menambahkan check `get_my_mastery`,
 `start_scheduled_review`, 22 node hadiah aktif, penolakan `claim_reward_node` untuk node
 tidak dikenal, serta penolakan tulis langsung ke `user_question_mastery` dan
-`user_reward_claims`. Ini menguji Auth + PostgREST + RPC nyata,
-**bukan** tampilan browser; uji klik tetap harus dilakukan terpisah.
+`user_reward_claims`. Sesi 16 menambahkan check `search_players`, `get_my_friends`,
+`get_friend_activity`, `get_friend_profile` (profil sendiri), `get_leaderboard`
+global/teman + penolakan scope palsu, `get_my_league`, `get_active_event`,
+`get_my_notifications`, `mark_notifications_read`, 10 tier liga, dan RLS `friendships` /
+`notifications`. Ini menguji Auth + PostgREST + RPC nyata, **bukan** tampilan browser;
+uji klik tetap harus dilakukan terpisah.
 
 ## Cakupan `npm run test:e2e`
 
 `playwright.config.ts` menjalankan Vite di port 4173 lalu menguji dengan Chrome terpasang
 (channel `chrome`). Test memakai `E2E_EMAIL`/`E2E_PASSWORD` dari `.env` dan skip sendiri
-bila kredensial tidak ada. Test dua akun memerlukan tambahan `E2E_EMAIL_2` dan
-`E2E_PASSWORD_2` (akun terkonfirmasi); tanpanya test Friends Quest skip dengan alasan
-jelas, bukan gagal. Bersih-bersih quest uji memakai `SUPABASE_ACCESS_TOKEN` bila tersedia.
+bila kredensial tidak ada. Test dua akun (Friends Quest dan sosial/liga) memakai
+`E2E_FRIEND_*` bila diisi, atau membuat dua akun sementara lewat Admin API bila
+`SUPABASE_ACCESS_TOKEN` tersedia; akun sementara dihapus di `finally`. Tanpa keduanya test
+skip dengan alasan jelas, bukan gagal.
 
 | Test | Cakupan |
 | --- | --- |
@@ -70,10 +76,13 @@ jelas, bukan gagal. Bersih-bersih quest uji memakai `SUPABASE_ACCESS_TOKEN` bila
 | `reduced motion keeps the map usable` | `prefers-reduced-motion: reduce`: kanvas peta, tombol level, dan judul tetap tampil. |
 | `practice hub starts a session and grades an answer` | `/practice?subject=bahasa-inggris` → mode nyata → jawab satu soal → `Periksa jawaban` → feedback dan tombol lanjut. Skip bila mekanik soal pertama butuh mikrofon. |
 | `profile and settings save and persist after reload` | Ubah nama tampilan → toast → reload → nilai tersimpan; ubah preferensi reduced motion → reload → tetap; keduanya dikembalikan ke nilai awal. |
-| `recovery link lets a player set a new password` | Akun sementara + tautan recovery resmi dibuat lewat Admin API, halaman `/reset-password` menyimpan password baru, lalu login API dengan password itu diverifikasi. Akun dihapus setelah test. Butuh `SUPABASE_ACCESS_TOKEN`. |
-| `two accounts create and join the same Friends Quest` | Akun utama membuat quest, akun kedua (`E2E_EMAIL_2`) bergabung lewat kode, kedua sisi melihat 2/8 anggota dan tombol klaim nonaktif. Bersihkan quest berjudul `E2E Quest …` sebelum/sesudah run. Skip bila kredensial akun kedua tidak ada. |
+| `recovery link lets a player set a new password` | Akun sementara + tautan recovery resmi dibuat lewat Admin API, halaman `/reset-password` menyimpan password baru, kartu sukses tidak tertimpa form, lalu login API dengan password itu diverifikasi. Akun dihapus setelah test. Butuh `SUPABASE_ACCESS_TOKEN`. |
+| `signup confirmation link activates a new account` | Akun dibuat belum terkonfirmasi, tautan `signup` resmi dibuka, halaman berakhir di `/app` atau `/onboarding`, `email_confirmed_at` terisi, dan login API berhasil. Akun dihapus setelah test. Butuh `SUPABASE_ACCESS_TOKEN`. |
+| `two accounts contribute, sync, and claim one Friends Quest reward each` | Dua akun sementara: membuat quest, bergabung lewat kode, dua sesi Match Madness per akun, progres 24/20 XP, klaim bersamaan hanya satu hadiah, klaim ulang idempoten, persistensi refresh/login, non-anggota ditolak, manipulasi `contribution_xp` ditolak, dan XSS judul quest tidak dieksekusi. |
+| `league, friends, notifications, and profile privacy work across two accounts` | Dua akun sementara: liga/event tampil, tab Global, cari + kirim permintaan, notifikasi masuk, terima teman, notifikasi penerimaan + tandai semua dibaca, statistik teman, privat menyembunyikan statistik, `friends` membukanya, hapus teman menutupnya lagi, dan `public` membuka untuk non-teman. |
 | `landing mascot canvas mounts and reacts to a click` | Maskot landing (kanvas/SVG fallback) dan reaksi klik. |
-| `map renders, level buttons work with the keyboard, and the canvas resizes` | Peta berakun, pemilih level via keyboard (`aria-pressed`, status live), mute, resize 390px. |
+| `audio engine starts and schedules sound after a user gesture` | Bungkus `AudioContext` sebelum halaman dimuat; setelah login, konteks dibuat, berstatus `running`, dan minimal 4 osilator dijadwalkan (musik + SFX). Bukan pengujian pendengaran. |
+| `map renders, level buttons work with the keyboard, and the canvas resizes` | Peta berakun, pemilih area via keyboard (`aria-pressed`, status live), label “Area n dari m”, legenda status, mute, resize 390px, kanvas compact 420, dan 6 item bottom nav minimal 44px. |
 
 Catatan bug katalog: view `subject_overview` sempat memakai `security_invoker = true`
 sementara `questions` di-revoke dari `authenticated`, sehingga view mengembalikan
@@ -94,9 +103,9 @@ lolos hanya karena shell halaman berhasil dimuat.
 
 `scripts/test-sql.mjs` membuat database PostgreSQL in-memory, lalu:
 
-1. Menjalankan kedua belas migration berurutan, termasuk `question_scenes`,
-   `practice_engine`, `friends_quest`, `progression_economy`, `tahap5_rewards`, dan
-   `mastery_review_rewards`.
+1. Menjalankan keempat belas migration berurutan, termasuk `question_scenes`,
+   `practice_engine`, `friends_quest`, `progression_economy`, `tahap5_rewards`,
+   `mastery_review_rewards`, `subject_overview_owner`, dan `social_league`.
 2. Memeriksa 8 mapel aktif, 57 lesson, 231 soal, 12 tipe soal, 19 pasangan matching,
    3 media gambar, dan 7 jenis node.
 3. Memeriksa 7 node practice, 7 checkpoint, dan 7 legendary; semuanya punya lesson
@@ -172,6 +181,13 @@ lolos hanya karena shell halaman berhasil dimuat.
 41. Toko dan inventory: katalog membaca harga server, pembelian memotong Koin dan menambah
     quantity, item tidak dimiliki ditolak, Ramuan Hati memulihkan Hearts, dan pemain tidak
     dapat mengubah `user_inventory` langsung.
+42. Sosial: pencarian menolak query pendek, permintaan/terima/hapus teman bekerja dua arah,
+    statistik mengikuti `private`/`friends`/`public`, leaderboard global/teman memakai XP
+    mingguan, dan pemain tidak dapat menulis `friendships`/`notifications` langsung.
+43. Liga dan event: grup mingguan dibuat per tier, promosi/degradasi dihitung saat
+    finalisasi, hadiah `10 + tier × 5` Koin dibayar sekali, event 100 XP → 25 Koin klaim
+    idempoten, notifikasi hasil liga/pertemanan terbentuk, dan RLS hanya membuka baris
+    sendiri.
 
 ## Unit test Vitest
 
@@ -190,15 +206,16 @@ lolos hanya karena shell halaman berhasil dimuat.
 
 ## Yang belum dapat diuji
 
-- Registrasi lewat UI, verifikasi email, reset password, onboarding, simpan profil, dan
-  simpan pengaturan belum diuji di browser. Login API sudah diuji.
+- Registrasi lewat form UI dan onboarding belum diuji penuh di browser; konfirmasi email
+  dan reset password sudah diuji memakai tautan resmi Supabase. Login API sudah diuji.
 - RLS Practice Hub dan `question_pairs` sudah diuji lewat PostgREST; RLS tabel lain baru
   diuji di PGlite.
 - Gameplay dan Practice Hub belum diuji di browser dengan sesi nyata; RPC sudah diuji
   di database.
 - E2E browser mencakup rute utama, alur lesson dan latihan, simpan profil/pengaturan,
-  Friends Quest dua akun, overflow ponsel, reduced motion, peta, dan maskot. Belum ada
-  uji audio yang benar-benar didengar, pembaca layar sungguhan, atau audit performa.
+  konfirmasi email, reset password, Friends Quest dua akun, overflow ponsel, reduced
+  motion, peta, maskot, dan penjadwalan audio. Audio belum diuji dengan telinga, belum
+  ada pembaca layar sungguhan, dan belum ada audit performa.
 - Pembelian toko, klaim quest/achievement, mastery/review, dan 20 mekanik mini-game belum
   dijelajahi satu per satu di browser; alur server-nya sudah diuji lewat SQL dan API.
 - Konfirmasi pendaftaran lewat email belum diuji karena butuh kotak surat uji; alur reset
@@ -206,8 +223,11 @@ lolos hanya karena shell halaman berhasil dimuat.
 - Audio memakai text-to-speech browser; belum ada pengujian suara nyata di perangkat.
 - Speaking belum diuji dengan mikrofon sungguhan; Web Speech Recognition berbeda tiap
   browser.
-- Friends Quest sudah diuji lewat PGlite dan API Supabase, tetapi UI dua akun nyata
-  (buat quest, salin kode, bergabung, klaim) belum diuji di browser.
+- Friends Quest dan alur sosial/liga sudah diuji lewat PGlite, API Supabase, dan E2E dua
+  akun sementara. **Uji dengan akun pemilik di-skip** (disepakati 11 November 2026) karena
+  password tidak tersedia; isi `E2E_FRIEND_*` bila ingin memakai akun nyata.
+- Halaman sosial belum diuji dengan pembaca layar atau pada data liga yang benar-benar
+  berisi 30 pemain; promosi/degradasi penuh diuji di PGlite.
 - Wallet, HUD Hearts di lesson, kartu progres beranda/profil, dan countdown refill belum
   diuji di browser dengan akun nyata; RPC dan RLS-nya sudah diuji.
 - Belum ada PWA.
@@ -262,6 +282,21 @@ lolos hanya karena shell halaman berhasil dimuat.
 - [ ] Tombol klaim memberi XP/Koin satu kali; klik kedua menolak klaim ganda.
 - [ ] Akun C yang bukan anggota tidak melihat quest dan tidak dapat mengklaim.
 - [ ] Pemain dengan 3 quest aktif mendapat pesan batas, bukan error mentah.
+
+### Teman, liga, event, dan privasi
+
+- [ ] Cari pemain dengan username/nama; hasil kosong menampilkan pesan jelas.
+- [ ] Kirim permintaan; penerima melihat notifikasi dan daftar permintaan masuk.
+- [ ] Terima/tolak permintaan; pengirim mendapat notifikasi hanya saat diterima.
+- [ ] Hapus teman; kedua pihak kehilangan akses statistik teman.
+- [ ] `/leaderboard` menampilkan tier, peringkat, zona promosi/degradasi, dan event.
+- [ ] Tab Global/Teman memuat papan yang sesuai; baris pemain sendiri ditandai.
+- [ ] Klaim hadiah liga/event sekali; klik kedua menampilkan “sudah diklaim”.
+- [ ] `/notifications` menampilkan notifikasi, tandai satu/semua dibaca, dan jumlah
+      belum dibaca kembali nol setelah reload.
+- [ ] Profil `private` menyembunyikan statistik dari semua pemain lain; `friends` hanya
+      untuk teman; `public` untuk semua.
+- [ ] `/players/:username` tidak bocor email dan menampilkan aksi sesuai relasi.
 
 ### Latihan (Practice Hub)
 
@@ -339,7 +374,7 @@ lolos hanya karena shell halaman berhasil dimuat.
 
 ## Smoke test browser (Playwright)
 
-`npm run test:e2e` menjalankan `tests/e2e/stage6.spec.ts` memakai Chrome yang terpasang
+`npm run test:e2e` menjalankan seluruh `tests/e2e/*.spec.ts` memakai Chrome yang terpasang
 (channel `chrome`) dan dev server Vite di port 4173.
 
 - Test landing selalu berjalan: kanvas maskot harus tampil, bisa diklik, dan tidak

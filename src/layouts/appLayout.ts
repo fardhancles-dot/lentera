@@ -15,6 +15,9 @@ export type NavKey =
   | 'practice'
   | 'wallet'
   | 'quests'
+  | 'friends'
+  | 'leaderboard'
+  | 'notifications'
   | 'shop'
   | 'profile'
   | 'settings';
@@ -33,9 +36,26 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'practice', href: '/practice', label: 'Latihan', shortLabel: 'Latihan', icon: 'target' },
   { key: 'wallet', href: '/wallet', label: 'Wallet', shortLabel: 'Wallet', icon: 'bag' },
   { key: 'quests', href: '/quests', label: 'Misi', shortLabel: 'Misi', icon: 'flag' },
+  { key: 'friends', href: '/friends', label: 'Teman', shortLabel: 'Teman', icon: 'users' },
+  { key: 'leaderboard', href: '/leaderboard', label: 'Liga', shortLabel: 'Liga', icon: 'trophy' },
+  { key: 'notifications', href: '/notifications', label: 'Notifikasi', shortLabel: 'Kabar', icon: 'bell' },
   { key: 'shop', href: '/shop', label: 'Toko', shortLabel: 'Toko', icon: 'gift' },
   { key: 'profile', href: '/profile', label: 'Profil', shortLabel: 'Profil', icon: 'user' },
   { key: 'settings', href: '/settings', label: 'Pengaturan', shortLabel: 'Atur', icon: 'settings' },
+];
+
+/**
+ * Eight items do not fit a 390px phone without shrinking labels below a
+ * comfortable size. Wallet and Settings stay one tap away through the topbar
+ * resource chips and gear, so the bottom bar keeps six real navigation targets.
+ */
+const MOBILE_NAV_KEYS: readonly NavKey[] = [
+  'home',
+  'learn',
+  'practice',
+  'quests',
+  'shop',
+  'profile',
 ];
 
 export interface AppLayoutOptions {
@@ -230,7 +250,9 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
   const bottomNav = el(
     'nav',
     { class: 'bottom-nav', attrs: { 'aria-label': 'Navigasi cepat' } },
-    NAV_ITEMS.map((item) => navLink(item, options.active, true)),
+    NAV_ITEMS.filter((item) => MOBILE_NAV_KEYS.includes(item.key)).map((item) =>
+      navLink(item, options.active, true),
+    ),
   );
 
   ctx.outlet.append(

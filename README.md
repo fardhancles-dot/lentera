@@ -7,7 +7,7 @@ Developer Dashboard.
 Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand terpusat di
 `src/config/brand.ts` dan dapat ditimpa lewat environment variable.
 
-> **Status proyek: Tahap 1–6 selesai.**
+> **Status proyek: Tahap 1–7 selesai.**
 > Lesson, latihan, dan **20 dari 20 mini-game** punya mekanik bermain nyata. Dua belas tipe
 > soal dinilai di server (termasuk Listening, Speaking, Translation, Conversation, Story),
 > tujuh mode latihan berjalan di atas sesi practice dengan XP idempoten, dan **Friends Quest**
@@ -17,8 +17,11 @@ Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand ter
 > jadwal review terjadwal, dan node hadiah di akhir setiap level**. Tahap 6 menambahkan
 > **peta petualangan Phaser responsif**, **karakter Kiko reusable dengan 13 state animasi**,
 > **audio sintetis** (musik, SFX, volume, mute), dan **pipeline aset**; daftar lesson DOM
-> tetap dipakai sebagai jalur aksesibel. Dua smoke test Playwright lulus: maskot landing
-> dan peta berakun (pemilih level keyboard, status live, mute, serta layout ponsel 390px).
+> tetap dipakai sebagai jalur aksesibel. Tahap 7 menambahkan **pertemanan, notifikasi,
+> 10 tier liga mingguan, leaderboard global/teman, event mingguan, dan privasi profil**,
+> seluruhnya dihitung server. Empat belas migration sudah diterapkan ke Supabase nyata;
+> 245 smoke check SQL dan 76 verifikasi API lulus. Full E2E **13 test lulus**, termasuk
+> alur dua akun untuk liga, teman, notifikasi, dan tiga tingkat privasi profil.
 > Rincian di **[docs/PROJECT_HANDOFF.md](docs/PROJECT_HANDOFF.md)** dan
 > **[docs/STAGE4_COMPLETION.md](docs/STAGE4_COMPLETION.md)**.
 
@@ -31,25 +34,26 @@ Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand ter
 | Fondasi Vite + TypeScript + Phaser 4 | **Implemented · Tested (build)** | Phaser dimuat lazy hanya saat stage maskot atau peta petualangan tampil. |
 | Design system & layout responsif | **Implemented · Verified (browser smoke)** | Token warna, komponen, sidebar desktop, bottom nav mobile. |
 | Landing page + maskot interaktif | **Implemented · Verified** | Kiko digambar vector dengan Phaser, idle/blink/celebrate. |
-| Peta petualangan Phaser + animasi Kiko | **Implemented · Tested (unit + build + browser berakun)** | `createKiko` dengan 13 state animasi dipakai ulang oleh maskot dan peta; peta di `/learn/:subject` punya pemilih level tombol DOM yang aksesibel, penanda posisi, layout wide/compact, dan dukungan `prefers-reduced-motion`. |
+| Peta petualangan Phaser + animasi Kiko | **Implemented · Tested (unit + build + browser berakun)** | `createKiko` dengan 13 state animasi dipakai ulang oleh maskot dan peta; peta di `/learn/:subject` punya status selesai/sedang dikerjakan/siap/terkunci/pratinjau, pemilih area DOM yang aksesibel, penanda posisi, palet berbeda per area, layout wide/compact dengan koordinat terpisah, dan dukungan `prefers-reduced-motion`. |
 | Sistem audio | **Implemented · Tested (unit + browser smoke); pemutaran belum diverifikasi telinga** | Musik dan SFX disintesis Web Audio, volume mengikuti pengaturan pemain, mute lokal di topbar, autoplay-safe. |
 | Pipeline aset | **Implemented · Tested (unit)** | `src/game/assets/manifest.ts` + loader Phaser, lisensi tercatat di `docs/ASSETS.md`. |
 | Register / login / logout | **Implemented · E2E verified** | Login API, payload lesson, grading, dan Practice Hub diuji ke project Supabase nyata. |
 | Verifikasi email & lupa password | **Implemented · Lupa password E2E; verifikasi email belum** | Tautan reset diuji lewat tautan resmi Supabase (dibuat Admin API, tanpa kotak surat) sampai password baru bisa dipakai login. Konfirmasi pendaftaran masih butuh kotak surat uji. |
 | Onboarding profil | **Implemented · E2E (via helper akun uji)** | Username, avatar, nama, target harian, zona waktu. Atomik via RPC. |
 | Profil & pengaturan cloud | **Implemented · E2E verified** | Simpan nama tampilan/bio dan preferensi reduced motion ± persist setelah reload diuji browser. |
-| Database & RLS | **Implemented · Tested (PGlite + Supabase API)** | 13 migration diterapkan ke project Supabase; 206 SQL smoke check + 61 verifikasi API lulus. |
+| Database & RLS | **Implemented · Tested (PGlite + Supabase API)** | 14 migration diterapkan ke project Supabase; 245 SQL smoke check + 76 verifikasi API lulus. |
 | Kurikulum & bank soal | **Implemented · Tested (SQL smoke)** | 10 mapel, 22 level, 57 lesson, 231 soal, 12 tipe soal, 7 jenis node; 7 mapel inti + Bahasa Sambas. |
 | Learning path & progres per mapel | **Implemented · Tested (SQL smoke)** | Node selesai/aktif/terkunci, unlock ditegakkan server, progres per course/node. |
 | Lesson engine & halaman hasil | **Implemented · Tested (SQL smoke + E2E)** | Kunci jawaban tidak dikirim ke browser; XP/Koin idempoten per attempt. Halaman lesson menampilkan lima riwayat percobaan terakhir milik pemain (akurasi, skor, benar/total) dari `lesson_attempts` dengan RLS. |
 | Gameplay 20 mini-game | **20/20 implemented · Tested (SQL + API + E2E alur jawab)** | 12 tipe soal punya layar; 7 mode latihan; Conversation bertahap dan Story dengan pilihan respons. E2E menjawab satu soal lesson dan satu soal latihan sampai feedback; 20 mekanik belum dijelajahi satu per satu di browser. |
 | Practice Hub & sesi latihan | **Implemented · Tested (SQL + E2E)** | Sesi server, timer, combo, bonus kecepatan, XP idempoten, unit chooser. E2E memulai sesi nyata dan memeriksa feedback penilaian. |
-| Friends Quest | **Implemented · Tested (SQL + API + E2E dua akun)** | Co-op lewat kode undangan, target XP gabungan, kontribusi dari XP lesson/latihan server, klaim sekali per anggota. E2E membuat quest, bergabung dengan akun kedua, dan memeriksa 2/8 anggota; butuh `E2E_EMAIL_2`/`E2E_PASSWORD_2`. Graf teman penuh tetap Tahap 7. |
+| Friends Quest | **Implemented · Tested (SQL + API + E2E dua akun)** | Co-op lewat kode undangan, target XP gabungan, kontribusi dari XP lesson/latihan server, klaim sekali per anggota. E2E membuat quest, bergabung dengan akun kedua, memeriksa 2/8 anggota, klaim bersamaan, persistensi, dan penolakan non-anggota. |
 | XP, Koin, Hearts, Streak & level | **Implemented · Tested (SQL + Supabase API)** | Ledger XP/Koin, Hearts dengan regenerasi/refill, Streak harian, 30 level akun, dan halaman `/wallet` dengan riwayat transaksi. Semua angka berasal dari RPC server. |
 | Reward level, milestone Streak, quest & achievement | **Implemented · Tested (SQL + Supabase API)** | Hadiah level dan milestone Streak otomatis lewat trigger; 3 quest harian + 3 mingguan dan 8 achievement dihitung dari ledger XP. Halaman `/quests` dan `/wallet`; UI belum diuji browser dengan akun nyata. |
 | Toko & inventory | **Implemented · Tested (SQL + Supabase API)** | Katalog dua item consumable, pembelian atomik, tas, Ramuan Hati, dan Perisai Streak (maksimal 2). Halaman `/shop`; UI belum diuji browser. |
 | Mastery, review terjadwal & node hadiah | **Implemented · Tested (SQL + Supabase API + unit)** | `user_question_mastery` per soal, interval 1/3/7/14/30 hari, halaman `/mastery`, mode Review Terjadwal, dan 22 node hadiah level dengan klaim idempoten. UI belum diuji browser. |
-| Leaderboard, Liga, Teman, Event | **Not implemented** | Tahap 7. |
+| Teman, notifikasi & privasi profil | **Implemented · Tested (SQL + API + E2E dua akun)** | Pencarian pemain, permintaan/terima/hapus teman, notifikasi, dan visibilitas statistik `private`/`friends`/`public`. Statistik hanya dibuka server sesuai relasi dan pengaturan. |
+| Liga, leaderboard & event mingguan | **Implemented · Tested (SQL + API + E2E dua akun)** | 10 tier, grup mingguan maksimal 30 pemain, promosi 5 teratas, degradasi 5 terbawah bila minimal 10 pemain, hadiah `10 + tier × 5` Koin, leaderboard global/teman, event mingguan 100 XP → 25 Koin, dan klaim idempoten. |
 | Developer Dashboard | **Not implemented** | Tahap 8; role developer dan mode pratinjau sudah ada. |
 | PWA / offline / AI / monetisasi | **Not implemented** | Direncanakan setelah gameplay stabil. |
 
@@ -99,7 +103,7 @@ Panduan lengkap Supabase, migrasi, dan deployment: **[docs/SETUP.md](docs/SETUP.
 | `npm run test:watch` | Unit test mode watch. |
 | `npm run test:e2e` | Smoke test browser via Playwright (memakai Chrome terpasang; butuh `.env` untuk test berakun). |
 | `npm run test:sql` | Smoke test migration, RPC, reward, dan RLS di PGlite. |
-| `npm run verify:supabase` | Verifikasi login, payload 20 soal, grading, hasil lesson, Practice Hub, Friends Quest, dan idempotensi reward di Supabase nyata. |
+| `npm run verify:supabase` | Verifikasi login, payload 20 soal, grading, hasil lesson, Practice Hub, Friends Quest, sosial/liga/event, notifikasi, privasi, dan idempotensi reward di Supabase nyata. |
 | `npm run db:apply-catalog-fix` | Menerapkan migration view katalog lewat Supabase Management API (`SUPABASE_ACCESS_TOKEN`); `-- --dry-run` untuk pratinjau. |
 | `npm run seed:build` | Validasi konten dan regenerasi migration seed kurikulum. |
 
@@ -129,7 +133,7 @@ Panduan lengkap Supabase, migrasi, dan deployment: **[docs/SETUP.md](docs/SETUP.
 │   ├── repositories/            # akses data Supabase
 │   ├── services/                # aturan bisnis, lesson engine client, pemetaan error
 │   ├── stores/                  # session, player, dan rewards store observable
-│   ├── styles/                  # tokens, base, components, layout, pages, practice
+│   ├── styles/                  # tokens, base, components, layout, pages, practice, social
 │   ├── types/                   # tipe database & sesi
 │   ├── utils/                   # DOM, validasi
 │   └── main.ts
@@ -146,7 +150,9 @@ Panduan lengkap Supabase, migrasi, dan deployment: **[docs/SETUP.md](docs/SETUP.
 │       ├── 20261110100000_friends_quest.sql
 │       ├── 20261110120000_progression_economy.sql
 │       ├── 20261110130000_tahap5_rewards.sql
-│       └── 20261110140000_mastery_review_rewards.sql
+│       ├── 20261110140000_mastery_review_rewards.sql
+│       ├── 20261110150000_subject_overview_owner.sql
+│       └── 20261111100000_social_league.sql
 ├── scripts/                     # generator + validasi seed kurikulum, SQL smoke test
 ├── tests/                       # unit test Vitest
 ├── docs/                        # dokumentasi teknis + laporan audit

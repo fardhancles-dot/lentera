@@ -36,6 +36,21 @@
   berpasangan. Payload hanya mengirim dua kolom terpisah.
 - Fungsi `security definer` memakai `search_path` tetap.
 - Fungsi bootstrap developer di-revoke dari `public`, `anon`, dan `authenticated`.
+- Tabel sosial/liga (`friendships`, `notifications`, `league_*`, `game_events`,
+  `user_event_claims`) di-revoke dari `anon`; hanya `authenticated` yang mendapat grant baca
+  terbatas. `league_groups` dan `league_members` tidak diberi grant langsung sama sekali.
+- `friendships` RLS hanya membuka relasi yang melibatkan pemanggil; `notifications` dan
+  `league_results` hanya baris sendiri. Semua penulisan lewat RPC, bukan PostgREST.
+- Profil publik hanya membagikan username, nama tampilan, avatar, dan bio. Email tetap di
+  `auth.users` dan tidak pernah dibaca RPC sosial.
+- Statistik pemain difilter `profile_visibility`: `private` selalu tertutup untuk pemain
+  lain, `friends` hanya untuk relasi `accepted`, `public` untuk semua. Leaderboard global
+  mengecualikan profil `private`.
+- Aksi sensitif sosial memakai `auth.uid()` dari sesi, bukan ID dari body request:
+  hanya addressee yang dapat menerima/menolak permintaan, klaim liga/event memakai baris
+  milik pemanggil, dan hadiah ditulis dengan kunci unik agar idempoten.
+- Toast merender teks dengan `textContent`, bukan `innerHTML`, sehingga judul quest/nama
+  pemain yang memuat HTML tidak dieksekusi (diuji E2E).
 
 ### Frontend
 
@@ -55,7 +70,7 @@ Ini harus diselesaikan sebelum fitur terkait dinyatakan selesai:
 | Rate limiting | Hanya bawaan Supabase Auth | Batasi aksi sensitif di Edge Function. |
 | Anti-cheat gameplay | Penilaian dan attempt sudah di server; timer belum | Tambah batas waktu wajar dan deteksi request berulang saat mode timed dibuat. |
 | Audit log developer | Belum ada | Tabel append-only + aktor dari `auth.uid()`, bukan input form. |
-| Privasi profil | Semua pemain dapat melihat profil dasar | Tambahkan pengaturan privasi + view terbatas saat fitur sosial dibuat. |
+| Privasi profil | Profil dasar (username, nama, avatar, bio) publik; statistik mengikuti `private`/`friends`/`public` lewat RPC | Email tidak pernah dibagikan; audit ulang bila menambah kolom profil baru. |
 | CSRF | SPA + Bearer token Supabase, tanpa cookie sesi aplikasi | Tidak ada form server-rendered. Tinjau ulang jika cookie dipakai. |
 | CSP | Belum diatur | Tambahkan header CSP di Vercel setelah daftar origin final. |
 | Email provider | Mengandalkan email bawaan Supabase | Konfigurasi SMTP saat produksi. |

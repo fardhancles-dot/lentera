@@ -1151,3 +1151,117 @@ lulus.
   belum ada.
 - Dashboard belum ditinjau pembaca layar atau viewport 390px.
 - Belum ada commit atau push Git untuk Tahap 8.
+
+## Sesi 18 — 11 November 2026 — Registrasi ringkas, reset password OTP, SMTP Brevo
+
+### Yang dikerjakan
+
+- **Aturan password disederhanakan**: minimal 6 karakter tanpa syarat huruf besar, angka,
+  atau simbol. Meter kekuatan password dihapus dan diganti petunjuk “Password minimal 6
+  karakter.”; konfirmasi password tetap wajib.
+- **Registrasi langsung memberi sesi** karena `mailer_autoconfirm=true` di project;
+  pengguna tidak perlu membuka email atau mengklik tautan aktivasi. Akun lama tetap bisa
+  login.
+- **Lupa password memakai mekanisme resmi Supabase**: `resetPasswordForEmail` lalu
+  `verifyOtp({ type: 'recovery' })` dengan kode 6 angka. Halaman reset menerima kode,
+  menolak kode salah/kedaluwarsa/pemakaian ulang, dan menyediakan kirim ulang dengan jeda
+  serta batas percobaan.
+- **Template Reset Password** memuat `{{ .Token }}` dan `{{ .ConfirmationURL }}`; subjek
+  “Kode reset password Lentera”. Perubahan template sebelumnya ditolak pada email bawaan
+  paket gratis, sehingga SMTP kustom dipasang.
+- **SMTP produksi Brevo**: `smtp-relay.brevo.com:587`, login berformat
+  `...@smtp-brevo.com` (bukan email akun), pengirim `Lentera`. Pembatasan Authorized IPs
+  untuk SMTP dinonaktifkan karena server Supabase memakai IP dinamis; tanpa itu pengiriman
+  gagal `525 Unauthorized IP address`. Batas kirim email auth dinaikkan ke 30/jam.
+- **Konfigurasi Auth**: `password_min_length=6`, `password_required_characters=null`,
+  OTP 6 angka berlaku 300 detik.
+- Dokumentasi `README.md`, `docs/SETUP.md`, dan `docs/SECURITY.md` diperbarui dari status
+  Ethereal menjadi Brevo produksi. Kunci SMTP hanya disimpan di konfigurasi Supabase,
+  tidak di repo.
+
+### Pengujian
+
+| Pemeriksaan | Hasil |
+| --- | --- |
+| `npm run typecheck` | Lulus. |
+| `npm test` | **91 test lulus**. |
+| `npm run build` | Lulus. |
+| `npm run test:e2e` | **15 lulus**. |
+| Email reset sungguhan | Terkirim ke Gmail; log Auth Supabase `status 200` tanpa error. |
+| Alur OTP end-to-end | Kode 6 angka diterima, sesi recovery dibuat, password baru tersimpan, login berhasil, kode yang sama ditolak saat dipakai ulang (403). |
+
+### Batasan
+
+- Kode OTP dan password tidak pernah disimpan plaintext; service role key tidak masuk
+  frontend.
+- Akun uji sementara dihapus setelah verifikasi; akun pemilik tidak diubah.
+
+## Sesi 19 — 11 November 2026 — Deployment ganda Vercel + GitHub Pages
+
+### Audit
+
+- Proyek adalah SPA Vite 8 + TypeScript + Phaser dengan routing History API. Tidak ada
+  server API sendiri: frontend memanggil Supabase langsung dan RLS menegakkan otorisasi.
+  Karena itu tidak ada backend yang berjalan di GitHub Pages, dan backend bersama otomatis
+  Supabase untuk kedua situs.
+- Base path sub-folder belum didukung: router, redirect auth, dan favicon memakai `/`.
+- Belum ada CI/CD; `vercel.json` sudah punya rewrite SPA; repository masih privat sehingga
+  Pages tidak tersedia pada paket GitHub saat ini.
+
+### Yang dikerjakan
+
+- **Dukungan base path**: `src/app/basePath.ts` (normalisasi, `stripBase`, `withBase`),
+  dipakai router untuk navigasi/popstate/redirect dan `src/config/brand.ts` untuk
+  `appOrigin`. Favicon memakai `%BASE_URL%`.
+- **Build Pages**: `npm run build:pages` memakai `vite build --base=/lentera/`, lalu
+  `scripts/pages-fallback.mjs` menyalin `index.html` ke `404.html` dan menulis `.nojekyll`.
+- **CI/CD**: `.github/workflows/deploy-pages.yml` membangun dari commit terbaru, mengunggah
+  artifact, dan men-deploy lewat `actions/deploy-pages`; dipicu push ke `main` dan manual.
+  Repository variables `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` diisi agar build tidak
+  jatuh ke mode “Supabase belum dikonfigurasi”.
+- **Supabase**: redirect URL GitHub Pages, Vercel produksi, preview Vercel, dan localhost
+  didaftarkan; Site URL diarahkan ke domain Vercel.
+- **GitHub Pages**: repository dijadikan publik (pilihan pemilik), Pages diaktifkan dengan
+  source GitHub Actions, dan deployment pertama dijalankan.
+- **Vercel**: project `dhancles/lentera` dibuat, environment Supabase diisi untuk
+  Production/Preview/Development, dan production live di `https://lentera-phi.vercel.app`.
+- **Administrasi akun**: akun pemilik yang diminta dipromosikan dari `player` menjadi
+  `developer`; akun QA `qa+xvrnmxbrxhtzzavmrlvy@example.com` dihapus beserta datanya, dan
+  kredensial E2E yang sudah tidak valid dibersihkan dari `.env` lokal.
+- **Dokumentasi**: `docs/DEPLOYMENT.md` ditambahkan; `README.md` dan `docs/SETUP.md` diberi
+  tautan serta langkah Pages/Vercel.
+
+### Pengujian
+
+| Pemeriksaan | Hasil |
+| --- | --- |
+| `npm run typecheck` | Lulus. |
+| `npm test` | **101 test lulus** (12 file), termasuk 10 test base path. |
+| `npm run build` | Lulus (Vercel, base `/`). |
+| `npm run build:pages` | Lulus (base `/lentera/`, menghasilkan `404.html`). |
+| Simulasi lokal kedua base | Aset, navigasi, deep link, dan `redirect_to` benar. |
+| GitHub Actions | Empat run sukses; push ke `main` otomatis men-deploy Pages. |
+| Live GitHub Pages | Aset `/lentera/assets/`, login akun uji, deep link `/lentera/profile`, redirect reset ke domain Pages, 0 error console. |
+| Live Vercel | Aset `/assets/`, deep link `/profile` 200, login, redirect reset ke domain Vercel. |
+| Lintas situs | Akun sama di kedua domain menampilkan data identik: Lv 4, 556 XP, 110 Koin, 5/5 Hearts, Streak 2 hari. |
+
+### Commit
+
+- `906c122` — base path, workflow Pages, dokumentasi deployment.
+- `f635652` — status Pages aktif dan hasil verifikasi live.
+- `8f3a1b2` — deployment Vercel dan verifikasi akun lintas situs.
+
+### Batasan dan sisa
+
+- Koneksi Git Vercel belum diotorisasi, sehingga push ke `main` baru otomatis men-deploy
+  Pages; Vercel perlu dihubungkan sekali lewat **Settings → Git**.
+- Supabase mengizinkan CORS dari origin mana pun; pembatasan per domain memerlukan proxy.
+  Otorisasi tetap dari JWT + RLS.
+- Sesi disimpan per origin, jadi pengguna login sekali di tiap domain; akun dan progres
+  tetap sama.
+- Deep link GitHub Pages mengembalikan status HTTP 404 untuk dokumen, tetapi `404.html`
+  menyajikan aplikasi dengan benar.
+- Repository kini publik agar Pages tersedia; jangan pernah commit `.env`, service role key,
+  atau kunci SMTP.
+- Akun `developer@lentera.test` masih ada dan masih berrole developer; belum dihapus karena
+  tidak termasuk permintaan sesi ini.

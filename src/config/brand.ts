@@ -5,6 +5,9 @@ const env = import.meta.env;
 
 const publicUrl = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
 
+/** Nama pemegang hak cipta di footer; terpisah dari nama produk. */
+const copyrightName = 'Fardhan';
+
 /**
  * Central branding. Change the game name, mascot or support link here (or with
  * VITE_* variables) instead of hunting through components.
@@ -14,11 +17,12 @@ export const brand = {
   tagline: publicUrl(env.VITE_GAME_TAGLINE) || 'Petualangan belajar yang seru',
   version: publicUrl(env.VITE_GAME_VERSION) || version,
   supportUrl: publicUrl(env.VITE_SUPPORT_URL),
+  copyrightName,
   mascot: {
     name: 'Kiko',
     role: 'roh daun penjaga Lentera',
   },
-  copyright: `© ${new Date().getFullYear()} Lentera. Dibuat untuk belajar dengan gembira.`,
+  copyright: `© ${new Date().getFullYear()} ${copyrightName}. Dibuat untuk belajar dengan gembira.`,
   colors: {
     primary: '#58CC02',
     primaryDark: '#2F8F24',

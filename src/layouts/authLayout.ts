@@ -39,7 +39,7 @@ export async function renderAuthLayout(ctx: RouteContext, card: HTMLElement): Pr
       el('div', { class: 'auth-panel__body' }, [card]),
       el('p', {
         class: 'auth-panel__legal',
-        text: `© ${new Date().getFullYear()} ${brand.name} · v${brand.version}`,
+        text: `© ${new Date().getFullYear()} ${brand.copyrightName} · v${brand.version}`,
       }),
     ]),
   ]);

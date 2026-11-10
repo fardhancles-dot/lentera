@@ -112,16 +112,22 @@ bukan kontrol keamanan di sini: setiap request tetap membawa JWT pengguna, dan R
 menentukan baris mana yang boleh dibaca/ditulis. Anon key aman dipublikasikan; service
 role key tidak boleh pernah masuk ke frontend.
 
+## Status deployment
+
+- Repository dibuat publik agar GitHub Pages tersedia pada paket GitHub saat ini.
+- Pages sudah diaktifkan dengan source **GitHub Actions**.
+- Repository variables `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` sudah diisi.
+- Workflow berhasil membangun dan men-deploy; situs live di
+  `https://fardhancles-dot.github.io/lentera/`.
+
 ## Langkah manual yang masih diperlukan
 
-1. **Aktifkan GitHub Pages:** Settings → Pages → Build and deployment → Source:
-   **GitHub Actions**. Repository privat memerlukan paket GitHub Pro/Team agar Pages
-   bisa aktif; jika masih Free, jadikan repository publik atau upgrade.
-2. **Buat/import project Vercel:** import `fardhancles-dot/lentera`, framework Vite,
-   build `npm run build`, output `dist`, isi env vars di atas, deploy.
-3. **Daftarkan domain Vercel** ke redirect URL Supabase seperti di atas.
-4. Jalankan workflow **Deploy GitHub Pages** (push ke `main` atau manual dari tab Actions)
-   dan pastikan job `build` serta `deploy` hijau.
+1. **Buat/import project Vercel:** login ke akun Vercel yang benar, import
+   `fardhancles-dot/lentera`, framework Vite, build `npm run build`, output `dist`, isi
+   env vars di atas, deploy.
+2. **Daftarkan domain Vercel** ke redirect URL Supabase: tambahkan
+   `https://<domain-vercel>/**`.
+3. Verifikasi login, profil, dan reset password di domain Vercel.
 
 ## Verifikasi yang sudah dilakukan
 
@@ -134,3 +140,9 @@ role key tidak boleh pernah masuk ke frontend.
   `redirect_to=http://localhost:4180/lentera/reset-password`.
 - Simulasi lokal Vercel di root: aset di `/assets/`, navigasi ke `/login`, deep link
   `/forgot-password`, dan `redirect_to=http://localhost:4181/reset-password` benar.
+- **Live GitHub Pages:** aset dimuat dari `/lentera/assets/`; login akun uji berhasil dan
+  diarahkan ke `/lentera/app`; deep link `/lentera/profile` menampilkan halaman Profil
+  dengan sesi yang bertahan; request reset mengirim
+  `redirect_to=https://fardhancles-dot.github.io/lentera/reset-password`; tidak ada error
+  console. Respons HTTP 404 untuk dokumen deep link adalah perilaku normal GitHub Pages
+  karena `404.html` yang menyajikan aplikasi.

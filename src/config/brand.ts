@@ -1,4 +1,5 @@
 import { version } from '../../package.json';
+import { basePath } from '../app/basePath';
 
 const env = import.meta.env;
 
@@ -32,5 +33,6 @@ export const brand = {
   },
 } as const;
 
-/** Auth redirect target, useful when the app is served from a sub-path. */
-export const appOrigin = publicUrl(env.VITE_APP_URL) || window.location.origin;
+/** Auth redirect target; includes the GitHub Pages sub-path when used there. */
+export const appOrigin =
+  publicUrl(env.VITE_APP_URL).replace(/\/+$/, '') || `${window.location.origin}${basePath}`;

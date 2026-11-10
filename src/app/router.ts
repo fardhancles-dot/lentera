@@ -1,3 +1,4 @@
+import { stripBase, withBase } from './basePath';
 import { brand } from '../config/brand';
 import { sessionStore } from '../stores/session.store';
 
@@ -221,14 +222,14 @@ export class Router {
     this.unsubscribeRecovery = sessionStore.subscribe((state) => {
       if (
         state.recoveryMode &&
-        normalizePath(window.location.pathname) !== '/reset-password'
+        normalizePath(stripBase(window.location.pathname)) !== '/reset-password'
       ) {
         this.navigate('/reset-password', { replace: true });
       }
     });
 
     window.addEventListener('popstate', () => {
-      void this.render(window.location.pathname + window.location.search, false);
+      void this.render(stripBase(window.location.pathname) + window.location.search, false);
     });
 
     document.addEventListener('click', (event) => {
@@ -251,18 +252,19 @@ export class Router {
       if (!href.startsWith('/')) return;
 
       event.preventDefault();
-      this.navigate(url.pathname + url.search + url.hash);
+      this.navigate(stripBase(url.pathname) + url.search + url.hash);
     });
 
-    await this.render(window.location.pathname + window.location.search, true);
+    await this.render(stripBase(window.location.pathname) + window.location.search, true);
   }
 
   navigate(url: string, options: { replace?: boolean } = {}): void {
     if (url === this.currentUrl) return;
+    const browserUrl = withBase(url);
     if (options.replace) {
-      window.history.replaceState(null, '', url);
+      window.history.replaceState(null, '', browserUrl);
     } else {
-      window.history.pushState(null, '', url);
+      window.history.pushState(null, '', browserUrl);
     }
     void this.render(url, false);
   }
@@ -339,7 +341,7 @@ export class Router {
   private async render(url: string, initial: boolean): Promise<void> {
     const token = ++this.renderToken;
     const parsed = new URL(url, window.location.origin);
-    const path = normalizePath(parsed.pathname);
+    const path = normalizePath(stripBase(parsed.pathname));
     const query = parsed.searchParams;
 
     this.runCleanups();

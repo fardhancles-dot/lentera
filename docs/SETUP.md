@@ -303,7 +303,13 @@ Perintah ini menguji login, payload soal, grading, penyelesaian lesson, Friends 
 penolakan akses `question_pairs` tanpa sesi. Tampilan browser tetap perlu diuji manual
 karena skrip ini memanggil API, bukan mengklik UI.
 
-## 11. Deploy ke Vercel
+## 11. Deploy ke Vercel dan GitHub Pages
+
+Proyek ini bisa berjalan di dua alamat sekaligus dengan satu backend Supabase. Panduan
+lengkap, arsitektur, dan daftar environment variables ada di
+**[DEPLOYMENT.md](DEPLOYMENT.md)**.
+
+### Vercel
 
 1. Push repository ke GitHub.
 2. Vercel → **Add New → Project** → import repository.
@@ -314,12 +320,22 @@ karena skrip ini memanggil API, bukan mengklik UI.
    - `VITE_SUPABASE_ANON_KEY`
    - opsional `VITE_APP_URL` = URL produksi
 6. Deploy.
-7. Tambahkan domain Vercel ke **Redirect URLs** Supabase, lalu set **Site URL** ke domain
-   produksi.
+7. Tambahkan domain Vercel ke **Redirect URLs** Supabase.
 8. Uji register (langsung masuk), lupa password dengan OTP, dan login ulang di domain
    produksi.
 
 `vercel.json` sudah berisi rewrite SPA agar refresh di `/profile` tidak 404.
+
+### GitHub Pages
+
+1. Settings → Pages → Source: **GitHub Actions** (repository privat butuh GitHub Pro).
+2. Tambahkan repository variables `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY`.
+3. Push ke `main`; workflow `.github/workflows/deploy-pages.yml` membangun dengan base
+   `/lentera/`, menyalin `index.html` ke `404.html` untuk deep link, lalu men-deploy.
+4. Pastikan `https://fardhancles-dot.github.io/lentera/**` ada di Redirect URLs Supabase.
+
+Jangan memakai `npm run build` biasa untuk GitHub Pages: build itu memakai base `/` dan
+aset akan 404 di sub-path.
 
 ## Troubleshooting
 

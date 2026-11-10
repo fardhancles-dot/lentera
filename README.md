@@ -91,6 +91,7 @@ Tanpa kredensial Supabase, aplikasi tetap menampilkan landing page, halaman masu
 dengan peringatan, dan panduan setup di `/setup`. Form akun tidak akan mengirim request.
 
 Panduan lengkap Supabase, migrasi, dan deployment: **[docs/SETUP.md](docs/SETUP.md)**.
+Deployment ganda Vercel + GitHub Pages: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**.
 
 ### Scripts
 
@@ -173,6 +174,7 @@ terkait dikerjakan — bukan folder kosong yang dibuat lebih awal.
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) — arsitektur, alur data, keputusan teknis.
 - [DATABASE.md](docs/DATABASE.md) — skema, RLS, fungsi, cara menambah tabel.
 - [SETUP.md](docs/SETUP.md) — Supabase, email, migrasi, Vercel, troubleshooting.
+- [DEPLOYMENT.md](docs/DEPLOYMENT.md) — deployment ganda Vercel + GitHub Pages, CI/CD, environment.
 - [SECURITY.md](docs/SECURITY.md) — model keamanan dan batasan yang diketahui.
 - [GAME_DESIGN.md](docs/GAME_DESIGN.md) — identitas visual, maskot, motion.
 - [GAMEPLAY.md](docs/GAMEPLAY.md) — rencana lesson engine & 20 mini-game, status nyata.

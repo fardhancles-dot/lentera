@@ -2,13 +2,15 @@
 
 Database: PostgreSQL di Supabase. Migration ada di `supabase/migrations/`.
 
-> **Status:** keempat belas migration sudah diterapkan ke project Supabase nyata
+> **Status:** kelima belas migration sudah diterapkan ke project Supabase nyata
 > (`xvrnmxbrxhtzzavmrlvy`, region Singapura), termasuk perbaikan view katalog
-> `20261110150000_subject_overview_owner.sql` dan migration sosial/liga
-> `20261111100000_social_league.sql` yang diterapkan lewat Management API. Smoke test
-> PGlite (245 check) dan verifikasi API Supabase (76 check) lulus, termasuk Friends Quest,
+> `20261110150000_subject_overview_owner.sql`, migration sosial/liga
+> `20261111100000_social_league.sql`, dan migration Developer Dashboard
+> `20261111110000_developer_dashboard.sql` yang diterapkan lewat Management API. Smoke test
+> PGlite (262 check) dan verifikasi API Supabase (83 check) lulus, termasuk Friends Quest,
 > progression/economy, reward/quest/achievement/toko, pertemanan, liga, event, notifikasi,
-> dan privasi profil. Pengujian UI browser terpisah.
+> privasi profil, serta overview/pencarian/Reward Center/audit log staff. Pengujian UI
+> browser terpisah.
 >
 > Untuk menerapkan migration baru tanpa CLI ter-link, gunakan
 > `SUPABASE_ACCESS_TOKEN=sbp_xxx npm run db:apply-catalog-fix` (`--dry-run` untuk melihat
@@ -32,6 +34,7 @@ Database: PostgreSQL di Supabase. Migration ada di `supabase/migrations/`.
 | `20261110140000_mastery_review_rewards.sql` | Mastery per soal, jadwal review, mode `scheduled_review`, node `reward` per level, RPC klaim hadiah, RLS. |
 | `20261110150000_subject_overview_owner.sql` | Menjalankan `subject_overview` dengan hak owner agar katalog tidak gagal saat `questions` di-revoke dari pemain. |
 | `20261111100000_social_league.sql` | Pertemanan, notifikasi, 10 tier liga + grup/ hasil mingguan, leaderboard, event mingguan, privasi profil, RPC sosial, trigger XP liga, dan RLS. |
+| `20261111110000_developer_dashboard.sql` | `audit_logs` append-only, helper `log_audit`, overview/pencarian staff, Reward Center satu akun, broadcast notifikasi (maks. 500), dan RLS staff-only. |
 
 Seed dihasilkan dari `scripts/content/**/*.ts` dengan `npm run seed:build`. Jangan mengedit
 file seed secara manual; ubah sumber TypeScript lalu regenerasi. UUID bersifat deterministik
@@ -104,6 +107,13 @@ Email tidak disimpan di `profiles`; email hidup di `auth.users` dan hanya dibaca
   tier berikutnya, hadiah, dan waktu klaim.
 - `game_events`, `user_event_claims` — event mingguan (100 XP → 25 Koin) dan klaim
   idempoten per pemain/event.
+
+### Developer dan audit
+
+- `audit_logs` — aktor (`auth.uid()`), role saat aksi, action, target, detail JSONB, waktu.
+  Append-only: hanya SELECT staff yang di-grant; INSERT/UPDATE/DELETE tidak diberikan ke
+  `anon`/`authenticated`. Penulisan hanya lewat helper internal `log_audit` yang dipanggil
+  RPC `security definer`.
 
 ### Ekonomi dan progres pemain
 
@@ -221,6 +231,12 @@ membaca `questions` sebagai pemain dan gagal dengan `permission denied`. Migrati
 | `claim_event_reward()` | Membayar Koin event sekali setelah target XP tercapai; idempoten. |
 | `get_my_notifications()` | 30 notifikasi terbaru + jumlah belum dibaca. |
 | `mark_notifications_read(id)` | Menandai satu atau semua notifikasi milik sendiri sebagai dibaca. |
+| `log_audit(action, target_type, target_id, details)` | Helper internal append-only; aktor dari `auth.uid()`, di-revoke dari API. |
+| `get_developer_overview()` | Ringkasan pemain, aktivitas, konten, dan jumlah audit; staff-only. |
+| `get_developer_users(query)` | Cari maksimal 25 pemain berdasarkan email/username/nama; staff-only. |
+| `get_audit_logs(limit)` | 1–100 entri audit terbaru; staff-only. |
+| `grant_reward(user, coins, xp, reason)` | Reward Center satu akun: validasi 0–10.000 Koin/0–100.000 XP, tulis ledger + wallet + audit atomik. |
+| `broadcast_notification(title, body, link)` | Notifikasi `info` ke maksimal 500 pemain onboarded, tautan internal, audit; staff-only. |
 
 Semua fungsi `security definer` memakai `set search_path` eksplisit. Fungsi engine di-revoke
 dari `public`/`anon` dan hanya dapat dieksekusi `authenticated`.
@@ -416,5 +432,6 @@ Jangan memberi role lewat form frontend atau menyimpan password developer di kod
 ## Rencana skema berikutnya
 
 - Inbox/notifikasi lanjutan (paginasi, preferensi per jenis).
-- Reward Center developer + audit log.
+- Content management (mapel/lesson/soal) dan editor Bahasa Sambas; belum termasuk
+  Developer Dashboard iterasi ini.
 - Entitlement premium dan produk.

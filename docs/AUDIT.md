@@ -43,13 +43,13 @@ browser masih terpisah.
 | # | Prioritas | Status nyata |
 | --- | --- | --- |
 | 1 | Fondasi HTML5, Phaser, TypeScript, Supabase | **Selesai** (kecuali kredensial Supabase belum diisi). |
-| 2 | Registrasi, login, profil, penyimpanan progres | **Selesai di kode**; penyimpanan progres menyusul di Tahap 3 dan sudah ada. Belum E2E. |
+| 2 | Registrasi, login, profil, penyimpanan progres | **Selesai dan diuji**; konfirmasi email, reset password, profil, dan pengaturan punya E2E. |
 | 3 | Mapel, level, unit, learning path, bank soal | **Inti selesai**; 6 dari 7 jenis node dan 3 dari 6 tingkat kesulitan terisi. |
-| 4 | Gameplay dan 20 mini-game | **Hampir selesai**: 12 tipe soal + 7 mode latihan = 19 mini-game. Friends Quest belum (butuh Tahap 7). |
-| 5 | XP, Koin, Hearts, Streak, reward | **Fondasi XP/Koin selesai** (ledger, wallet, reward idempoten). Hearts, streak, level akun, quest belum. |
-| 6 | Karakter, animasi, audio, adventure map | **Sebagian**: maskot Kiko vector + animasi dasar; peta berbasis DOM, bukan Phaser; audio belum. |
-| 7 | Leaderboard, teman, Quest, sosial | **Belum dikerjakan.** |
-| 8 | Developer Dashboard dan administrasi | **Belum dikerjakan.** Role `developer` dan mode pratinjau sudah disiapkan. |
+| 4 | Gameplay dan 20 mini-game | **Selesai**: 12 tipe soal + 7 mode latihan + Friends Quest; dinilai di server. |
+| 5 | XP, Koin, Hearts, Streak, reward | **Selesai**: ledger, wallet, Hearts, Streak, level, quest, achievement, toko, mastery, dan node hadiah. |
+| 6 | Karakter, animasi, audio, adventure map | **Selesai**: Kiko 13 state, peta Phaser responsif, audio sintetis, dan pipeline aset. |
+| 7 | Leaderboard, teman, Quest, sosial | **Selesai**: pertemanan, notifikasi, liga, leaderboard, event, dan privasi profil. |
+| 8 | Developer Dashboard dan administrasi | **Dashboard selesai dan diuji**: overview, pencarian, Reward Center, broadcast, audit log. CRUD konten/editor Bahasa Sambas belum. |
 
 ---
 
@@ -209,11 +209,11 @@ Practice, Unit Review, Legendary Challenge).
 
 ### Prioritas 8 — developer
 
-- Developer Dashboard dan seluruh CRUD konten (mapel, course, level, unit, lesson, soal,
-  media, Bahasa Sambas).
-- Reward Center (satu akun dan broadcast), inbox pemain, claim reward, audit log.
-- Pengelolaan quest, achievement, shop, event, konfigurasi game.
-- Edge Functions untuk operasi istimewa.
+- **Sudah**: Developer Dashboard, pencarian pemain, Reward Center satu akun, broadcast
+  notifikasi maksimal 500 penerima, dan audit log append-only.
+- **Belum**: CRUD konten (mapel, course, level, unit, lesson, soal, media, Bahasa Sambas),
+  inbox admin, pengelolaan quest/achievement/shop/event, dan konfigurasi game.
+- **Belum**: Edge Functions untuk rate limit/antrean operasi istimewa.
 
 ### Lintas tahap
 
@@ -287,7 +287,8 @@ dukungan multi-course.
    shop, inventory. Semua penulisan lewat RPC dengan idempotensi.
 4. **Tahap 6** — sprite/animasi karakter, adventure map Phaser, audio, efek.
 5. **Tahap 7** — leaderboard, liga, teman, activity feed, event.
-6. **Tahap 8** — Developer Dashboard, content management, Reward Center, inbox, audit log.
+6. **Tahap 8** — selesai untuk Developer Dashboard, Reward Center, broadcast, dan audit
+   log. Content management, inbox admin, dan konfigurasi game masih tersisa.
 7. **QA** — Playwright/browser E2E, responsif, performa, deploy Vercel.
 
 Aturan kerja yang dipertahankan: jangan menulis ulang fondasi, jangan mengganti stack,
@@ -350,9 +351,10 @@ STARTED** belum, **NEEDS FIX** ada tetapi bermasalah.
 
 ### Batasan yang belum ditutup
 
-1. Browser E2E belum ada; verifikasi Supabase saat ini lewat API/RPC.
+1. Browser E2E sudah ada dan lulus 14 test, tetapi broadcast massal valid belum dijalankan
+   di browser agar pemain asli tidak menerima notifikasi uji.
 2. Konten lima mekanik baru baru ada di satu lesson Bahasa Inggris.
 3. Belum ada aset audio rekaman; model audio memakai TTS browser.
 4. Conversation belum bercabang multi-langkah.
-5. Admin Panel pengelolaan soal belum ada (Tahap 8).
-6. Friends Quest menunggu Tahap 7.
+5. Admin Panel pengelolaan soal belum ada; CRUD konten belum termasuk Stage 8.
+6. Rate limit, retensi audit, dan paginasi notifikasi belum ada.

@@ -51,6 +51,15 @@
   milik pemanggil, dan hadiah ditulis dengan kunci unik agar idempoten.
 - Toast merender teks dengan `textContent`, bukan `innerHTML`, sehingga judul quest/nama
   pemain yang memuat HTML tidak dieksekusi (diuji E2E).
+- `audit_logs` append-only: hanya SELECT staff yang di-grant; INSERT/UPDATE/DELETE tidak
+  diberikan ke `anon`/`authenticated`. Aktor dan role diambil dari sesi/`user_roles`, bukan
+  input form. Penulisan hanya lewat helper internal `log_audit` yang di-revoke dari API.
+- RPC Developer Dashboard (`get_developer_overview`, `get_developer_users`,
+  `get_audit_logs`, `grant_reward`, `broadcast_notification`) memanggil `is_staff()` di
+  server. Router staff-only hanya lapisan UX.
+- `grant_reward` memvalidasi batas Koin/XP dan alasan, lalu menulis wallet, ledger, dan audit
+  dalam satu transaksi. `broadcast_notification` membatasi 500 penerima onboarded, hanya
+  mengirim notifikasi, dan menolak tautan eksternal.
 
 ### Frontend
 
@@ -67,9 +76,9 @@ Ini harus diselesaikan sebelum fitur terkait dinyatakan selesai:
 | --- | --- | --- |
 | Otoritas XP/Koin/Hearts/Streak/level | XP, Koin, Hearts, Streak, dan level dihitung RPC/trigger server | Client hanya membaca snapshot; tidak ada grant tulis ke Hearts/Streak/wallet. Level diturunkan dari total XP. |
 | Idempotensi reward | Lesson sudah idempoten | `lesson_attempt_id` unik + unique `answer_attempts`; reward lain memakai pola yang sama. |
-| Rate limiting | Hanya bawaan Supabase Auth | Batasi aksi sensitif di Edge Function. |
+| Rate limiting | Hanya bawaan Supabase Auth | Batasi grant/broadcast sensitif di Edge Function sebelum produksi. |
 | Anti-cheat gameplay | Penilaian dan attempt sudah di server; timer belum | Tambah batas waktu wajar dan deteksi request berulang saat mode timed dibuat. |
-| Audit log developer | Belum ada | Tabel append-only + aktor dari `auth.uid()`, bukan input form. |
+| Audit log developer | `audit_logs` staff-only, append-only | Aktor dari `auth.uid()`, role dari `user_roles`; pemain tidak dapat membaca/menulis. Belum ada retensi/arsip otomatis. |
 | Privasi profil | Profil dasar (username, nama, avatar, bio) publik; statistik mengikuti `private`/`friends`/`public` lewat RPC | Email tidak pernah dibagikan; audit ulang bila menambah kolom profil baru. |
 | CSRF | SPA + Bearer token Supabase, tanpa cookie sesi aplikasi | Tidak ada form server-rendered. Tinjau ulang jika cookie dipakai. |
 | CSP | Belum diatur | Tambahkan header CSP di Vercel setelah daftar origin final. |

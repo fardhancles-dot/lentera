@@ -1,0 +1,251 @@
+/* ------------------------------------------------------------------------- */
+/* Tahap 8 — Developer Dashboard                                              */
+/* ------------------------------------------------------------------------- */
+
+.dev-metrics {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin: 1rem 0;
+}
+
+.dev-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.85rem;
+  border: 1px solid var(--line, #dbe7d3);
+  border-radius: var(--radius-md, 14px);
+  background: #fff;
+}
+
+.dev-metric__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 0.25rem;
+  border-radius: 10px;
+  background: #eaf7df;
+  color: #3e8b2d;
+}
+
+.dev-metric__label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--ink-muted, #5b6b56);
+}
+
+.dev-metric__value {
+  font-size: 1.3rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.dev-metric__note {
+  font-size: 0.72rem;
+  color: var(--ink-muted, #5b6b56);
+  line-height: 1.35;
+}
+
+.dev-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr);
+  gap: 1rem;
+  margin: 1rem 0;
+  align-items: start;
+}
+
+.dev-panel {
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.dev-grid .dev-panel {
+  margin-top: 0;
+}
+
+.dev-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dev-search {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.85rem 0;
+}
+
+.dev-search .input {
+  flex: 1;
+}
+
+.dev-user-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 430px;
+  overflow-y: auto;
+}
+
+.dev-user {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--line, #dbe7d3);
+  border-radius: 12px;
+  background: #fff;
+  flex-wrap: wrap;
+}
+
+.dev-user__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+  min-width: 180px;
+}
+
+.dev-user__handle,
+.dev-user__stats {
+  font-size: 0.76rem;
+  color: var(--ink-muted, #5b6b56);
+  overflow-wrap: anywhere;
+}
+
+.dev-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+
+.dev-form__row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.dev-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.dev-field__label {
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.dev-textarea {
+  min-height: 76px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.dev-selected {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 12px;
+  background: #eefbe3;
+  border: 1px solid #9fd77d;
+  font-size: 0.86rem;
+}
+
+.dev-selected--empty {
+  background: #f6f8f4;
+  border-color: var(--line, #dbe7d3);
+  color: var(--ink-muted, #5b6b56);
+}
+
+.audit-list {
+  list-style: none;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-height: 430px;
+  overflow-y: auto;
+}
+
+.audit-row {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line, #dbe7d3);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.audit-row__dot {
+  width: 8px;
+  height: 8px;
+  margin-top: 0.4rem;
+  border-radius: 50%;
+  background: #58cc02;
+  flex: 0 0 auto;
+}
+
+.audit-row__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.audit-row__head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.audit-row__time {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--ink-muted, #5b6b56);
+  white-space: nowrap;
+}
+
+.audit-row__meta,
+.audit-row__details {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--ink-muted, #5b6b56);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1100px) {
+  .dev-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dev-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .dev-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dev-form__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dev-search {
+    flex-direction: column;
+  }
+}

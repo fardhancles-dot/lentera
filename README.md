@@ -7,7 +7,7 @@ Developer Dashboard.
 Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand terpusat di
 `src/config/brand.ts` dan dapat ditimpa lewat environment variable.
 
-> **Status proyek: Tahap 1–7 selesai.**
+> **Status proyek: Tahap 1–8 selesai.**
 > Lesson, latihan, dan **20 dari 20 mini-game** punya mekanik bermain nyata. Dua belas tipe
 > soal dinilai di server (termasuk Listening, Speaking, Translation, Conversation, Story),
 > tujuh mode latihan berjalan di atas sesi practice dengan XP idempoten, dan **Friends Quest**
@@ -18,12 +18,13 @@ Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand ter
 > **peta petualangan Phaser responsif**, **karakter Kiko reusable dengan 13 state animasi**,
 > **audio sintetis** (musik, SFX, volume, mute), dan **pipeline aset**; daftar lesson DOM
 > tetap dipakai sebagai jalur aksesibel. Tahap 7 menambahkan **pertemanan, notifikasi,
-> 10 tier liga mingguan, leaderboard global/teman, event mingguan, dan privasi profil**,
-> seluruhnya dihitung server. Empat belas migration sudah diterapkan ke Supabase nyata;
-> 245 smoke check SQL dan 76 verifikasi API lulus. Full E2E **13 test lulus**, termasuk
-> alur dua akun untuk liga, teman, notifikasi, dan tiga tingkat privasi profil.
-> Rincian di **[docs/PROJECT_HANDOFF.md](docs/PROJECT_HANDOFF.md)** dan
-> **[docs/STAGE4_COMPLETION.md](docs/STAGE4_COMPLETION.md)**.
+> 10 tier liga mingguan, leaderboard global/teman, event mingguan, dan privasi profil**.
+> Tahap 8 menambahkan **Developer Dashboard staff-only: overview metrik, pencarian pemain,
+> Reward Center satu akun, broadcast notifikasi, dan audit log append-only**. Lima belas
+> migration sudah diterapkan ke Supabase nyata; 262 smoke check SQL dan 83 verifikasi API
+> lulus. Full E2E **14 test lulus**, termasuk dashboard staff, hadiah ke akun sementara,
+> audit log, dan penolakan pemain biasa. Rincian di
+> **[docs/PROJECT_HANDOFF.md](docs/PROJECT_HANDOFF.md)**.
 
 ---
 
@@ -41,7 +42,7 @@ Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand ter
 | Verifikasi email & lupa password | **Implemented · Lupa password E2E; verifikasi email belum** | Tautan reset diuji lewat tautan resmi Supabase (dibuat Admin API, tanpa kotak surat) sampai password baru bisa dipakai login. Konfirmasi pendaftaran masih butuh kotak surat uji. |
 | Onboarding profil | **Implemented · E2E (via helper akun uji)** | Username, avatar, nama, target harian, zona waktu. Atomik via RPC. |
 | Profil & pengaturan cloud | **Implemented · E2E verified** | Simpan nama tampilan/bio dan preferensi reduced motion ± persist setelah reload diuji browser. |
-| Database & RLS | **Implemented · Tested (PGlite + Supabase API)** | 14 migration diterapkan ke project Supabase; 245 SQL smoke check + 76 verifikasi API lulus. |
+| Database & RLS | **Implemented · Tested (PGlite + Supabase API)** | 15 migration diterapkan ke project Supabase; 262 SQL smoke check + 83 verifikasi API lulus. |
 | Kurikulum & bank soal | **Implemented · Tested (SQL smoke)** | 10 mapel, 22 level, 57 lesson, 231 soal, 12 tipe soal, 7 jenis node; 7 mapel inti + Bahasa Sambas. |
 | Learning path & progres per mapel | **Implemented · Tested (SQL smoke)** | Node selesai/aktif/terkunci, unlock ditegakkan server, progres per course/node. |
 | Lesson engine & halaman hasil | **Implemented · Tested (SQL smoke + E2E)** | Kunci jawaban tidak dikirim ke browser; XP/Koin idempoten per attempt. Halaman lesson menampilkan lima riwayat percobaan terakhir milik pemain (akurasi, skor, benar/total) dari `lesson_attempts` dengan RLS. |
@@ -54,7 +55,7 @@ Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand ter
 | Mastery, review terjadwal & node hadiah | **Implemented · Tested (SQL + Supabase API + unit)** | `user_question_mastery` per soal, interval 1/3/7/14/30 hari, halaman `/mastery`, mode Review Terjadwal, dan 22 node hadiah level dengan klaim idempoten. UI belum diuji browser. |
 | Teman, notifikasi & privasi profil | **Implemented · Tested (SQL + API + E2E dua akun)** | Pencarian pemain, permintaan/terima/hapus teman, notifikasi, dan visibilitas statistik `private`/`friends`/`public`. Statistik hanya dibuka server sesuai relasi dan pengaturan. |
 | Liga, leaderboard & event mingguan | **Implemented · Tested (SQL + API + E2E dua akun)** | 10 tier, grup mingguan maksimal 30 pemain, promosi 5 teratas, degradasi 5 terbawah bila minimal 10 pemain, hadiah `10 + tier × 5` Koin, leaderboard global/teman, event mingguan 100 XP → 25 Koin, dan klaim idempoten. |
-| Developer Dashboard | **Not implemented** | Tahap 8; role developer dan mode pratinjau sudah ada. |
+| Developer Dashboard | **Implemented · Tested (SQL + API + E2E)** | `/developer` staff-only: overview, pencarian pemain, Reward Center satu akun, broadcast maksimal 500 penerima, dan audit log append-only. E2E mengirim hadiah ke akun sementara dan memastikan pemain biasa ditolak. |
 | PWA / offline / AI / monetisasi | **Not implemented** | Direncanakan setelah gameplay stabil. |
 
 Legenda status: **Implemented** (kode ada), **Tested** (ada bukti eksekusi), **Configured**
@@ -182,7 +183,7 @@ terkait dikerjakan — bukan folder kosong yang dibuat lebih awal.
 - [PROJECT_HISTORY.md](docs/PROJECT_HISTORY.md) — catatan per sesi pengembangan.
 - [SESSION_2026-11-09.md](docs/SESSION_2026-11-09.md) — catatan percakapan dan status sesi lima mini-game.
 
-Dokumentasi sistem reward lanjutan dan Developer Dashboard akan dibuat bersamaan dengan
+Dokumentasi sistem reward lanjutan, audit log, dan Developer Dashboard diperbarui bersama
 implementasinya agar tidak berisi janji kosong.
 
 ---

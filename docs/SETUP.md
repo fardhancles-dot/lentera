@@ -210,8 +210,10 @@ Setelah akun terverifikasi:
 select public.bootstrap_developer('email-kamu@contoh.com');
 ```
 
-Logout dan login lagi. Role akan termuat dari `user_roles`. Dashboard developer belum
-dibangun; role disiapkan untuk tahap 8.
+Logout dan login lagi. Role akan termuat dari `user_roles`. Setelah role aktif, buka
+`/developer` untuk Developer Dashboard (overview, Reward Center, broadcast, dan audit log).
+Pemain biasa tidak melihat menu atau ikon developer dan dialihkan ke `/app` bila membuka
+rute itu.
 
 Untuk menambah developer lain setelahnya:
 

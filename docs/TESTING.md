@@ -6,19 +6,21 @@
 | --- | --- | --- |
 | TypeScript strict | `npm run typecheck` | Lulus, 0 error. |
 | Unit test | `npm test` | **78 test lulus (11 file)**, termasuk audio, aset, layout compact, dan status learning path. |
-| Migration + RPC + RLS + practice + Friends Quest + progression + reward + mastery + sosial/liga | `npm run test:sql` | **245 smoke check lulus** di PGlite, termasuk akses `subject_overview` sebagai `authenticated`, pertemanan, liga, event, notifikasi, dan RLS. |
+| Migration + RPC + RLS + practice + Friends Quest + progression + reward + mastery + sosial/liga + developer | `npm run test:sql` | **262 smoke check lulus** di PGlite, termasuk akses `subject_overview` sebagai `authenticated`, pertemanan, liga, event, notifikasi, RLS, serta overview/pencarian/Reward Center/audit/broadcast. |
 | Build produksi | `npm run build` | Lulus; Phaser, Friends Quest, quest, shop, dan wallet menjadi chunk terpisah. |
 | Browser smoke | Chrome headless | Landing, auth, guard route, 404 (sesi 1). |
-| Supabase nyata | `npm run verify:supabase` | **76 check lulus** (view katalog, lesson 20 soal, 4 scene, Practice Hub, Friends Quest, progression, reward/quest/achievement/toko, mastery/review/node hadiah, sosial/liga/event/notifikasi/privasi, XP idempoten, RLS) di project `xvrnmxbrxhtzzavmrlvy`. |
-| Playwright/E2E | `npm run test:e2e` | **13 lulus** (9 rute, alur lesson, latihan, konfirmasi email, reset password, profil/pengaturan, overflow 390px, reduced motion, maskot, audio, peta, Friends Quest dua akun, sosial/liga/privasi dua akun). |
+| Supabase nyata | `npm run verify:supabase` | **83 check lulus** (view katalog, lesson 20 soal, 4 scene, Practice Hub, Friends Quest, progression, reward/quest/achievement/toko, mastery/review/node hadiah, sosial/liga/event/notifikasi/privasi, developer overview/pencarian/audit, XP idempoten, RLS) di project `xvrnmxbrxhtzzavmrlvy`. |
+| Playwright/E2E | `npm run test:e2e` | **14 lulus** (9 rute, alur lesson, latihan, konfirmasi email, reset password, profil/pengaturan, overflow 390px, reduced motion, maskot, audio, peta, Friends Quest dua akun, sosial/liga/privasi dua akun, Developer Dashboard staff). |
 
 PGlite membuktikan SQL dan RPC konsisten. Verifikasi Supabase nyata kini juga sudah
 dijalankan lewat Auth + PostgREST. UI browser diuji Playwright memakai akun QA di `.env`
 (Chrome terpasang, bukan unduhan Playwright); email verifikasi dan redirect email belum.
-Keempat belas migration sudah diterapkan ke project nyata, termasuk
+Kelima belas migration sudah diterapkan ke project nyata, termasuk
 `20261110140000_mastery_review_rewards.sql` (mastery, review terjadwal, node hadiah),
-`20261110150000_subject_overview_owner.sql` (perbaikan view katalog), dan
-`20261111100000_social_league.sql` (pertemanan, liga, event, notifikasi, privasi).
+`20261110150000_subject_overview_owner.sql` (perbaikan view katalog),
+`20261111100000_social_league.sql` (pertemanan, liga, event, notifikasi, privasi), dan
+`20261111110000_developer_dashboard.sql` (Developer Dashboard, Reward Center, broadcast,
+audit log).
 Migration sosial diterapkan lewat Management API dengan pola `db:apply-catalog-fix`
 karena project tidak ter-link ke Supabase CLI di mesin pengembangan.
 
@@ -56,8 +58,12 @@ tidak dikenal, serta penolakan tulis langsung ke `user_question_mastery` dan
 `get_friend_activity`, `get_friend_profile` (profil sendiri), `get_leaderboard`
 global/teman + penolakan scope palsu, `get_my_league`, `get_active_event`,
 `get_my_notifications`, `mark_notifications_read`, 10 tier liga, dan RLS `friendships` /
-`notifications`. Ini menguji Auth + PostgREST + RPC nyata, **bukan** tampilan browser;
-uji klik tetap harus dilakukan terpisah.
+`notifications`. Sesi 17 menambahkan check `get_developer_overview`,
+`get_developer_users` lewat email staff, `get_audit_logs`, penolakan reward kosong, dan
+penolakan tautan broadcast eksternal. Broadcast valid sengaja tidak dijalankan agar tidak
+mengirim notifikasi ke seluruh pemain nyata; pengiriman valid diuji di PGlite. Ini menguji
+Auth + PostgREST + RPC nyata, **bukan** tampilan browser; uji klik tetap harus dilakukan
+terpisah.
 
 ## Cakupan `npm run test:e2e`
 
@@ -80,6 +86,7 @@ skip dengan alasan jelas, bukan gagal.
 | `signup confirmation link activates a new account` | Akun dibuat belum terkonfirmasi, tautan `signup` resmi dibuka, halaman berakhir di `/app` atau `/onboarding`, `email_confirmed_at` terisi, dan login API berhasil. Akun dihapus setelah test. Butuh `SUPABASE_ACCESS_TOKEN`. |
 | `two accounts contribute, sync, and claim one Friends Quest reward each` | Dua akun sementara: membuat quest, bergabung lewat kode, dua sesi Match Madness per akun, progres 24/20 XP, klaim bersamaan hanya satu hadiah, klaim ulang idempoten, persistensi refresh/login, non-anggota ditolak, manipulasi `contribution_xp` ditolak, dan XSS judul quest tidak dieksekusi. |
 | `league, friends, notifications, and profile privacy work across two accounts` | Dua akun sementara: liga/event tampil, tab Global, cari + kirim permintaan, notifikasi masuk, terima teman, notifikasi penerimaan + tandai semua dibaca, statistik teman, privat menyembunyikan statistik, `friends` membukanya, hapus teman menutupnya lagi, dan `public` membuka untuk non-teman. |
+| `developer dashboard grants a reward and keeps audit staff-only` | Akun staff QA + akun pemain sementara: enam metrik tampil, pencarian lewat email, pilih pemain, kirim 3 Koin + 5 XP, toast sukses, audit `Hadiah dikirim` tercatat, wallet pemain berisi saldo dan transaksi `Hadiah developer`, pemain biasa dialihkan dari `/developer` ke `/app`, dan tidak ada tautan developer. Baris audit uji dibersihkan lewat service role; akun sementara dihapus. |
 | `landing mascot canvas mounts and reacts to a click` | Maskot landing (kanvas/SVG fallback) dan reaksi klik. |
 | `audio engine starts and schedules sound after a user gesture` | Bungkus `AudioContext` sebelum halaman dimuat; setelah login, konteks dibuat, berstatus `running`, dan minimal 4 osilator dijadwalkan (musik + SFX). Bukan pengujian pendengaran. |
 | `map renders, level buttons work with the keyboard, and the canvas resizes` | Peta berakun, pemilih area via keyboard (`aria-pressed`, status live), label “Area n dari m”, legenda status, mute, resize 390px, kanvas compact 420, dan 6 item bottom nav minimal 44px. |
@@ -103,9 +110,10 @@ lolos hanya karena shell halaman berhasil dimuat.
 
 `scripts/test-sql.mjs` membuat database PostgreSQL in-memory, lalu:
 
-1. Menjalankan keempat belas migration berurutan, termasuk `question_scenes`,
+1. Menjalankan kelima belas migration berurutan, termasuk `question_scenes`,
    `practice_engine`, `friends_quest`, `progression_economy`, `tahap5_rewards`,
-   `mastery_review_rewards`, `subject_overview_owner`, dan `social_league`.
+   `mastery_review_rewards`, `subject_overview_owner`, `social_league`, dan
+   `developer_dashboard`.
 2. Memeriksa 8 mapel aktif, 57 lesson, 231 soal, 12 tipe soal, 19 pasangan matching,
    3 media gambar, dan 7 jenis node.
 3. Memeriksa 7 node practice, 7 checkpoint, dan 7 legendary; semuanya punya lesson
@@ -187,7 +195,13 @@ lolos hanya karena shell halaman berhasil dimuat.
 43. Liga dan event: grup mingguan dibuat per tier, promosi/degradasi dihitung saat
     finalisasi, hadiah `10 + tier × 5` Koin dibayar sekali, event 100 XP → 25 Koin klaim
     idempoten, notifikasi hasil liga/pertemanan terbentuk, dan RLS hanya membuka baris
-    sendiri.
+    sendiri. Seed XP minggu lalu ditulis ke ledger agar peringkat deterministik setelah
+    `finalize_league_group` menghitung ulang XP dari sumber kebenaran.
+44. Developer: overview berisi total pemain/aktivitas/konten; pencarian menemukan pemain
+    lewat email; grant 7 Koin + 13 XP menulis wallet/ledger/audit; broadcast membuat
+    notifikasi pemain onboarded; pemain biasa tidak dapat membaca overview, grant, broadcast,
+    atau audit; insert audit langsung dan helper `log_audit` ditolak; reward kosong/negatif
+    dan tautan eksternal ditolak.
 
 ## Unit test Vitest
 
@@ -223,9 +237,13 @@ lolos hanya karena shell halaman berhasil dimuat.
 - Audio memakai text-to-speech browser; belum ada pengujian suara nyata di perangkat.
 - Speaking belum diuji dengan mikrofon sungguhan; Web Speech Recognition berbeda tiap
   browser.
-- Friends Quest dan alur sosial/liga sudah diuji lewat PGlite, API Supabase, dan E2E dua
-  akun sementara. **Uji dengan akun pemilik di-skip** (disepakati 11 November 2026) karena
-  password tidak tersedia; isi `E2E_FRIEND_*` bila ingin memakai akun nyata.
+- Friends Quest, alur sosial/liga, dan Developer Dashboard sudah diuji lewat PGlite, API
+  Supabase, dan E2E akun sementara. **Uji dengan akun pemilik di-skip** (disepakati 11
+  November 2026) karena password tidak tersedia; isi `E2E_FRIEND_*` bila ingin memakai
+  akun nyata.
+- Broadcast valid tidak dikirim dari E2E agar pemain asli tidak menerima notifikasi uji;
+  hanya validasi API dan pengiriman di PGlite yang diuji. Dashboard belum ditinjau pembaca
+  layar atau viewport 390px.
 - Halaman sosial belum diuji dengan pembaca layar atau pada data liga yang benar-benar
   berisi 30 pemain; promosi/degradasi penuh diuji di PGlite.
 - Wallet, HUD Hearts di lesson, kartu progres beranda/profil, dan countdown refill belum
@@ -346,6 +364,18 @@ lolos hanya karena shell halaman berhasil dimuat.
 - [ ] Node hadiah terkunci menampilkan sisa lesson yang harus diselesaikan.
 - [ ] Klaim node hadiah menambah Koin/XP sekali; klik kedua menampilkan “sudah diklaim”.
 - [ ] Saldo wallet dan riwayat Koin/XP cocok dengan hadiah yang diklaim.
+
+### Developer Dashboard
+
+- [ ] Staff melihat menu Developer dan ikon topbar; pemain biasa tidak melihatnya.
+- [ ] `/developer` menampilkan enam metrik dan tidak error untuk akun staff.
+- [ ] Pencarian email/username/nama mengembalikan maksimal 25 pemain.
+- [ ] Grant 0/0, alasan terlalu pendek, atau angka melebihi batas ditolak dengan pesan jelas.
+- [ ] Grant valid menambah Koin/XP satu akun dan muncul di wallet + audit log.
+- [ ] Broadcast menolak tautan eksternal; pengiriman valid hanya ke maksimal 500 pemain
+      onboarded dan tidak memberi Koin/XP.
+- [ ] Pemain biasa yang membuka `/developer` dialihkan ke `/app`.
+- [ ] Audit log tidak memiliki tombol edit/hapus dan tidak dapat dibaca pemain biasa.
 
 ### RLS
 

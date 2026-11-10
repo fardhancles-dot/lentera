@@ -20,6 +20,7 @@ export type NavKey =
   | 'notifications'
   | 'shop'
   | 'profile'
+  | 'developer'
   | 'settings';
 
 interface NavItem {
@@ -41,6 +42,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'notifications', href: '/notifications', label: 'Notifikasi', shortLabel: 'Kabar', icon: 'bell' },
   { key: 'shop', href: '/shop', label: 'Toko', shortLabel: 'Toko', icon: 'gift' },
   { key: 'profile', href: '/profile', label: 'Profil', shortLabel: 'Profil', icon: 'user' },
+  { key: 'developer', href: '/developer', label: 'Developer', shortLabel: 'Dev', icon: 'code' },
   { key: 'settings', href: '/settings', label: 'Pengaturan', shortLabel: 'Atur', icon: 'settings' },
 ];
 
@@ -92,6 +94,8 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
   if (!user) return;
 
   const displayName = user.profile.display_name || user.profile.username;
+  const isStaff = user.role === 'developer' || user.role === 'admin';
+  const visibleNav = NAV_ITEMS.filter((item) => item.key !== 'developer' || isStaff);
 
   const logoutButton = el(
     'button',
@@ -131,7 +135,7 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
     el(
       'nav',
       { class: 'sidebar__nav', attrs: { 'aria-label': 'Menu' } },
-      NAV_ITEMS.map((item) => navLink(item, options.active, false)),
+      visibleNav.map((item) => navLink(item, options.active, false)),
     ),
     el('div', { class: 'sidebar__tip' }, [
       el('span', { class: 'sidebar__tip-art', html: kikoMarkup(72) }),
@@ -225,6 +229,20 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
     el('div', { class: 'topbar__actions' }, [
       resourceBar,
       muteButton,
+      isStaff
+        ? el(
+            'a',
+            {
+              class: 'icon-btn',
+              attrs: {
+                href: '/developer',
+                'aria-label': 'Developer Dashboard',
+                title: 'Developer Dashboard',
+              },
+            },
+            [icon('code', 20)],
+          )
+        : null,
       el(
         'a',
         {
@@ -250,9 +268,9 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
   const bottomNav = el(
     'nav',
     { class: 'bottom-nav', attrs: { 'aria-label': 'Navigasi cepat' } },
-    NAV_ITEMS.filter((item) => MOBILE_NAV_KEYS.includes(item.key)).map((item) =>
-      navLink(item, options.active, true),
-    ),
+    visibleNav
+      .filter((item) => MOBILE_NAV_KEYS.includes(item.key))
+      .map((item) => navLink(item, options.active, true)),
   );
 
   ctx.outlet.append(

@@ -6,6 +6,7 @@ import './styles/layout.css';
 import './styles/pages.css';
 import './styles/practice.css';
 import './styles/social.css';
+import './styles/developer.css';
 
 import { Router } from './app/router';
 import { kikoMarkup, lampMarkup } from './components/brandArt';

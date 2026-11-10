@@ -36,12 +36,24 @@ const ROADMAP: Array<{ title: string; meta: string; state: 'done' | 'active' | '
   },
   {
     title: 'XP, Koin, Hearts, Streak, dan wallet',
-    meta: 'Tahap 5 — Hearts, Streak, level akun, dan riwayat wallet',
-    state: 'active',
+    meta: 'Selesai — Hearts, Streak, level akun, quest, achievement, toko, dan riwayat wallet',
+    state: 'done',
   },
-  { title: 'Karakter, animasi, audio, adventure map', meta: 'Direncanakan', state: 'todo' },
-  { title: 'Leaderboard, teman, Quest, sistem sosial', meta: 'Friends Quest sudah ada; leaderboard dan teman penuh direncanakan', state: 'active' },
-  { title: 'Developer Dashboard dan administrasi', meta: 'Direncanakan', state: 'todo' },
+  {
+    title: 'Karakter, animasi, audio, adventure map',
+    meta: 'Selesai — peta Phaser, Kiko 13 state, audio sintetis, dan pipeline aset',
+    state: 'done',
+  },
+  {
+    title: 'Leaderboard, teman, Quest, sistem sosial',
+    meta: 'Selesai — Friends Quest, pertemanan, liga, leaderboard, event, dan notifikasi',
+    state: 'done',
+  },
+  {
+    title: 'Developer Dashboard dan administrasi',
+    meta: 'Dashboard, Reward Center, broadcast, dan audit log selesai; CRUD konten berikutnya',
+    state: 'done',
+  },
 ];
 
 const ROLE_LABEL = {
@@ -231,6 +243,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       statusItem('Kurikulum dan bank soal tersimpan di database'),
       statusItem('Lesson dinilai di server; XP & Koin tercatat'),
       statusItem('Hearts, Streak, level, dan wallet dihitung server'),
+      statusItem('Developer Dashboard dan audit log staff-only aktif'),
     ]),
   ]);
 

@@ -21,6 +21,7 @@ const SOURCE_LABELS: Record<string, string> = {
   shop_purchase: 'Pembelian toko',
   quest: 'Hadiah quest',
   daily: 'Hadiah harian',
+  developer_grant: 'Hadiah developer',
 };
 
 function sourceLabel(source: string): string {

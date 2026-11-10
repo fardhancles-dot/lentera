@@ -420,6 +420,17 @@ export type NotificationRow = {
   read_at: string | null;
 };
 
+export type AuditLogRow = {
+  id: string;
+  actor_id: string | null;
+  actor_role: AppRole;
+  action: string;
+  target_type: string;
+  target_id: string | null;
+  details: Json;
+  created_at: string;
+};
+
 export type LeagueTierRow = {
   tier: number;
   name: string;
@@ -684,6 +695,12 @@ export type Database = {
       };
       notifications: {
         Row: NotificationRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      audit_logs: {
+        Row: AuditLogRow;
         Insert: Record<string, unknown>;
         Update: Record<string, unknown>;
         Relationships: [];
@@ -978,6 +995,31 @@ export type Database = {
       };
       mark_notifications_read: {
         Args: { p_id?: string | null };
+        Returns: Json;
+      };
+      get_developer_overview: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      get_developer_users: {
+        Args: { p_query?: string };
+        Returns: Json;
+      };
+      get_audit_logs: {
+        Args: { p_limit?: number };
+        Returns: Json;
+      };
+      grant_reward: {
+        Args: {
+          p_user_id: string;
+          p_coins: number;
+          p_xp: number;
+          p_reason: string;
+        };
+        Returns: Json;
+      };
+      broadcast_notification: {
+        Args: { p_title: string; p_body?: string; p_link?: string };
         Returns: Json;
       };
     };

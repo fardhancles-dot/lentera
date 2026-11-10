@@ -65,6 +65,7 @@ try {
   await run('supabase/migrations/20261110140000_mastery_review_rewards.sql');
   await run('supabase/migrations/20261110150000_subject_overview_owner.sql');
   await run('supabase/migrations/20261111100000_social_league.sql');
+  await run('supabase/migrations/20261111110000_developer_dashboard.sql');
 
   const content = await db.query(`
     select
@@ -1845,6 +1846,28 @@ try {
     );
   }
 
+  // finalize_league_group menghitung ulang weekly_xp dari ledger. Tanpa ledger
+  // minggu lalu semua anggota bernilai 0 dan peringkat hanya ditentukan UUID,
+  // sehingga seed harus mencerminkan sumber kebenaran yang sama.
+  const seedLeagueXp = async (members) => {
+    for (let index = 0; index < members.length; index += 1) {
+      await db.query(
+        `delete from public.user_xp_ledger
+         where user_id = $1
+           and created_at >= $2::date
+           and created_at < ($2::date + interval '7 days')`,
+        [members[index], prevWeek],
+      );
+      await db.query(
+        `insert into public.user_xp_ledger (user_id, amount, source, created_at)
+         values ($1, $2, 'lesson', ($3::date + interval '3 days') at time zone 'UTC')`,
+        [members[index], 100 - index * 10, prevWeek],
+      );
+    }
+  };
+  await seedLeagueXp(tierOneMembers);
+  await seedLeagueXp(tierFiveMembers);
+
   await db.query('select public.finalize_league_group($1)', [tierOneGroup.rows[0].id]);
   await db.query('select public.finalize_league_group($1)', [tierFiveGroup.rows[0].id]);
   const finalized = await db.query(
@@ -2038,6 +2061,152 @@ try {
     'removed friend disappears from the friends list',
   );
   await db.exec('reset role');
+
+  // -------------------------------------------------------------------------
+  // Developer Dashboard: staff overview, user search, reward grants, broadcast,
+  // audit log, and staff-only access. user1 becomes the developer for this block.
+  // -------------------------------------------------------------------------
+  await db.query("update public.user_roles set role = 'developer' where user_id = $1", [user1]);
+  await db.query(
+    'update public.profiles set onboarding_completed = true where id = any($1::uuid[])',
+    [[user2, user3]],
+  );
+  await db.exec('set role authenticated');
+  await asUser(user1);
+
+  const developerOverview = await db.query('select public.get_developer_overview() as payload');
+  const overviewPayload = developerOverview.rows[0].payload;
+  check(
+    overviewPayload.players.total >= 4 &&
+      overviewPayload.players.staff >= 1 &&
+      overviewPayload.content.lessons === 57 &&
+      overviewPayload.content.questions === 231 &&
+      typeof overviewPayload.activity.xpAwarded === 'number',
+    'developer overview returns player, activity, and content totals',
+    JSON.stringify(overviewPayload),
+  );
+
+  const developerUsers = await db.query(
+    "select public.get_developer_users('player-two') as payload",
+  );
+  check(
+    developerUsers.rows[0].payload.length === 1 &&
+      developerUsers.rows[0].payload[0].userId === user2 &&
+      developerUsers.rows[0].payload[0].email === 'player-two@example.com',
+    'developer user search finds a player by email fragment',
+    JSON.stringify(developerUsers.rows[0].payload),
+  );
+
+  const rewardGrant = await db.query(
+    "select public.grant_reward($1, 7, 13, 'Uji hadiah developer') as payload",
+    [user2],
+  );
+  const rewardGrantPayload = rewardGrant.rows[0].payload;
+  check(
+    rewardGrantPayload.coinsAwarded === 7 &&
+      rewardGrantPayload.xpAwarded === 13 &&
+      rewardGrantPayload.totalCoins >= 7 &&
+      rewardGrantPayload.totalXp >= 13,
+    'developer can grant coins and XP to one player',
+    JSON.stringify(rewardGrantPayload),
+  );
+  await db.exec('reset role');
+  const grantCoinRows = await db.query(
+    "select count(*)::int as count from public.coin_transactions where user_id = $1 and source = 'developer_grant'",
+    [user2],
+  );
+  const grantXpRows = await db.query(
+    "select count(*)::int as count from public.user_xp_ledger where user_id = $1 and source = 'developer_grant'",
+    [user2],
+  );
+  check(grantCoinRows.rows[0].count === 1, 'reward grant writes one coin transaction');
+  check(grantXpRows.rows[0].count === 1, 'reward grant writes one XP ledger row');
+  await db.exec('set role authenticated');
+  await asUser(user1);
+
+  const auditLogs = await db.query('select public.get_audit_logs(10) as payload');
+  check(
+    auditLogs.rows[0].payload.some(
+      (entry) => entry.action === 'reward_grant' && entry.targetId === user2,
+    ),
+    'reward grant is recorded in the audit log',
+    JSON.stringify(auditLogs.rows[0].payload.slice(0, 2)),
+  );
+
+  const broadcast = await db.query(
+    "select public.broadcast_notification('Pemeliharaan', 'Server istirahat sebentar.', '/app') as payload",
+  );
+  check(
+    broadcast.rows[0].payload.recipients >= 1 &&
+      broadcast.rows[0].payload.title === 'Pemeliharaan',
+    'staff broadcast creates notifications for onboarded players',
+    JSON.stringify(broadcast.rows[0].payload),
+  );
+  await asUser(user2);
+  const broadcastInbox = await db.query('select public.get_my_notifications() as payload');
+  check(
+    broadcastInbox.rows[0].payload.items.some((item) => item.title === 'Pemeliharaan'),
+    'broadcast notification appears in the player inbox',
+  );
+
+  await expectError(
+    'a player cannot read the developer overview',
+    'select public.get_developer_overview()',
+    [],
+    'staff_required',
+  );
+  await expectError(
+    'a player cannot grant rewards',
+    "select public.grant_reward($1, 1, 1, 'bukan staff')",
+    [user2],
+    'staff_required',
+  );
+  await expectError(
+    'a player cannot broadcast notifications',
+    "select public.broadcast_notification('Pesan', 'Isi', '/app')",
+    [],
+    'staff_required',
+  );
+  const playerAuditCount = await db.query('select count(*)::int as count from public.audit_logs');
+  check(
+    playerAuditCount.rows[0].count === 0,
+    'RLS hides the audit log from non-staff players',
+    String(playerAuditCount.rows[0].count),
+  );
+  await expectError(
+    'players cannot insert audit rows directly',
+    "insert into public.audit_logs (action, target_type) values ('fake', 'player')",
+    [],
+    'permission denied',
+  );
+  await expectError(
+    'players cannot call the internal audit helper',
+    "select public.log_audit('fake', 'player', null, '{}'::jsonb)",
+    [],
+    'permission denied',
+  );
+
+  await asUser(user1);
+  await expectError(
+    'reward grant rejects an empty reward',
+    "select public.grant_reward($1, 0, 0, 'kosong')",
+    [user2],
+    'reward_empty',
+  );
+  await expectError(
+    'reward grant rejects negative coins',
+    "select public.grant_reward($1, -1, 0, 'negatif')",
+    [user2],
+    'reward_coins_invalid',
+  );
+  await expectError(
+    'broadcast rejects an external link',
+    "select public.broadcast_notification('Pesan', 'Isi', 'https://contoh.com')",
+    [],
+    'broadcast_link_invalid',
+  );
+  await db.exec('reset role');
+  await db.query("update public.user_roles set role = 'player' where user_id = $1", [user1]);
 
   if (failures.length > 0) {
     console.error(`\n${failures.length} SQL smoke check(s) failed.`);

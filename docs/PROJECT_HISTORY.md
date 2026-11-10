@@ -1097,3 +1097,57 @@ lulus.
   pemain dan promosi/degradasi penuh baru diuji di PGlite.
 - Notifikasi dibatasi 30 terbaru dan aktivitas 20 terbaru; belum ada paginasi.
 - Belum ada commit atau push Git.
+
+## Sesi 17 — 11 November 2026 — Tahap 8: Developer Dashboard, audit log, Reward Center
+
+### Yang dikerjakan
+
+- **Migration `20261111110000_developer_dashboard.sql`**: tabel `audit_logs` append-only,
+  helper internal `log_audit`, RPC `get_developer_overview`, `get_developer_users`,
+  `get_audit_logs`, `grant_reward`, dan `broadcast_notification`; RLS/grant staff-only.
+  Semua RPC memanggil `is_staff()` di server.
+- **Halaman `/developer`**: enam metrik, pencarian maksimal 25 pemain lewat email/username/
+  nama, Reward Center satu akun (0–10.000 Koin + 0–100.000 XP dengan alasan), broadcast
+  notifikasi maksimal 500 pemain onboarded, dan audit log 30 entri terbaru.
+- **Keamanan**: audit log hanya SELECT staff; INSERT/UPDATE/DELETE tidak diberikan ke
+  `anon`/`authenticated`; penulisan hanya lewat helper yang di-revoke dari API. Grant Koin/XP
+  dan broadcast menulis audit, bukan aksi client langsung.
+- **Integrasi**: route staff-only, guard redirect pemain biasa ke `/app`, nav sidebar dan
+  ikon topbar staff-only, `src/styles/developer.css`, dan label transaksi
+  `developer_grant` di wallet.
+- **Pengujian**: SQL check diperluas untuk overview/pencarian/grant/ledger/audit/broadcast/
+  RLS; verifikasi API nyata ditambah tujuh check; E2E baru memakai akun staff QA + akun
+  pemain sementara.
+
+### Cakupan yang tidak dibangun
+
+- CRUD konten (mapel/lesson/soal) dan editor Bahasa Sambas tidak termasuk iterasi ini.
+- Broadcast valid tidak dijalankan dari E2E agar tidak mengirim notifikasi ke pemain asli.
+
+### Koreksi selama pengujian
+
+- Dua check promosi/degradasi liga flaky karena `finalize_league_group` menghitung ulang XP
+  dari ledger dan menimpa seed `weekly_xp`; test sekarang menulis ledger minggu lalu agar
+  peringkat deterministik.
+- Label wallet `developer_grant` ditambahkan agar grant tampil sebagai “Hadiah developer”.
+
+### Pengujian
+
+| Perintah | Hasil |
+| --- | --- |
+| `npm run typecheck` | Lulus 0 error. |
+| `npm test` | **78 test lulus** (11 file). |
+| `npm run build` | Lulus. |
+| `npm run test:e2e` | **14 lulus**: seluruh alur lama + Developer Dashboard staff (15,4 dtk). |
+| `npm run test:sql` | **262 check lulus** di PGlite. |
+| `npm run verify:supabase` | **83 check lulus** di project `xvrnmxbrxhtzzavmrlvy`; audit log kembali 0 entri setelah E2E. |
+| Migration nyata | `20261111110000_developer_dashboard.sql` diterapkan lewat Management API. |
+
+### Batasan
+
+- **Uji dengan akun pemilik di-skip** atas kesepakatan 11 November 2026; password tidak
+  diminta lewat chat. E2E memakai akun staff QA dan akun pemain sementara yang dihapus.
+- Broadcast massal valid hanya diuji di PGlite; rate limiting, retensi audit, dan paginasi
+  belum ada.
+- Dashboard belum ditinjau pembaca layar atau viewport 390px.
+- Belum ada commit atau push Git untuk Tahap 8.

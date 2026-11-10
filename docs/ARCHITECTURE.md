@@ -200,6 +200,20 @@ mengubah `lesson-play.page.ts`.
 - Setiap level adalah area peta dengan palet langit/bukit/jalan sendiri
   (`AREA_PALETTES`), dan perpindahan area memudarkan lapisan scenery serta node.
 
+## Developer Dashboard dan audit
+
+- Halaman `/developer` dimuat lazy dan hanya dirender setelah guard role memastikan
+  `developer`/`admin`. Pemain biasa dialihkan ke `/app`.
+- `developer.repository.ts` hanya memanggil RPC; `developer.service.ts` memvalidasi bentuk
+  payload dan memetakan kode error server ke pesan Indonesia.
+- `get_developer_users` mencari email/username/nama dan membatasi 25 hasil. Email hanya
+  dibaca staff lewat RPC ini, tidak pernah masuk leaderboard/profil publik.
+- `grant_reward` dan `broadcast_notification` adalah satu-satunya jalur tulis. Keduanya
+  memanggil `is_staff()`, menulis audit lewat `log_audit`, dan tidak memberi grant tabel
+  langsung ke pemain.
+- `audit_logs` append-only; dashboard hanya membaca 30 entri terbaru. Tidak ada tombol
+  edit/hapus.
+
 ## Konfigurasi
 
 - `src/config/env.ts` — validasi kredensial Supabase; hanya anon/publishable key.
@@ -226,8 +240,8 @@ mengubah `lesson-play.page.ts`.
 
 - Belum ada i18n; teks UI Indonesia. `user_settings.locale` sudah disiapkan.
 - Belum ada PWA/service worker.
-- Belum ada Edge Function; operasi istimewa saat ini cukup lewat RPC. Reward Center dan
-  broadcast nanti wajib lewat Edge Function/RPC dengan verifikasi role.
+- Belum ada Edge Function; Reward Center dan broadcast saat ini lewat RPC dengan
+  `is_staff()` di server. Rate limit/antrean Edge Function belum ada.
 - Satu course per mapel; UI memakai `courses[0]`.
 - Seluruh 12 tipe soal punya renderer; `unsupported` hanya jaring pengaman data rusak.
 - Friends Quest sudah ada sebagai co-op berbasis kode undangan; Tahap 7 menambahkan
@@ -235,5 +249,5 @@ mengubah `lesson-play.page.ts`.
 - Audio model memakai text-to-speech browser; belum ada aset rekaman.
 - Timer latihan berjalan di client untuk tampilan; skor, combo, dan XP dihitung ulang
   server dari jawaban tersimpan (durasi menjawab dibatasi 0–600 detik).
-- E2E Playwright mencakup rute utama, lesson, latihan, Auth, Friends Quest, dan
-  sosial/liga dengan dua akun; lihat `docs/TESTING.md`.
+- E2E Playwright mencakup rute utama, lesson, latihan, Auth, Friends Quest, sosial/liga
+  dengan dua akun, dan Developer Dashboard staff; lihat `docs/TESTING.md`.

@@ -1,46 +1,49 @@
-# Project Handoff — Stage 7
+# Project Handoff — Stage 8
 
 Diperbarui: 11 November 2026.
 
 ## Status ringkas
 
-Stage 1–6 tetap utuh. Stage 7 (sosial, liga, leaderboard, event mingguan, notifikasi,
-privasi profil) diimplementasikan dan lolos typecheck, **78 unit test**, build produksi,
-**245 smoke check SQL**, **76 verifikasi API Supabase**, serta **13 test browser lulus**
-tanpa skip. Migration `20261111100000_social_league.sql` sudah diterapkan ke project
-Supabase nyata.
+Stage 1–7 tetap utuh. Stage 8 menambahkan **Developer Dashboard staff-only**, **Reward
+Center satu akun**, **broadcast notifikasi**, dan **audit log append-only**. Seluruh kode
+lolos typecheck, **78 unit test**, build produksi, **262 smoke check SQL**, **83 verifikasi
+API Supabase**, serta **14 test browser lulus** tanpa skip. Migration
+`20261111110000_developer_dashboard.sql` sudah diterapkan ke project Supabase nyata.
 
 ## Yang selesai
 
-- **Pertemanan**: pencarian pemain (minimal 2 karakter), kirim/terima/tolak/batalkan/hapus
-  teman, daftar teman dengan XP mingguan/level/streak bersama, dan activity feed dari
-  XP/pencapaian teman.
-- **Notifikasi**: permintaan teman, penerimaan pertemanan, dan hasil liga; halaman
-  `/notifications`, tandai satu/semua dibaca, jumlah belum dibaca.
-- **Liga mingguan**: 10 tier (Benih → Lentera), grup maksimal 30 pemain, finalisasi minggu
-  lalu saat dibaca, promosi 5 teratas, degradasi 5 terbawah bila grup ≥ 10 pemain, hadiah
-  `10 + tier × 5` Koin, riwayat 8 minggu, dan klaim idempoten.
-- **Leaderboard**: tab Liga/Teman/Global, 50 peringkat XP mingguan, posisi pemain, dan
-  pengecualian profil `private` dari papan global.
-- **Event mingguan**: Festival Lentera (100 XP → 25 Koin), progres dari XP lesson/latihan,
-  klaim idempoten.
-- **Privasi profil**: `private`/`friends`/`public` di `/settings`; `/players/:username`
-  hanya membuka statistik sesuai relasi + pengaturan. Email tidak pernah dibagikan.
-- **Integrasi UI**: route `/friends`, `/leaderboard`, `/notifications`, `/players/:username`;
-  item nav Teman/Liga/Kabar; kartu Komunitas di beranda; CSS `social.css`.
-- **Keamanan**: RLS + grant terbatas untuk semua tabel baru, penulisan hanya lewat RPC,
-  `auth.uid()` sebagai otoritas, dan perbaikan XSS toast (`textContent`) yang diuji E2E.
+- **Developer Dashboard** di `/developer`, hanya untuk role `developer`/`admin`:
+  - overview jumlah pemain/onboarded/baru 7 hari, staff, lesson/latihan selesai, XP
+    diberikan, Koin beredar, streak aktif, dan statistik konten;
+  - pencarian maksimal 25 pemain berdasarkan email, username, atau nama tampilan;
+  - form Reward Center untuk satu akun: 0–10.000 Koin dan/atau 0–100.000 XP, alasan wajib
+    3–160 karakter;
+  - form broadcast notifikasi `info` ke maksimal 500 pemain onboarded dengan tautan
+    internal;
+  - daftar audit log 30 entri terbaru dengan aktor, role, target, detail, dan waktu.
+- **Audit log append-only** (`audit_logs`): aktor diambil dari `auth.uid()`, role dari
+  `user_roles`; hanya SELECT staff yang di-grant. INSERT/UPDATE/DELETE tidak diberikan ke
+  `anon`/`authenticated`. Penulisan hanya lewat helper internal `log_audit` yang dipanggil
+  RPC `security definer`.
+- **Reward atomik**: `grant_reward` menulis wallet, transaksi Koin, ledger XP, dan audit
+  dalam satu transaksi. Source ledger/transaksi adalah `developer_grant`.
+- **Otorisasi server**: semua RPC memanggil `public.is_staff()`; UI staff-only adalah
+  lapisan kedua. Router mengalihkan pemain biasa dari `/developer` ke `/app`.
+- **Integrasi**: route `/developer`, nav sidebar staff-only, ikon topbar staff-only, dan
+  `src/styles/developer.css`. Bottom nav tetap enam item.
+- **Cakupan yang sengaja belum dibangun**: CRUD konten (mapel/lesson/soal) dan editor
+  Bahasa Sambas. Iterasi ini fokus dashboard, audit, dan reward.
 
 ## File utama
 
-- `supabase/migrations/20261111100000_social_league.sql`
-- `src/types/social.ts`, `src/types/database.ts`
-- `src/repositories/social.repository.ts`, `src/services/social.service.ts`
-- `src/pages/leaderboard.page.ts`, `friends.page.ts`, `notifications.page.ts`, `player.page.ts`
-- `src/pages/home.page.ts`, `settings.page.ts`, `src/layouts/appLayout.ts`, `src/app/router.ts`
-- `src/styles/social.css`
-- `tests/e2e/social.spec.ts`, `tests/e2e/friends-quest.spec.ts`
-- `scripts/verify-supabase.mjs`, `scripts/test-sql.mjs`
+- `supabase/migrations/20261111110000_developer_dashboard.sql`
+- `src/types/developer.ts`, `src/types/database.ts`
+- `src/repositories/developer.repository.ts`, `src/services/developer.service.ts`
+- `src/pages/developer.page.ts`, `src/styles/developer.css`
+- `src/app/router.ts`, `src/layouts/appLayout.ts`, `src/main.ts`
+- `src/pages/wallet.page.ts` (label transaksi `developer_grant`)
+- `tests/e2e/developer.spec.ts`
+- `scripts/test-sql.mjs`, `scripts/verify-supabase.mjs`
 
 ## Verifikasi terakhir (11 November 2026)
 
@@ -49,42 +52,45 @@ Supabase nyata.
 | `npm run typecheck` | Lulus, 0 error |
 | `npm test` | 78 test lulus (11 file) |
 | `npm run build` | Lulus (peringatan ukuran chunk Phaser tetap ada, bukan error) |
-| `npm run test:e2e` | **13 lulus**, termasuk sosial/liga/privasi dua akun (38,4 dtk) dan Friends Quest (30,9 dtk) |
-| `npm run test:sql` | **245 check lulus** di PGlite |
-| `npm run verify:supabase` | **76 check lulus** di project `xvrnmxbrxhtzzavmrlvy` |
-| Migration nyata | `20261111100000_social_league.sql` diterapkan lewat Management API; RPC sosial/liga/event/notifikasi terbaca akun QA |
+| `npm run test:e2e` | **14 lulus**; dashboard 15,4 dtk |
+| `npm run test:sql` | **262 check lulus** di PGlite |
+| `npm run verify:supabase` | **83 check lulus** di project `xvrnmxbrxhtzzavmrlvy` |
+| Migration nyata | `20261111110000_developer_dashboard.sql` diterapkan lewat Management API; RPC Stage 8 terbaca akun QA staff |
 
-Alur E2E sosial membuktikan: liga + event tampil, tab Global memuat baris pemain, pencarian
-dan permintaan teman, notifikasi masuk, penerimaan, notifikasi penerimaan + tandai semua
-dibaca, statistik teman, `private` menyembunyikan statistik, `friends` membukanya, hapus
-teman menutupnya, dan `public` membuka untuk non-teman.
+Alur E2E dashboard membuktikan: staff membuka `/developer` dan melihat enam metrik; mencari
+akun pemain sementara lewat email; memilih akun; mengirim 3 Koin + 5 XP dengan alasan;
+toast sukses; audit log memuat aksi `reward_grant`; wallet pemain menampilkan saldo dan
+transaksi `Hadiah developer`; pemain biasa dialihkan dari `/developer` ke `/app` dan tidak
+melihat tautan developer. Akun sementara dihapus dan baris audit uji dibersihkan lewat
+service role setelah test.
 
 ## Catatan pengujian
 
 - **Uji dengan akun pemilik: SKIP (disepakati 11 November 2026).** Password akun pemilik
-  tidak diminta lewat chat; alur dua akun diverifikasi memakai akun sementara lewat Admin
-  API yang dihapus di `finally`. Isi `E2E_FRIEND_*` bila uji akun nyata ingin dilanjutkan.
-- Full E2E berjalan dengan akun QA di `.env`; onboarding akun QA menambah data aditif pada
-  akun uji, bukan data pengguna lain.
-- Liga dengan 30 pemain, promosi/degradasi penuh, dan event kedaluwarsa diuji di PGlite;
-  browser memakai grup baru berisi 1 anggota.
-- Audio tetap hanya diuji sebagai penjadwalan osilator, belum didengar manusia.
-- Pembaca layar sungguhan dan audit performa belum dilakukan.
+  tidak diminta lewat chat. E2E memakai akun staff QA di `.env` dan akun pemain sementara
+  lewat Admin API yang dihapus di `finally`.
+- **Broadcast valid tidak dikirim dari E2E** agar tidak membuat notifikasi untuk seluruh
+  pemain asli. Yang diuji: keberadaan form dan penolakan tautan eksternal lewat API;
+  pengiriman nyata diverifikasi di PGlite.
+- Audit log nyata dibaca staff; akses anon dan pemain biasa ditolak di SQL/API test.
+- Uji browser tidak menjalankan grant kedua atau broadcast massal; race/idempotensi
+  klaim lain tetap diuji di PGlite.
+- Panduan UI belum ditinjau pembaca layar; overflow dashboard belum diuji pada viewport
+  390px.
+- Build masih menghasilkan peringatan chunk Phaser > 500 kB; bukan error.
 
 ## Sisa pekerjaan
 
-1. **Uji dengan akun pemilik** — isi `E2E_FRIEND_EMAIL`, `E2E_FRIEND_PASSWORD`,
-   `E2E_FRIEND_EMAIL_2`, `E2E_FRIEND_PASSWORD_2` di `.env` (jangan lewat chat).
-2. **Uji liga dengan grup penuh** — butuh 10–30 akun atau seed terkontrol untuk melihat
-   promosi/degradasi di browser.
-3. **Paginasi notifikasi/aktivitas** — saat ini 30 notifikasi dan 20 aktivitas terakhir.
-4. **Deployment produksi** (Vercel) dan **Stage 8** (Developer Dashboard, audit log,
-   Reward Center).
-5. **Audio dengan telinga** dan **pembaca layar** untuk halaman sosial.
+1. **Uji dengan akun pemilik** — isi kredensial di `.env` langsung, jangan lewat chat.
+2. **Content management** — CRUD mapel/lesson/soal dan editor Bahasa Sambas.
+3. **Broadcast lanjutan** — preferensi notifikasi, paginasi target, dan konfirmasi
+   dua langkah untuk audiens besar.
+4. **Deployment produksi** (Vercel) dan peninjauan CSP/rate limit.
+5. **Aksesibilitas dan viewport** dashboard di 390px serta pembaca layar.
 
 ## Langkah berikutnya
 
-1. Isi kredensial dua akun pemilik bila ingin E2E memakai akun nyata.
-2. Tinjau tampilan `/friends`, `/leaderboard`, `/notifications`, `/players/:username` di
-   ponsel 390px dan desktop 1280px (sudah lolos overflow, belum ditinjau visual).
-3. Lanjut Stage 8 setelah keputusan cakupan Developer Dashboard.
+1. Tinjau visual `/developer` di desktop 1280px dan ponsel 390px.
+2. Putuskan apakah CRUD konten masuk Stage 9.
+3. Siapkan antrean broadcast/Edge Function bila audiens melebihi 500 atau butuh
+   penjadwalan.

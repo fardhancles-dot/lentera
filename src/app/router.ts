@@ -17,7 +17,7 @@ export interface PageModule {
   render: (ctx: RouteContext) => void | Promise<void>;
 }
 
-type Access = 'public' | 'guest' | 'authenticated' | 'onboarded';
+type Access = 'public' | 'guest' | 'authenticated' | 'onboarded' | 'staff';
 
 interface RouteDefinition {
   pattern: string;
@@ -140,6 +140,11 @@ const routes: RouteDefinition[] = [
     pattern: '/players/:username',
     access: 'onboarded',
     load: () => import('../pages/player.page'),
+  },
+  {
+    pattern: '/developer',
+    access: 'staff',
+    load: () => import('../pages/developer.page'),
   },
   {
     pattern: '/profile',
@@ -310,6 +315,17 @@ export class Router {
     if (route.access === 'authenticated' && onboarded) {
       this.navigate('/app', { replace: true });
       return false;
+    }
+
+    if (route.access === 'staff') {
+      if (!onboarded) {
+        this.navigate('/onboarding', { replace: true });
+        return false;
+      }
+      if (state.user?.role !== 'developer' && state.user?.role !== 'admin') {
+        this.navigate('/app', { replace: true });
+        return false;
+      }
     }
 
     if (route.access === 'onboarded' && !onboarded) {

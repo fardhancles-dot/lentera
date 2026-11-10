@@ -1117,9 +1117,102 @@ try {
     ok('RLS notifications hanya mengembalikan milik sendiri');
   }
 
+  // Tahap 8 — Developer Dashboard. Hanya aksi baca dan validasi yang aman;
+  // broadcast valid sengaja tidak dijalankan agar tidak mengirim notifikasi
+  // ke seluruh pemain nyata.
+  const { data: developerOverview, error: developerOverviewError } = await supabase.rpc(
+    'get_developer_overview',
+  );
+  if (developerOverviewError) {
+    fail('get_developer_overview', developerOverviewError.message);
+  } else if (
+    typeof developerOverview?.players?.total === 'number' &&
+    typeof developerOverview?.players?.onboarded === 'number' &&
+    typeof developerOverview?.activity?.xpAwarded === 'number' &&
+    typeof developerOverview?.content?.questions === 'number' &&
+    typeof developerOverview?.auditEntries === 'number'
+  ) {
+    ok('get_developer_overview mengembalikan metrik pemain, aktivitas, dan konten');
+  } else {
+    fail(
+      'get_developer_overview mengembalikan metrik pemain, aktivitas, dan konten',
+      JSON.stringify(developerOverview),
+    );
+  }
+
+  const { data: developerUsers, error: developerUsersError } = await supabase.rpc(
+    'get_developer_users',
+    { p_query: email },
+  );
+  if (developerUsersError) {
+    fail('get_developer_users', developerUsersError.message);
+  } else if (
+    Array.isArray(developerUsers) &&
+    developerUsers.some((player) => player.userId === auth.user.id && player.email === email)
+  ) {
+    ok('get_developer_users menemukan akun staff lewat email');
+  } else {
+    fail('get_developer_users menemukan akun staff lewat email', JSON.stringify(developerUsers));
+  }
+
+  const { data: developerAudit, error: developerAuditError } = await supabase.rpc(
+    'get_audit_logs',
+    { p_limit: 10 },
+  );
+  if (developerAuditError) {
+    fail('get_audit_logs', developerAuditError.message);
+  } else if (
+    Array.isArray(developerAudit) &&
+    developerAudit.every(
+      (entry) =>
+        typeof entry.id === 'string' &&
+        typeof entry.action === 'string' &&
+        typeof entry.actorRole === 'string' &&
+        typeof entry.createdAt === 'string',
+    )
+  ) {
+    ok(`get_audit_logs mengembalikan ${developerAudit.length} entri audit`);
+  } else {
+    fail('get_audit_logs mengembalikan entri audit', JSON.stringify(developerAudit));
+  }
+
+  const { error: emptyRewardError } = await supabase.rpc('grant_reward', {
+    p_user_id: auth.user.id,
+    p_coins: 0,
+    p_xp: 0,
+    p_reason: 'validasi tanpa perubahan',
+  });
+  if (emptyRewardError?.message.includes('reward_empty')) {
+    ok('grant_reward menolak hadiah kosong');
+  } else {
+    fail('grant_reward menolak hadiah kosong', emptyRewardError?.message ?? 'tidak ada error');
+  }
+
+  const { error: invalidLinkError } = await supabase.rpc('broadcast_notification', {
+    p_title: 'Validasi tautan',
+    p_body: '',
+    p_link: 'https://example.com',
+  });
+  if (invalidLinkError?.message.includes('broadcast_link_invalid')) {
+    ok('broadcast_notification menolak tautan eksternal');
+  } else {
+    fail(
+      'broadcast_notification menolak tautan eksternal',
+      invalidLinkError?.message ?? 'tidak ada error',
+    );
+  }
+
   const anon = createClient(url, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
+  const { error: developerAnonError } = await anon.rpc('get_developer_overview');
+  if (developerAnonError) ok('get_developer_overview tidak bisa dipanggil tanpa sesi');
+  else fail('get_developer_overview tidak bisa dipanggil tanpa sesi');
+
+  const { error: auditAnonError } = await anon.from('audit_logs').select('id').limit(1);
+  if (auditAnonError) ok('audit_logs tidak bisa dibaca tanpa sesi');
+  else fail('audit_logs tidak bisa dibaca tanpa sesi');
+
   const { error: pairError } = await anon.from('question_pairs').select('id').limit(1);
   if (pairError) ok('question_pairs tidak bisa dibaca tanpa sesi');
   else fail('question_pairs tidak bisa dibaca tanpa sesi');

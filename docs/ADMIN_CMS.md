@@ -33,10 +33,13 @@ permission granular di server.
 1. **Ringkasan** — `admin_get_overview`, `admin_get_analytics`, `admin_get_content_health`.
 2. **Kurikulum** — baca pohon lengkap dan simpan mapel, kursus, level, unit, lesson,
    node. Draft/publish, arsip melalui status/nonaktif, audit per perubahan.
-3. **Bank soal** — daftar/filter/pagination, editor 12 tipe yang benar-benar punya
-   renderer, kunci jawaban hanya melalui RPC admin, simpan atomik, arsip/aktifkan.
-4. **Map editor** — node `learning_nodes` yang sama dengan gameplay; tipe, urutan,
-   lesson, reward, status aktif.
+3. **Bank soal** — dikelola per mata pelajaran tanpa memilih lesson/level. Editor
+   12 tipe yang punya renderer, kunci jawaban hanya lewat RPC admin, simpan atomik.
+   Soal baru otomatis menjadi level berikutnya; arsip/aktifkan ikut mengubah node
+   level tanpa menghapus soal atau menggeser nomor level lain.
+4. **Map editor** — pemantauan level per mata pelajaran: jumlah level, soal yang
+   terhubung, status, dan tombol edit soal. Level dibuat dari Bank Soal, bukan
+   dibuat manual satu per satu. Pengaturan node lanjutan tetap ada di Kurikulum.
 5. **Media library** — upload ke bucket `content-media`, validasi server MIME/ukuran,
    alt text wajib untuk gambar, metadata `media_assets`, arsip.
 6. **Pengguna** — direktori, detail aktivitas, role, Reward Center melalui ledger.
@@ -147,6 +150,21 @@ password acak yang dibuat dan dihapus dalam satu skrip:
 - Akun staff, mapel uji, dan halaman uji dihapus; query verifikasi menunjukkan
   `0` baris tersisa untuk semuanya, dan tidak ada halaman terbit yang tertinggal.
 
+Verifikasi otomatis level (13 November 2026), `npm run verify:auto-levels`,
+memakai akun developer + player sementara dan satu soal uji di Pemrograman Web:
+
+- Bank Soal hanya menampilkan pilihan mata pelajaran; form tambah soal tidak
+  meminta lesson. Soal baru langsung menjadi Level 9 dan memiliki lesson sendiri.
+- Map Editor menampilkan Level 9 beserta soal yang terhubung.
+- Peta publik menampilkan **9 Level · 9 Soal**, tanpa informasi bab; node Level 9
+  tampil di viewport mobile.
+- Backend memuat tepat satu soal untuk Level 9, menilai jawaban benar, mencatat
+  penyelesaian Level 9, dan mempertahankan 8 level sebelumnya.
+- Edit soal mempertahankan node dan nomor level. Arsip soal menonaktifkan level
+  (peta kembali 8/8) tanpa menggeser nomor; aktifkan kembali memulihkan Level 9.
+- Tidak ada console error dan tidak ada overflow horizontal Map Editor di mobile.
+- Soal, level, lesson, progres, dan akun uji dihapus; level maksimum kembali 8.
+
 Verifikasi browser mendalam (13 November 2026) memakai satu akun `developer` dan
 satu akun `player` sementara, dengan hierarki kurikulum draft terisolasi:
 
@@ -240,12 +258,15 @@ masih setengah jadi dan rantai integrasi yang belum tertutup.
   (penegakan tetap trigger database).
 - `src/services/content.service.ts` — turunan warna hover/pressed dari warna brand.
 - `src/pages/admin/curriculum.ts` — kontrol reorder.
-- `src/pages/admin/questions.ts` — reorder dan media picker.
+- `src/pages/admin/questions.ts` — Bank Soal per mapel, form tambah/edit, media picker.
+- `src/pages/admin/curriculum.ts` — Map Level (pemantauan) dan editor kurikulum lanjutan.
+- `supabase/migrations/20261113100000_auto_levels.sql` — relasi soal-level, level otomatis, statistik level.
+- `scripts/verify-auto-levels.mjs` — verifikasi browser alur level otomatis.
 - `src/pages/admin/website.ts` — media picker untuk blok gambar.
 - `src/pages/admin/media.ts` — picker library.
 - `src/repositories/admin.repository.ts`, `src/services/admin.service.ts` — `reorder`.
 - `src/styles/admin.css`, `src/styles/pages.css` — gaya picker, banner, halaman info.
-- `scripts/test-sql.mjs` — lima smoke check integrasi publik.
+- `scripts/test-sql.mjs` — smoke check integrasi publik dan level otomatis.
 
 ### Masih terbuka
 

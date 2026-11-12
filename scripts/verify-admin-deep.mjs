@@ -238,12 +238,11 @@ try {
   // Question bank CRUD
   // -------------------------------------------------------------------------
   await page.goto(`${base}/admin/questions`, { waitUntil: 'domcontentloaded' });
-  await page.locator('select[name="lesson"]').waitFor({ timeout: 20_000 });
-  await page.locator('select[name="lesson"]').selectOption(lessonId);
+  await page.locator('select[name="subject"]').waitFor({ timeout: 20_000 });
+  await page.locator('select[name="subject"]').selectOption(subjectId);
   await page.getByRole('button', { name: 'Tambah soal' }).waitFor({ timeout: 20_000 });
   await page.getByRole('button', { name: 'Tambah soal' }).click();
   dialog = page.getByRole('dialog', { name: 'Tambah soal' });
-  await dialog.locator('select[name="lessonId"]').selectOption(lessonId);
   await dialog.locator('textarea[name="prompt"]').fill(questionPrompt);
   await dialog.locator('textarea[name="explanation"]').fill('Penjelasan verifikasi.');
   const optionLabels = dialog.locator('input[name="optionLabel"]');
@@ -258,13 +257,13 @@ try {
   const pickedUrl = await mediaRow.locator('input[name="mediaUrl"]').inputValue();
   if (pickedUrl && pickedUrl.includes('content-media')) ok('media picker mengisi URL soal');
   else fail('media picker mengisi URL soal', pickedUrl);
-  await dialog.locator('button[type="submit"]').click();
+  await dialog.getByRole('button', { name: 'Simpan & buat level' }).click();
   await dialog.waitFor({ state: 'detached', timeout: 25_000 });
   await page.getByText(questionPrompt, { exact: false }).first().waitFor({ timeout: 20_000 });
   ok('create soal lewat UI');
 
   const questionRows = await sql(
-    `select id, prompt, is_active from public.questions where lesson_id = '${lessonId}'`,
+    `select id, prompt, is_active from public.questions where prompt = '${questionPrompt}'`,
   );
   if (questionRows.length === 1 && questionRows[0].is_active) {
     questionId = questionRows[0].id;

@@ -32,8 +32,11 @@
 - Learning path per mapel: level → unit → node, dengan status selesai/aktif/terkunci.
 - Klik level langsung membuka layar permainan; tidak ada halaman detail lesson atau
   tombol “Mulai lesson” sebagai perantara. URL detail lama dialihkan ke permainan.
-- Satu level memainkan tepat satu soal dari bank soal lesson-nya. Bank soal tetap utuh
-  untuk latihan, mistakes review, dan mastery.
+- Satu level memainkan tepat satu soal yang terhubung lewat `learning_nodes.question_id`.
+  Bank soal lama tetap utuh untuk latihan, mistakes review, dan mastery; soal yang
+  ditambahkan dari Bank Soal otomatis membuat level baru dengan lesson sendiri.
+- Peta belajar tidak memakai konsep bab. Statistik memakai level aktif dan soal yang
+  terhubung, sehingga 8 level aktif selalu terbaca 8 level dan 8 soal.
 - Layar lesson: progress bar, hint, pilihan ganda, input teks, word bank, sentence
   builder, matching pairs, fill in the blank inline (satu atau banyak rumpang), picture
   identification, tombol periksa, feedback benar/salah, penjelasan, jawaban benar, dan

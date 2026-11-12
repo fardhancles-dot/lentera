@@ -14,6 +14,7 @@ export type { LearningNodeStatus } from './learningPath';
 
 export interface SubjectCard extends SubjectOverviewRow {
   completedLessons: number;
+  completedLevels: number;
   progressPercent: number;
 }
 
@@ -25,6 +26,8 @@ export interface PathNode {
   nodeType: string;
   lessonId: string | null;
   lessonSlug: string | null;
+  questionId: string | null;
+  levelNumber: number | null;
   playable: boolean;
   questionCount: number;
   topics: string[];
@@ -103,26 +106,41 @@ function groupBy<T>(items: T[], key: (item: T) => string): Map<string, T[]> {
 
 export const curriculumService = {
   async loadCatalog(userId: string): Promise<SubjectCard[]> {
-    const [subjects, courseProgress] = await Promise.all([
+    const [subjects, courseProgress, nodeProgress, levelIndex] = await Promise.all([
       curriculumRepository.listSubjects(),
       progressRepository.listCourseProgress(userId),
+      progressRepository.listNodeProgress(userId),
+      curriculumRepository.listLevelNodeIndex().catch(() => []),
     ]);
 
     const progressByCourse = new Map(courseProgress.map((row) => [row.course_id, row]));
+    const completedNodeIds = new Set(
+      nodeProgress.filter((row) => row.status === 'completed').map((row) => row.node_id),
+    );
+    const levelsBySubject = new Map<string, string[]>();
+    for (const row of levelIndex) {
+      const list = levelsBySubject.get(row.subjectId) ?? [];
+      list.push(row.nodeId);
+      levelsBySubject.set(row.subjectId, list);
+    }
 
     return subjects.map((subject) => {
       const progress = subject.course_id ? progressByCourse.get(subject.course_id) : undefined;
-      const completedLessons = Math.min(
-        progress?.completed_lessons ?? 0,
-        Math.max(subject.lesson_count, 0),
-      );
+      const indexedLevels = levelsBySubject.get(subject.id);
+      const levelCount = indexedLevels?.length ?? subject.level_count;
+      const completedLevels = indexedLevels
+        ? indexedLevels.filter((id) => completedNodeIds.has(id)).length
+        : Math.min(progress?.completed_lessons ?? 0, Math.max(levelCount, 0));
 
       return {
         ...subject,
-        completedLessons,
+        level_count: levelCount,
+        question_count: indexedLevels ? levelCount : subject.question_count,
+        completedLessons: Math.min(completedLevels, levelCount),
+        completedLevels,
         progressPercent:
-          subject.lesson_count > 0
-            ? Math.min(100, Math.round((completedLessons / subject.lesson_count) * 100))
+          levelCount > 0
+            ? Math.min(100, Math.round((completedLevels / levelCount) * 100))
             : 0,
       };
     });
@@ -264,8 +282,8 @@ export const curriculumService = {
             );
 
           for (const node of unitNodes) {
-            questionCount += node.questionCount;
             if (!node.playable) continue;
+            questionCount += node.questionCount;
             totalNodes += 1;
             if (node.status === 'completed') completedNodes += 1;
           }
@@ -398,8 +416,12 @@ function buildPathNode(
     nodeType: node.node_type,
     lessonId: node.lesson_id,
     lessonSlug: lesson?.slug ?? null,
+    questionId: node.question_id ?? null,
+    levelNumber: node.level_number ?? null,
     playable: Boolean(node.lesson_id && lesson),
-    questionCount: stats?.question_count ?? 0,
+    // A level plays exactly one linked question. Legacy questions in the same
+    // lesson stay available to practice/mastery but are not counted as levels.
+    questionCount: node.question_id ? 1 : 0,
     topics: stats?.topics ?? [],
     questionTypes: stats?.question_types ?? [],
     estimatedMinutes: lesson?.estimated_minutes ?? 0,

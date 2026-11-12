@@ -242,6 +242,10 @@ function parseQuestionItem(value: unknown): AdminQuestionListItem {
     lessonTitle: str(data.lessonTitle),
     subjectId: str(data.subjectId),
     subjectName: str(data.subjectName),
+    nodeId: typeof data.nodeId === 'string' ? data.nodeId : null,
+    levelNumber: typeof data.levelNumber === 'number' ? data.levelNumber : null,
+    levelActive: bool(data.levelActive, true),
+    attemptCount: num(data.attemptCount),
     type: str(data.type, 'multiple_choice'),
     topic: str(data.topic),
     difficulty: str(data.difficulty, 'beginner'),
@@ -259,8 +263,6 @@ function parseQuestion(value: Json): AdminQuestion {
     ...parseQuestionItem({
       ...data,
       lessonTitle: '',
-      subjectId: '',
-      subjectName: '',
       updatedAt: '',
     }),
     slug: str(data.slug),
@@ -368,6 +370,14 @@ function parseCurriculum(value: Json): CurriculumSubject[] {
                       lessonId: typeof node.lessonId === 'string' ? node.lessonId : null,
                       lessonTitle:
                         typeof node.lessonTitle === 'string' ? node.lessonTitle : null,
+                      questionId:
+                        typeof node.questionId === 'string' ? node.questionId : null,
+                      levelNumber:
+                        typeof node.levelNumber === 'number' ? node.levelNumber : null,
+                      questionPrompt:
+                        typeof node.questionPrompt === 'string' ? node.questionPrompt : null,
+                      questionActive:
+                        typeof node.questionActive === 'boolean' ? node.questionActive : null,
                       sortOrder: num(node.sortOrder),
                       isActive: bool(node.isActive, true),
                       rewardCoins: num(node.rewardCoins),
@@ -634,6 +644,8 @@ export const adminService = {
     run(() => adminRepository.getQuestion(questionId), parseQuestion),
   saveQuestion: (payload: Json, reason: string) =>
     run(() => adminRepository.saveQuestion(payload, reason), parseQuestion),
+  createQuestionLevel: (payload: Json, reason: string) =>
+    run(() => adminRepository.createQuestionLevel(payload, reason), parseQuestion),
   setQuestionActive: (questionId: string, active: boolean, reason: string) =>
     run(() => adminRepository.setQuestionActive(questionId, active, reason), (value) =>
       record(value),

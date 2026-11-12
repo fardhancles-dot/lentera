@@ -120,7 +120,8 @@ lolos hanya karena shell halaman berhasil dimuat.
    dengan minimal 3 soal aktif.
 4. Memastikan tidak ada node playable pada mapel inti yang kehabisan soal.
 5. Memeriksa urutan `practice → checkpoint → legendary` dan penempatannya di Level 2/3.
-6. Memeriksa agregat `subject_overview` (Pemrograman Web: 8 lesson, 30 soal).
+6. Memeriksa agregat `subject_overview` (Pemrograman Web: 8 lesson, 8 level aktif, 8 soal level).
+7. Menjalankan `npm run verify:auto-levels` untuk alur Bank Soal → level otomatis → peta publik → gameplay satu soal → arsip/aktifkan, termasuk cleanup.
 7. Membuat dua pengguna lewat trigger dan memastikan profil otomatis terbentuk.
 8. Menolak node kedua sebelum node pertama selesai (`lesson_locked`).
 9. Memastikan payload `start_lesson` berisi 5 soal dan tidak membocorkan `is_correct`

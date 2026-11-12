@@ -58,6 +58,10 @@ export interface CurriculumUnit {
     nodeType: string;
     lessonId: string | null;
     lessonTitle: string | null;
+    questionId: string | null;
+    levelNumber: number | null;
+    questionPrompt: string | null;
+    questionActive: boolean | null;
     sortOrder: number;
     isActive: boolean;
     rewardCoins: number;
@@ -109,6 +113,10 @@ export interface AdminQuestionListItem {
   lessonTitle: string;
   subjectId: string;
   subjectName: string;
+  nodeId: string | null;
+  levelNumber: number | null;
+  levelActive: boolean;
+  attemptCount: number;
   type: string;
   topic: string;
   difficulty: string;

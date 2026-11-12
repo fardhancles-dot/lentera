@@ -21,6 +21,7 @@
     "verify:admin-deploy": "node --env-file=.env scripts/verify-admin-deploy.mjs",
     "verify:admin-browser": "node --env-file=.env scripts/verify-admin-browser.mjs",
     "verify:admin-deep": "node --env-file=.env scripts/verify-admin-deep.mjs",
+    "verify:auto-levels": "node --env-file=.env scripts/verify-auto-levels.mjs",
     "setup:supabase": "node scripts/setup-supabase.mjs",
     "db:apply-catalog-fix": "node scripts/apply-catalog-fix.mjs",
     "seed:build": "tsx scripts/generate-curriculum-sql.ts"

@@ -98,6 +98,8 @@ export const adminRepository = {
     call('admin_get_question', { p_question_id: questionId }),
   saveQuestion: (payload: Json, reason: string) =>
     call('admin_save_question', { p_payload: payload, p_reason: reason }),
+  createQuestionLevel: (payload: Json, reason: string) =>
+    call('admin_create_question_level', { p_payload: payload, p_reason: reason }),
   setQuestionActive: (questionId: string, active: boolean, reason: string) =>
     call('admin_set_question_active', {
       p_question_id: questionId,

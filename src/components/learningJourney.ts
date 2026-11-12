@@ -53,7 +53,7 @@ function stopLabel(stop: JourneyStop): string {
 
 function stopAriaLabel(stop: JourneyStop): string {
   if (stop.kind === 'reward') {
-    return `Hadiah ${stop.rewardNumber}, ${stop.chapterName}. ${stopLabel(stop)}.`;
+    return `Hadiah ${stop.rewardNumber}. ${stopLabel(stop)}.`;
   }
 
   const status =
@@ -213,7 +213,7 @@ function createStop(
     element.setAttribute(
       'title',
       stop.kind === 'reward'
-        ? 'Selesaikan semua level di bab ini untuk membuka hadiah.'
+        ? 'Selesaikan level sebelumnya untuk membuka hadiah.'
         : 'Selesaikan level sebelumnya untuk membuka level ini.',
     );
   }
@@ -301,7 +301,8 @@ export function createLearningJourney(
     el('h1', { class: 'journey-map__title', text: subject.name }),
     el('span', {
       class: 'journey-map__meta',
-      text: `${path.levels.length} bab · ${path.totalNodes} level · ${formatNumber(path.questionCount)} soal`,
+      text: `${path.totalNodes} Level · ${formatNumber(path.questionCount)} Soal`,
+      attrs: { 'data-journey-meta': 'levels-questions' },
     }),
   ]);
 

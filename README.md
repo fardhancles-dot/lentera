@@ -43,7 +43,7 @@ Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand ter
 | Onboarding profil | **Implemented · E2E (via helper akun uji)** | Username, avatar, nama, target harian, zona waktu. Atomik via RPC. |
 | Profil & pengaturan cloud | **Implemented · E2E verified** | Simpan nama tampilan/bio dan preferensi reduced motion ± persist setelah reload diuji browser. |
 | Database & RLS | **Implemented · Tested (PGlite + Supabase API)** | 15 migration diterapkan ke project Supabase; 262 SQL smoke check + 83 verifikasi API lulus. |
-| Kurikulum & bank soal | **Implemented · Tested (SQL smoke)** | 10 mapel, 22 level, 57 lesson, 231 soal, 12 tipe soal, 7 jenis node; 7 mapel inti + Bahasa Sambas. |
+| Kurikulum & bank soal | **Implemented · Tested (SQL + E2E)** | 10 mapel, 56 level aktif, 57 lesson, 231 soal, 12 tipe soal, 7 jenis node; 7 mapel inti + Bahasa Sambas. |
 | Learning path & progres per mapel | **Implemented · Tested (SQL smoke)** | Node selesai/aktif/terkunci, unlock ditegakkan server, progres per course/node. |
 | Lesson engine & halaman hasil | **Implemented · Tested (SQL smoke + E2E)** | Kunci jawaban tidak dikirim ke browser; XP/Koin idempoten per attempt. Halaman lesson menampilkan lima riwayat percobaan terakhir milik pemain (akurasi, skor, benar/total) dari `lesson_attempts` dengan RLS. |
 | Gameplay 20 mini-game | **20/20 implemented · Tested (SQL + API + E2E alur jawab)** | 12 tipe soal punya layar; 7 mode latihan; Conversation bertahap dan Story dengan pilihan respons. E2E menjawab satu soal lesson dan satu soal latihan sampai feedback; 20 mekanik belum dijelajahi satu per satu di browser. |
@@ -106,6 +106,7 @@ Deployment ganda Vercel + GitHub Pages: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.m
 | `npm run test:e2e` | Smoke test browser via Playwright (memakai Chrome terpasang; butuh `.env` untuk test berakun). |
 | `npm run test:sql` | Smoke test migration, RPC, reward, dan RLS di PGlite. |
 | `npm run verify:supabase` | Verifikasi login, payload satu soal per level, grading, hasil lesson, Practice Hub, Friends Quest, sosial/liga/event, notifikasi, privasi, dan idempotensi reward di Supabase nyata. |
+| `npm run verify:auto-levels` | Verifikasi browser: tambah soal per mapel, level otomatis, peta publik, gameplay satu soal, edit/arsip, dan cleanup. |
 | `npm run db:apply-catalog-fix` | Menerapkan migration view katalog lewat Supabase Management API (`SUPABASE_ACCESS_TOKEN`); `-- --dry-run` untuk pratinjau. |
 | `npm run seed:build` | Validasi konten dan regenerasi migration seed kurikulum. |
 

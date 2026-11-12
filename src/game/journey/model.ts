@@ -61,7 +61,9 @@ export function buildJourneyStops(levels: readonly PathLevel[]): JourneyStop[] {
 
       if (!node.playable) continue;
 
-      levelNumber += 1;
+      // Level numbers come from the database so archiving a level never
+      // renumbers the levels after it.
+      levelNumber = node.levelNumber ?? levelNumber + 1;
       stops.push({
         node,
         kind: 'level',
@@ -112,22 +114,10 @@ export function layoutJourney(
   const bottom = options.bottom ?? 150;
 
   const positions: JourneyPosition[] = [];
-  let chapterIndex = -1;
-  let chapterStopIndex = 0;
+  const pattern = [50, 30, 70, 40, 60];
 
   stops.forEach((stop, index) => {
-    if (stop.chapterIndex !== chapterIndex) {
-      chapterIndex = stop.chapterIndex;
-      chapterStopIndex = 0;
-    }
-
-    const pattern =
-      chapterIndex === 0
-        ? [50, 30, 70]
-        : chapterIndex % 2 === 1
-          ? [30, 70, 50]
-          : [70, 30, 50];
-    const x = stop.kind === 'reward' ? 50 : pattern[chapterStopIndex++ % pattern.length]!;
+    const x = stop.kind === 'reward' ? 50 : pattern[index % pattern.length]!;
 
     positions.push({
       x,

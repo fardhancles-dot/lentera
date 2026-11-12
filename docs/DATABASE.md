@@ -35,6 +35,7 @@ Database: PostgreSQL di Supabase. Migration ada di `supabase/migrations/`.
 | `20261110150000_subject_overview_owner.sql` | Menjalankan `subject_overview` dengan hak owner agar katalog tidak gagal saat `questions` di-revoke dari pemain. |
 | `20261111100000_social_league.sql` | Pertemanan, notifikasi, 10 tier liga + grup/ hasil mingguan, leaderboard, event mingguan, privasi profil, RPC sosial, trigger XP liga, dan RLS. |
 | `20261111110000_developer_dashboard.sql` | `audit_logs` append-only, helper `log_audit`, overview/pencarian staff, Reward Center satu akun, broadcast notifikasi (maks. 500), dan RLS staff-only. |
+| `20261113100000_auto_levels.sql` | `learning_nodes.question_id` + `level_number`, backfill 8 level lama, RPC `admin_create_question_level`, start lesson memakai soal level, statistik katalog berbasis level. |
 
 Seed dihasilkan dari `scripts/content/**/*.ts` dengan `npm run seed:build`. Jangan mengedit
 file seed secara manual; ubah sumber TypeScript lalu regenerasi. UUID bersifat deterministik

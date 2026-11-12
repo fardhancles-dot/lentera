@@ -72,6 +72,7 @@ try {
   await run('supabase/migrations/20261112130000_admin_content.sql');
   await run('supabase/migrations/20261112140000_admin_gamification.sql');
   await run('supabase/migrations/20261112150000_maintenance_mode.sql');
+  await run('supabase/migrations/20261113100000_auto_levels.sql');
 
   const content = await db.query(`
     select
@@ -430,8 +431,8 @@ try {
     `select lesson_count, question_count from public.subject_overview where slug = 'pemrograman-web'`,
   );
   check(
-    overview.rows[0]?.lesson_count === 8 && overview.rows[0]?.question_count === 30,
-    'subject overview aggregates the eight lessons and 30 questions',
+    overview.rows[0]?.lesson_count === 8 && overview.rows[0]?.question_count === 8,
+    'subject overview counts the eight playable levels, not every bank question',
     JSON.stringify(overview.rows[0] ?? null),
   );
 
@@ -444,7 +445,7 @@ try {
     );
     check(
       playerOverview.rows[0]?.lesson_count === 8 &&
-        playerOverview.rows[0]?.question_count === 30,
+        playerOverview.rows[0]?.question_count === 8,
       'signed-in player can read subject overview without question access',
       JSON.stringify(playerOverview.rows[0] ?? null),
     );
@@ -2400,6 +2401,54 @@ try {
     [questionRow.id],
   );
   check(archivedQuestion.rows[0].payload.isActive === true, 'admin can reactivate an archived question');
+
+  const autoLevelQuestion = await db.query(
+    `select public.admin_create_question_level($1::jsonb, 'Tambah level otomatis') as payload`,
+    [JSON.stringify({
+      subjectId: subjectRow.id, slug: 'soal-level-otomatis', type: 'multiple_choice',
+      prompt: 'Soal otomatis untuk level baru?', points: 10,
+      options: [
+        { label: 'Benar', isCorrect: true, sortOrder: 0 },
+        { label: 'Salah', isCorrect: false, sortOrder: 1 },
+      ],
+      answers: [], pairs: [], media: [], scene: {},
+    })],
+  );
+  const autoQuestion = autoLevelQuestion.rows[0].payload;
+  check(
+    autoQuestion.levelNumber === 1 && Boolean(autoQuestion.nodeId) &&
+      Boolean(autoQuestion.id) && autoQuestion.subjectId === subjectRow.id,
+    'adding a question creates its level automatically',
+    JSON.stringify(autoQuestion),
+  );
+
+  const autoListed = await db.query(
+    'select public.admin_list_questions(null, $1) as payload',
+    [subjectRow.id],
+  );
+  check(
+    autoListed.rows[0].payload.items.some((item) => item.id === autoQuestion.id && item.levelNumber === 1),
+    'question bank lists the auto-created level',
+  );
+
+  await db.query(
+    "select public.admin_set_question_active($1, false, 'Uji arsip level') as payload",
+    [autoQuestion.id],
+  );
+  const pausedLevel = await db.query(
+    'select public.admin_get_question($1) as payload',
+    [autoQuestion.id],
+  );
+  const pausedQuestion = pausedLevel.rows[0].payload;
+  check(
+    pausedQuestion?.levelActive === false && pausedQuestion?.levelNumber === 1,
+    'archiving a question pauses its level without renumbering it',
+    JSON.stringify(pausedQuestion),
+  );
+  await db.query(
+    "select public.admin_set_question_active($1, true, 'Aktifkan lagi level') as payload",
+    [autoQuestion.id],
+  );
 
   const curriculums = await db.query('select public.admin_list_curriculum() as payload');
   const curriculumSubject = curriculums.rows[0].payload.find((row) => row.slug === 'mapel-uji-admin');

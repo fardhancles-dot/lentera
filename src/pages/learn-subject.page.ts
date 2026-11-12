@@ -136,7 +136,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
           onLocked: (stop) =>
             showToast(
               stop.kind === 'reward'
-                ? 'Selesaikan semua level di bab ini untuk membuka hadiah.'
+                ? 'Selesaikan level sebelumnya untuk membuka hadiah.'
                 : 'Selesaikan level sebelumnya untuk membuka level ini.',
               'default',
             ),

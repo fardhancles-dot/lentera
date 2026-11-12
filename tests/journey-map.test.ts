@@ -21,6 +21,8 @@ function makeNode(
     nodeType,
     lessonId: nodeType === 'reward' ? null : `lesson-${id}`,
     lessonSlug: nodeType === 'reward' ? null : `lesson-${id}`,
+    questionId: nodeType === 'reward' ? null : `question-${id}`,
+    levelNumber: null,
     playable: nodeType !== 'reward',
     questionCount: nodeType === 'reward' ? 0 : 4,
     topics: [],
@@ -137,14 +139,14 @@ describe('learning journey model', () => {
     expect(stops.at(-1)?.rewardNumber).toBe(6);
   });
 
-  it('winds nodes down the map and keeps reward chests centred', () => {
+  it('winds nodes continuously down the map and keeps reward chests centred', () => {
     const stops = buildJourneyStops(threeChapters);
     const layout = layoutJourney(stops);
 
     expect(layout.positions).toHaveLength(12);
     expect(layout.height).toBe(128 + 11 * 112 + 150);
     expect(layout.positions.map((position) => position.x)).toEqual([
-      50, 30, 70, 50, 30, 70, 50, 50, 70, 30, 50, 50,
+      50, 30, 70, 50, 60, 50, 30, 50, 40, 60, 50, 50,
     ]);
     expect(layout.positions.map((position) => position.y)).toEqual(
       Array.from({ length: 12 }, (_, index) => 128 + index * 112),

@@ -112,10 +112,7 @@ function subjectCard(ctx: Parameters<PageModule['render']>[0], subject: SubjectC
   const metaRow = el('div', { class: 'subject-card__meta' }, [
     isDevelopment
       ? el('span', { text: 'Belum ada level dan soal' })
-      : el('span', { text: `${subject.level_count} level · ${subject.lesson_count} lesson` }),
-    isDevelopment
-      ? null
-      : el('span', { text: `${formatNumber(subject.question_count)} soal` }),
+      : el('span', { text: `${subject.level_count} level · ${formatNumber(subject.question_count)} soal` }),
   ]);
 
   const progress = el('div', {
@@ -150,8 +147,8 @@ function subjectCard(ctx: Parameters<PageModule['render']>[0], subject: SubjectC
           el('span', {
             class: 'subject-card__progress-label',
             text:
-              subject.completedLessons > 0
-                ? `${subject.completedLessons}/${subject.lesson_count} lesson selesai`
+              subject.completedLevels > 0
+                ? `${subject.completedLevels}/${subject.level_count} level selesai`
                 : 'Belum dimulai',
           }),
         ]),
@@ -230,7 +227,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
 
         const active = subjects.filter((subject) => subject.status === 'active');
         const primary = active.filter((subject) => subject.is_primary).length;
-        const lessons = active.reduce((sum, subject) => sum + subject.lesson_count, 0);
+        const levels = active.reduce((sum, subject) => sum + subject.level_count, 0);
         const questions = active.reduce((sum, subject) => sum + subject.question_count, 0);
 
         summarySlot.append(
@@ -240,12 +237,12 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
               el('span', { class: 'stat__label', text: 'Mapel aktif' }),
             ]),
             el('div', { class: 'stat' }, [
-              el('span', { class: 'stat__value', text: String(lessons) }),
-              el('span', { class: 'stat__label', text: 'Lesson' }),
+              el('span', { class: 'stat__value', text: formatNumber(levels) }),
+              el('span', { class: 'stat__label', text: 'Level' }),
             ]),
             el('div', { class: 'stat' }, [
               el('span', { class: 'stat__value', text: formatNumber(questions) }),
-              el('span', { class: 'stat__label', text: 'Soal tersimpan' }),
+              el('span', { class: 'stat__label', text: 'Soal' }),
             ]),
           ]),
         );
@@ -259,7 +256,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
               el('p', { class: 'banner__title', text: 'Tentang ketersediaan konten' }),
               el('p', {
                 class: 'banner__body',
-                text: `${primary} mata pelajaran inti aktif dengan ${formatNumber(questions)} soal tersimpan. Bahasa Sambas aktif dan siap diisi pemilik konten; bahasa daerah lain menunggu pengembangan developer.`,
+                text: `${primary} mata pelajaran inti aktif dengan ${formatNumber(levels)} level dan ${formatNumber(questions)} soal. Bahasa Sambas aktif dan siap diisi pemilik konten; bahasa daerah lain menunggu pengembangan developer.`,
               }),
             ]),
           ]),

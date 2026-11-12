@@ -3,6 +3,7 @@ import { adminService } from '../../services/admin.service';
 import type { CurriculumLesson } from '../../types/admin';
 import type { Json } from '../../types/database';
 import { el, formatNumber } from '../../utils/dom';
+import { openQuestionById, openQuestionEditor, subjectLevels } from './questions';
 import { reorderControls } from './reorder';
 import type { AdminSectionContext } from './ui';
 import {
@@ -492,54 +493,98 @@ export async function renderCurriculum(ctx: AdminSectionContext): Promise<void> 
 export async function renderMap(ctx: AdminSectionContext): Promise<void> {
   ctx.root.replaceChildren(loading('Memuat peta pembelajaran…'));
   try {
-    const curriculum = await adminService.getCurriculum();
-    const rows: Array<Array<Node | string>> = [];
-    const lessonLists = new Map<string, CurriculumLesson[]>();
-    for (const subject of curriculum) {
-      for (const course of subject.courses) {
-        for (const level of course.levels) {
-          for (const unit of level.units) {
-            const lessons = unit.lessons.map((lesson) => ({ ...lesson, unitId: unit.id }));
-            lessonLists.set(unit.id, lessons);
-            for (const node of unit.nodes) {
-              rows.push([
-                el('span', {}, [
-                  el('strong', { text: node.title }),
-                  el('span', { class: 'admin-sub', text: ` ${subject.name} / ${level.title} / ${unit.title}` }),
-                ]),
-                node.nodeType,
-                node.lessonTitle ?? '—',
-                String(node.sortOrder),
-                node.nodeType === 'reward'
-                  ? `${formatNumber(node.rewardCoins)} Koin · ${formatNumber(node.rewardXp)} XP`
-                  : '—',
-                badge(node.isActive ? 'Aktif' : 'Nonaktif', node.isActive ? 'ok' : 'muted'),
-                button('Edit', 'settings', () =>
-                  openCurriculumForm(
-                    'node',
-                    { ...node, unitId: unit.id },
-                    unit.id,
-                    lessonLists.get(unit.id) ?? [],
-                    () => void renderMap(ctx),
-                  )),
-              ]);
-            }
-          }
-        }
+    let curriculum = await adminService.getCurriculum();
+    const subjects = curriculum.filter((subject) => subject.status !== 'inactive');
+    const levelSlot = el('div', {});
+    const summary = el('div', { class: 'admin-filters' });
+    const subjectSelect = select(
+      'map-subject',
+      subjects.map((subject) => ({ value: subject.id, label: subject.name })),
+      subjects[0]?.id ?? '',
+    );
+
+    const draw = (): void => {
+      const subject = curriculum.find((entry) => entry.id === subjectSelect.value);
+      const levels = subjectLevels(subject).sort(
+        (a, b) => (a.levelNumber ?? 0) - (b.levelNumber ?? 0),
+      );
+      const active = levels.filter((level) => level.isActive && level.questionId);
+      const linked = levels.filter((level) => level.questionId);
+
+      summary.replaceChildren(
+        el('span', { class: 'badge badge--muted', text: `${levels.length} level` }),
+        el('span', { class: 'badge badge--success', text: `${active.length} level aktif` }),
+        el('span', { class: 'badge badge--muted', text: `${linked.length} soal terhubung` }),
+      );
+
+      if (!subject) {
+        levelSlot.replaceChildren(el('p', { class: 'form-hint', text: 'Pilih mata pelajaran.' }));
+        return;
       }
-    }
+
+      if (levels.length === 0) {
+        levelSlot.replaceChildren(
+          el('p', {
+            class: 'form-hint',
+            text: 'Belum ada level. Tambahkan soal di Bank Soal; level pertama akan dibuat otomatis.',
+          }),
+        );
+        return;
+      }
+
+      levelSlot.replaceChildren(
+        table(
+          ['Level', 'Nama level', 'Soal terhubung', 'Status', 'Aksi'],
+          levels.map((level) => [
+            badge(`Level ${level.levelNumber ?? '—'}`, level.isActive ? 'ok' : 'muted'),
+            el('span', {}, [
+              el('strong', { text: level.title }),
+              el('span', { class: 'admin-sub', text: ` ${level.description || 'Level otomatis dari Bank Soal'}` }),
+            ]),
+            level.questionPrompt
+              ? el('span', {}, [
+                  el('span', { text: level.questionPrompt.slice(0, 110) }),
+                  level.questionActive === false
+                    ? el('span', { class: 'admin-sub', text: ' · soal diarsipkan' })
+                    : null,
+                ])
+              : badge('Belum terhubung', 'warn'),
+            badge(level.isActive ? 'Aktif' : 'Nonaktif', level.isActive ? 'ok' : 'muted'),
+            el('span', { class: 'admin-row-actions' }, [
+              level.questionId
+                ? button('Edit soal', 'settings', () =>
+                    openQuestionById(level.questionId!, curriculum, subject.id, () => void reload()))
+                : button('Tambah soal', 'plus', () =>
+                    openQuestionEditor(null, curriculum, subject.id, () => void reload())),
+            ]),
+          ]),
+        ),
+      );
+    };
+
+    const reload = async (): Promise<void> => {
+      curriculum = await adminService.getCurriculum();
+      draw();
+    };
+
+    subjectSelect.addEventListener('change', draw);
 
     ctx.root.replaceChildren(
-      panel('Map editor', 'Node peta dibaca langsung dari learning_nodes yang juga dipakai pemain.', [
-        rows.length === 0
-          ? el('p', { class: 'form-hint', text: 'Belum ada node.' })
-          : table(['Node', 'Tipe', 'Lesson', 'Urutan', 'Reward', 'Status', 'Aksi'], rows),
-        el('p', {
-          class: 'form-hint',
-          text: 'Posisi, jalur, dan animasi peta tetap mengikuti renderer yang sudah ada. Dashboard hanya mengelola data node.',
-        }),
-      ]),
+      panel(
+        'Map level',
+        'Level dibuat dari soal di Bank Soal. Halaman ini memantau hubungan level dengan soal.',
+        [
+          el('div', { class: 'admin-filters' }, [subjectSelect]),
+          summary,
+          levelSlot,
+          el('p', {
+            class: 'form-hint',
+            text: 'Posisi, jalur, reward, dan animasi peta tetap memakai renderer yang sudah ada. Pengaturan node lanjutan tersedia di Struktur pembelajaran.',
+          }),
+        ],
+      ),
     );
+    draw();
   } catch (error) {
     ctx.root.replaceChildren(
       errorState(error instanceof Error ? error.message : 'Peta gagal dimuat.', () => void renderMap(ctx)),

@@ -179,6 +179,8 @@ export type LearningNodeRow = {
   description: string;
   node_type: NodeKind;
   lesson_id: string | null;
+  question_id: string | null;
+  level_number: number | null;
   sort_order: number;
   is_active: boolean;
   reward_coins: number;

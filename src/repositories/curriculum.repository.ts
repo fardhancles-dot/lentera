@@ -265,6 +265,56 @@ export const curriculumRepository = {
     return data;
   },
 
+  /** Playable levels keyed by subject, used for catalog progress. */
+  async listLevelNodeIndex(): Promise<Array<{ subjectId: string; nodeId: string }>> {
+    const supabase = requireSupabase();
+    const coursesResult = await supabase
+      .from('courses')
+      .select('id, subject_id')
+      .eq('is_published', true);
+    if (coursesResult.error) raise(coursesResult.error);
+    const courses = coursesResult.data ?? [];
+    if (courses.length === 0) return [];
+
+    const courseToSubject = new Map(courses.map((course) => [course.id, course.subject_id]));
+    const levelsResult = await supabase
+      .from('course_levels')
+      .select('id, course_id')
+      .in('course_id', [...courseToSubject.keys()])
+      .eq('is_published', true);
+    if (levelsResult.error) raise(levelsResult.error);
+    const levels = levelsResult.data ?? [];
+    if (levels.length === 0) return [];
+
+    const levelToCourse = new Map(levels.map((level) => [level.id, level.course_id]));
+    const unitsResult = await supabase
+      .from('units')
+      .select('id, course_level_id')
+      .in('course_level_id', [...levelToCourse.keys()])
+      .eq('is_published', true);
+    if (unitsResult.error) raise(unitsResult.error);
+    const units = unitsResult.data ?? [];
+    if (units.length === 0) return [];
+
+    const unitToLevel = new Map(units.map((unit) => [unit.id, unit.course_level_id]));
+    const nodesResult = await supabase
+      .from('learning_nodes')
+      .select('id, unit_id, question_id')
+      .in('unit_id', [...unitToLevel.keys()])
+      .eq('is_active', true)
+      .not('question_id', 'is', null);
+    if (nodesResult.error) raise(nodesResult.error);
+
+    const rows: Array<{ subjectId: string; nodeId: string }> = [];
+    for (const node of nodesResult.data ?? []) {
+      const levelId = unitToLevel.get(node.unit_id);
+      const courseId = levelId ? levelToCourse.get(levelId) : undefined;
+      const subjectId = courseId ? courseToSubject.get(courseId) : undefined;
+      if (subjectId) rows.push({ subjectId, nodeId: node.id });
+    }
+    return rows;
+  },
+
   async listQuestionStats(lessonIds: string[]): Promise<LessonQuestionStatsRow[]> {
     const ids = unique(lessonIds);
     if (ids.length === 0) return [];

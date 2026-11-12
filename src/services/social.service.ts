@@ -1,4 +1,4 @@
-import { socialRepository } from '../repositories/social.repository';
+import { socialRepository, type PlayerLevelThreshold } from '../repositories/social.repository';
 import type { Json } from '../types/database';
 import type {
   ActiveEvent,
@@ -127,8 +127,14 @@ function parseSearch(value: Json): PlayerSearchResult[] {
 
 function parseProfile(value: Json): FriendProfile {
   const record = asRecord(value);
-  const nullableNumber = (input: unknown): number | null =>
-    typeof input === 'number' && Number.isFinite(input) ? input : null;
+  const nullableNumber = (input: unknown): number | null => {
+    if (typeof input === 'number' && Number.isFinite(input)) return input;
+    if (typeof input === 'string' && input.trim() !== '') {
+      const parsed = Number(input);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+  };
   return {
     userId: asString(record.userId),
     username: asString(record.username, 'pemain'),
@@ -144,6 +150,7 @@ function parseProfile(value: Json): FriendProfile {
     weeklyXp: nullableNumber(record.weeklyXp),
     level: nullableNumber(record.level),
     levelTitle: typeof record.levelTitle === 'string' ? record.levelTitle : null,
+    levelProgressPercent: nullableNumber(record.levelProgressPercent),
     currentStreak: nullableNumber(record.currentStreak),
     longestStreak: nullableNumber(record.longestStreak),
     completedLessons: nullableNumber(record.completedLessons),
@@ -295,6 +302,38 @@ async function run<T>(task: () => Promise<Json>, parse: (value: Json) => T): Pro
   }
 }
 
+let levelThresholdsPromise: Promise<PlayerLevelThreshold[]> | null = null;
+
+function loadLevelThresholds(): Promise<PlayerLevelThreshold[]> {
+  if (!levelThresholdsPromise) {
+    levelThresholdsPromise = socialRepository.getLevelThresholds().catch((error: unknown) => {
+      levelThresholdsPromise = null;
+      throw error;
+    });
+  }
+  return levelThresholdsPromise;
+}
+
+function progressPercentForXp(
+  totalXp: number,
+  thresholds: PlayerLevelThreshold[],
+): number | null {
+  if (thresholds.length === 0) return null;
+
+  const current = [...thresholds]
+    .reverse()
+    .find((entry) => entry.xpRequired <= totalXp) ?? thresholds[0]!;
+  const next = thresholds.find((entry) => entry.xpRequired > totalXp);
+
+  if (!next) return 100;
+
+  const span = next.xpRequired - current.xpRequired;
+  if (span <= 0) return 0;
+
+  const percent = Math.round(((totalXp - current.xpRequired) / span) * 100);
+  return Math.min(100, Math.max(0, percent));
+}
+
 export const socialService = {
   searchPlayers(query: string): Promise<PlayerSearchResult[]> {
     return run(() => socialRepository.searchPlayers(query.trim()), parseSearch);
@@ -335,8 +374,21 @@ export const socialService = {
     return run(() => socialRepository.getFriends(), parseFriends);
   },
 
-  getFriendProfile(username: string): Promise<FriendProfile> {
-    return run(() => socialRepository.getFriendProfile(username), parseProfile);
+  async getFriendProfile(username: string): Promise<FriendProfile> {
+    const profile = await run(() => socialRepository.getFriendProfile(username), parseProfile);
+
+    if (!profile.statsVisible || profile.totalXp === null) return profile;
+
+    try {
+      const thresholds = await loadLevelThresholds();
+      return {
+        ...profile,
+        levelProgressPercent: progressPercentForXp(profile.totalXp, thresholds),
+      };
+    } catch {
+      // The profile itself remains usable if the reference query fails.
+      return profile;
+    }
   },
 
   getFriendActivity(limit = 20): Promise<ActivityItem[]> {

@@ -78,9 +78,10 @@ Tersimpan sebagai `avatar_key` di database. Avatar adalah bagian karakter, bukan
 
 ## Layout
 
-- **Mobile first**: navigasi bawah 6 tujuan utama (Beranda, Belajar, Latihan, Misi,
-  Toko, Profil), target sentuh minimal 44–54 px, safe-area iOS. Wallet dan Pengaturan
-  tetap tersedia lewat chip sumber daya dan ikon gear di topbar.
+- **Mobile first**: navigasi bawah 5 tujuan utama (Beranda, Belajar, Latihan, Misi,
+  Profil), target sentuh minimal 44–54 px, safe-area iOS. Header memuat hamburger,
+  Toko, Nyawa, Koin, Streak, dan avatar; Wallet dibuka dari chip sumber daya,
+  sedangkan Pengaturan, Liga, Notifikasi, dan Teman ada di hamburger menu.
 - **Tablet**: satu kolom nyaman dengan kartu lebar terbatas.
 - **Desktop**: sidebar 248 px, konten maksimum 1080 px, tip Kiko di sidebar.
 - Area Phaser selalu berada dalam kontainer ber-aspect-ratio, tidak menutupi form.
@@ -105,7 +106,7 @@ lanjutan dan tetap harus menghormati `prefers-reduced-motion`.
 - Musik latar dan SFX disintesis Web Audio (osilator), tanpa file sampel pihak ketiga.
 - SFX: klik, langkah, benar, salah, lesson selesai, hadiah, dan node terkunci.
 - Volume musik, efek, dan suara karakter dibaca dari pengaturan tersimpan; mute lokal
-  tersedia di topbar tanpa menimpa pengaturan akun.
+  tersedia di halaman Pengaturan tanpa menimpa pengaturan akun.
 - Audio hanya dimulai setelah gesture pengguna, berhenti saat tab disembunyikan, dan
   tidak menumpuk karena SFX yang sama dibatasi 40 ms.
 - Suara dialog memakai browser Speech Synthesis bila tersedia; fitur yang tidak didukung

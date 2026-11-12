@@ -2,6 +2,7 @@ import type { PageModule } from '../app/router';
 import { createButton } from '../components/forms';
 import { icon } from '../components/icons';
 import { showToast } from '../components/toast';
+import { audioEngine } from '../game/audio/audioEngine';
 import { pageHeader, renderAppLayout } from '../layouts/appLayout';
 import { authService } from '../services/auth.service';
 import { profileService } from '../services/profile.service';
@@ -150,6 +151,16 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     settings.voice_volume,
     'voice-volume',
   );
+  const muteAudio = switchRow(
+    'Bisukan semua suara',
+    'Matikan musik dan efek suara di perangkat ini tanpa mengubah volume tersimpan.',
+    audioEngine.isMuted(),
+    'audio-muted',
+  );
+  const muteAudioInput = muteAudio.root.querySelector<HTMLInputElement>('input');
+  muteAudioInput?.addEventListener('change', () => {
+    audioEngine.setMuted(Boolean(muteAudioInput.checked));
+  });
 
   const reducedMotion = switchRow(
     'Kurangi animasi',
@@ -201,6 +212,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       music.root,
       sfx.root,
       voice.root,
+      muteAudio.root,
     ]),
 
     el('section', { class: 'card settings-section' }, [

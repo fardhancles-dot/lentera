@@ -27,10 +27,13 @@
   celebrate saat diklik) dan di hasil lesson (celebrating bila lulus, sad bila belum).
 - Audio sintetis: musik latar lembut, klik tombol, langkah di peta, jawaban benar/salah,
   penyelesaian lesson, klaim hadiah, dan node terkunci. Volume musik/SFX/voice mengikuti
-  pengaturan pemain; tombol mute ada di topbar dan disimpan lokal.
+  pengaturan pemain; kontrol mute ada di halaman Pengaturan dan disimpan lokal.
 - Katalog mapel dari database, termasuk status pengembangan bahasa daerah.
 - Learning path per mapel: level → unit → node, dengan status selesai/aktif/terkunci.
-- Detail lesson: topik, jenis soal, tujuan unit, XP/Koin, syarat mulai.
+- Klik level langsung membuka layar permainan; tidak ada halaman detail lesson atau
+  tombol “Mulai lesson” sebagai perantara. URL detail lama dialihkan ke permainan.
+- Satu level memainkan tepat satu soal dari bank soal lesson-nya. Bank soal tetap utuh
+  untuk latihan, mistakes review, dan mastery.
 - Layar lesson: progress bar, hint, pilihan ganda, input teks, word bank, sentence
   builder, matching pairs, fill in the blank inline (satu atau banyak rumpang), picture
   identification, tombol periksa, feedback benar/salah, penjelasan, jawaban benar, dan
@@ -45,7 +48,7 @@
 Klik node
   → start_lesson(node_id)
       validasi mapel/lesson aktif + urutan unlock
-      buat attempt unik, kirim soal tanpa kunci
+      buat attempt unik, kirim tepat satu soal tanpa kunci
   → render satu soal per layar
   → submit_attempt_answer(attempt, question, answer)
       nilai di server, simpan sekali, kirim feedback
@@ -78,7 +81,7 @@ untuk pemain yang sudah login.
 - **Suara karakter/model** memakai `speechSynthesis` dan menghormati `voice_volume`
   bila pemanggil tidak memberi volume eksplisit.
 - **Mute** adalah preferensi perangkat (localStorage), bukan perubahan database;
-  tombolnya ada di topbar dengan `aria-pressed`.
+  tombolnya ada di halaman Pengaturan dengan `aria-pressed`.
 
 ## Peta petualangan 2D
 

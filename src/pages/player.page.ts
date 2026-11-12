@@ -1,6 +1,7 @@
 import type { PageModule } from '../app/router';
 import { avatar } from '../components/avatar';
 import { icon } from '../components/icons';
+import { createLevelProgress, tierBadge } from '../components/levelProgress';
 import { showToast } from '../components/toast';
 import { pageHeader, renderAppLayout } from '../layouts/appLayout';
 import { socialService } from '../services/social.service';
@@ -179,18 +180,20 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
 }
 
 function profileCard(profile: FriendProfile, reload: () => void): HTMLElement {
+  const canSeeLevel = profile.statsVisible && profile.level !== null;
+
   return el('div', { class: 'player-layout' }, [
     el('section', { class: 'card player-card' }, [
       el('div', { class: 'player-card__top' }, [
         avatar(profile.avatarKey, 'xl'),
         el('div', { class: 'player-card__identity' }, [
-          el('h2', { class: 'player-card__name', text: profile.displayName }),
+          el('div', { class: 'player-card__name-row' }, [
+            el('h2', { class: 'player-card__name', text: profile.displayName }),
+            canSeeLevel && profile.levelTitle ? tierBadge(profile.levelTitle) : null,
+          ]),
           el('p', { class: 'player-card__handle', text: `@${profile.username}` }),
-          profile.statsVisible && profile.level
-            ? el('span', {
-                class: 'badge badge--blue',
-                text: `Level ${profile.level}${profile.levelTitle ? ` · ${profile.levelTitle}` : ''}`,
-              })
+          canSeeLevel
+            ? createLevelProgress(profile.level!, profile.levelProgressPercent).element
             : null,
         ]),
         actionSlot(profile, reload),

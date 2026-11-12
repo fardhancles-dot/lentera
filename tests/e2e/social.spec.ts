@@ -65,12 +65,51 @@ test('league, friends, notifications, and profile privacy work across two accoun
     await hostPage.goto('/profile');
     const hostUsername = await hostPage.locator('input[name="username"]').inputValue();
     expect(hostUsername).toBeTruthy();
+    await expect(hostPage.locator('.profile-hero .profile-tier')).toBeVisible({ timeout: 30_000 });
+    await expect(hostPage.locator('.profile-hero .profile-level')).toBeVisible();
+    await expect(hostPage.locator('.profile-hero .profile-level__label')).toContainText(/LV \d+/);
 
-    // 0. Shortcut komunitas di beranda membuka halaman Teman.
+    // 0. Navigasi komunitas pindah ke hamburger menu di header mobile.
+    await hostPage.setViewportSize({ width: 390, height: 844 });
     await hostPage.goto('/app');
-    await expect(hostPage.locator('.social-shortcuts')).toBeVisible({ timeout: 30_000 });
-    await hostPage.locator('.social-shortcut[href="/friends"]').click();
+    await expect(hostPage.locator('.social-shortcuts')).toHaveCount(0);
+    await expect(hostPage.locator('.bottom-nav__item')).toHaveCount(5);
+    const mobileHeader = hostPage.locator('.topbar__mobile');
+    await expect(mobileHeader.locator('.header-hamburger')).toBeVisible();
+    await expect(mobileHeader.locator('.header-shop')).toBeVisible();
+    await expect(mobileHeader.locator('.header-resources .resource-chip')).toHaveCount(3);
+    await expect(mobileHeader.locator('.resource-chip--hearts')).toContainText('5/5');
+    await expect(mobileHeader.locator('.resource-chip--coin .resource-chip__value')).not.toHaveText('—');
+    await expect(mobileHeader.locator('.resource-chip--streak .resource-chip__value')).not.toHaveText('—');
+    await expect(mobileHeader.locator('.header-avatar')).toBeVisible();
+    const headerOrder = await mobileHeader.evaluate((node) =>
+      Array.from(node.children).map((child) => {
+        if (child.classList.contains('header-hamburger')) return 'hamburger';
+        if (child.classList.contains('header-shop')) return 'shop';
+        if (child.classList.contains('header-resources')) return 'resources';
+        if (child.classList.contains('header-avatar')) return 'avatar';
+        return 'other';
+      }),
+    );
+    expect(headerOrder).toEqual(['hamburger', 'shop', 'resources', 'avatar']);
+    const resourceOrder = await mobileHeader.locator('.header-resources > *').evaluateAll((nodes) =>
+      nodes.map((node) =>
+        ['hearts', 'coin', 'streak'].find((key) => node.classList.contains(`resource-chip--${key}`)),
+      ),
+    );
+    expect(resourceOrder).toEqual(['hearts', 'coin', 'streak']);
+    const overflow = await hostPage.evaluate(() =>
+      document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow, 'horizontal overflow in px').toBeLessThanOrEqual(2);
+    await hostPage.getByRole('button', { name: 'Buka menu' }).click();
+    await expect(hostPage.locator('.drawer-nav__item')).toHaveCount(4);
+    await expect(hostPage.locator('.drawer-nav__item[href="/settings"]')).toBeVisible();
+    await expect(hostPage.locator('.drawer-nav__item[href="/leaderboard"]')).toBeVisible();
+    await expect(hostPage.locator('.drawer-nav__item[href="/notifications"]')).toBeVisible();
+    await hostPage.locator('.drawer-nav__item[href="/friends"]').click();
     await expect(hostPage).toHaveURL(/\/friends$/);
+    await hostPage.setViewportSize({ width: 1280, height: 900 });
 
     // 1. Liga mingguan dan event aktif tampil untuk akun baru.
     await hostPage.goto('/leaderboard');
@@ -146,6 +185,9 @@ test('league, friends, notifications, and profile privacy work across two accoun
     await hostPage.goto(`/players/${guestUsername}`);
     await expect(hostPage.locator('.player-card__name')).toBeVisible({ timeout: 30_000 });
     await expect(hostPage.locator('.player-stats')).toBeVisible();
+    await expect(hostPage.locator('.player-card .profile-tier')).toBeVisible();
+    await expect(hostPage.locator('.player-card .profile-level')).toBeVisible();
+    await expect(hostPage.locator('.player-card .profile-level__label')).toContainText(/LV \d+/);
     await expect(hostPage.locator('.player-card__privacy')).toContainText('Hanya teman');
 
     // 9. Privat menyembunyikan statistik bahkan dari teman.
@@ -153,6 +195,7 @@ test('league, friends, notifications, and profile privacy work across two accoun
     await hostPage.goto(`/players/${guestUsername}`);
     await expect(hostPage.locator('.player-locked')).toBeVisible({ timeout: 30_000 });
     await expect(hostPage.locator('.player-stats')).toHaveCount(0);
+    await expect(hostPage.locator('.player-card .profile-level')).toHaveCount(0);
     await expect(hostPage.locator('.player-card__privacy')).toContainText('Privat');
 
     // 10. "Teman" membuka statistik lagi, lalu menghapus teman menutupnya.

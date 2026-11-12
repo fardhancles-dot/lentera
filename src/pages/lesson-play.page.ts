@@ -71,8 +71,9 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
 
   const subjectSlug = ctx.params.subject ?? '';
   const lessonSlug = ctx.params.lessonSlug ?? '';
-  const backHref = `/learn/${subjectSlug}/lesson/${lessonSlug}`;
   const pathHref = `/learn/${subjectSlug}`;
+  // There is no detail-lesson page in front of the game anymore.
+  const backHref = pathHref;
   let disposed = false;
   let start: LessonStart | null = null;
   let index = 0;
@@ -576,7 +577,9 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
         art.replaceChildren();
         resultStage?.destroy();
         resultStage = createMascotStage(art, {
-          reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+          reducedMotion:
+            sessionStore.getState().user?.settings.reduced_motion ??
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches,
           animation: passed ? 'celebrating' : 'sad',
         });
       } catch (error) {

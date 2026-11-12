@@ -50,22 +50,17 @@ test('lesson starts, answers, shows feedback, and advances', async ({ page }) =>
   test.skip(!session.ok, session.ok ? '' : session.reason);
 
   await page.goto('/learn/bahasa-inggris');
-  await expect(page.locator('.subject-path')).toBeVisible({ timeout: 30_000 });
-  const lessonLink = page.locator('a.path-node[href*="/lesson/"]').first();
+  await expect(page.locator('.journey-map')).toBeVisible({ timeout: 30_000 });
+  const lessonLink = page.locator('a.journey-stop--level[href$="/play"]').first();
   test.skip((await lessonLink.count()) === 0, 'no playable lesson in the QA account');
 
+  // A level click must open the game directly, with no detail-lesson step.
   await lessonLink.click();
-  await page.waitForURL(/\/lesson\//);
+  await page.waitForURL(/\/lesson\/.+\/play$/);
 
-  await expect(page.getByRole('heading', { name: 'Riwayat percobaan' })).toBeVisible({
-    timeout: 30_000,
-  });
-
-  const start = page.getByRole('link', { name: /Mulai lesson|Main lagi/ });
-  await start.click();
-  await page.waitForURL(/\/play/);
-
-  await expect(page.locator('.play-shell')).toBeVisible();
+  await expect(page.locator('.play-shell')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole('heading', { name: 'Riwayat percobaan' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /Mulai lesson|Main lagi/ })).toHaveCount(0);
   await expect(page.locator('.play-prompt').first()).toBeVisible();
 
   const answered = await answerFirstQuestion(page);
@@ -79,7 +74,8 @@ test('lesson starts, answers, shows feedback, and advances', async ({ page }) =>
   await expect(feedback).toBeVisible();
   await expect(feedback).toContainText(/Benar|Belum tepat|Jawaban benar|Coba/i);
 
-  const next = page.getByRole('button', { name: /Lanjut|Lihat hasil/ });
+  // One question per level: the first feedback already offers the result.
+  const next = page.getByRole('button', { name: 'Lihat hasil' });
   await expect(next).toBeVisible();
 
   expect(errors).toEqual([]);
@@ -97,9 +93,10 @@ test('mobile layout has no horizontal overflow', async ({ page }) => {
     await assertNoOverflow(page);
   }
 
-  const frame = page.locator('.adventure-map__frame');
+  const map = page.locator('.journey-map');
   await page.goto('/learn/bahasa-inggris');
-  await expect(frame.locator('canvas')).toBeVisible({ timeout: 30_000 });
+  await expect(map).toBeVisible({ timeout: 30_000 });
+  await expect(map.locator('.journey-stop').first()).toBeVisible();
   await assertNoOverflow(page);
 });
 
@@ -110,7 +107,9 @@ test('reduced motion keeps the map usable', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/learn/bahasa-inggris');
 
-  await expect(page.locator('.adventure-map__frame canvas')).toBeVisible({ timeout: 30_000 });
-  await expect(page.locator('.adventure-map__level').first()).toBeVisible();
-  await expect(page.locator('.adventure-map__title')).not.toBeEmpty();
+  const map = page.locator('.journey-map');
+  await expect(map).toBeVisible({ timeout: 30_000 });
+  await expect(map).toHaveAttribute('data-reduced-motion', 'true');
+  await expect(map.locator('.journey-stop').first()).toBeVisible();
+  await expect(map.locator('.journey-map__title')).not.toBeEmpty();
 });

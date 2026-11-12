@@ -105,7 +105,7 @@ Deployment ganda Vercel + GitHub Pages: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.m
 | `npm run test:watch` | Unit test mode watch. |
 | `npm run test:e2e` | Smoke test browser via Playwright (memakai Chrome terpasang; butuh `.env` untuk test berakun). |
 | `npm run test:sql` | Smoke test migration, RPC, reward, dan RLS di PGlite. |
-| `npm run verify:supabase` | Verifikasi login, payload 20 soal, grading, hasil lesson, Practice Hub, Friends Quest, sosial/liga/event, notifikasi, privasi, dan idempotensi reward di Supabase nyata. |
+| `npm run verify:supabase` | Verifikasi login, payload satu soal per level, grading, hasil lesson, Practice Hub, Friends Quest, sosial/liga/event, notifikasi, privasi, dan idempotensi reward di Supabase nyata. |
 | `npm run db:apply-catalog-fix` | Menerapkan migration view katalog lewat Supabase Management API (`SUPABASE_ACCESS_TOKEN`); `-- --dry-run` untuk pratinjau. |
 | `npm run seed:build` | Validasi konten dan regenerasi migration seed kurikulum. |
 

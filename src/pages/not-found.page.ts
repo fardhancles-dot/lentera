@@ -1,6 +1,7 @@
 import type { PageModule } from '../app/router';
-import { kikoMarkup, lampMarkup } from '../components/brandArt';
-import { brand } from '../config/brand';
+import { kikoMarkup } from '../components/brandArt';
+import { brandMark } from '../components/brandMark';
+import { contentService } from '../services/content.service';
 import { el } from '../utils/dom';
 
 const meta = { title: 'Halaman tidak ditemukan' };
@@ -12,10 +13,10 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     el('div', { class: 'state-page' }, [
       el('div', { class: 'state-card' }, [
         el('a', { class: 'brand', attrs: { href: '/' }, style: { justifyContent: 'center', marginBottom: '1.25rem' } }, [
-          el('span', { class: 'brand__mark', html: lampMarkup(30) }),
+          brandMark(30),
           el('span', { class: 'brand__text' }, [
-            el('span', { class: 'brand__name', text: brand.name }),
-            el('span', { class: 'brand__tag', text: brand.tagline }),
+            el('span', { class: 'brand__name', text: contentService.settings.siteName }),
+            el('span', { class: 'brand__tag', text: contentService.settings.tagline }),
           ]),
         ]),
         el('div', { style: { width: '150px', margin: '0 auto 0.5rem' }, html: kikoMarkup(150) }),

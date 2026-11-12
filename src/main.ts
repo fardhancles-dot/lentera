@@ -4,14 +4,17 @@ import './styles/base.css';
 import './styles/components.css';
 import './styles/layout.css';
 import './styles/pages.css';
+import './styles/journey.css';
 import './styles/practice.css';
 import './styles/social.css';
 import './styles/developer.css';
+import './styles/admin.css';
 
 import { Router } from './app/router';
 import { kikoMarkup, lampMarkup } from './components/brandArt';
 import { brand } from './config/brand';
 import { installAudioUnlock } from './game/audio/audioEngine';
+import { contentService } from './services/content.service';
 import { sessionStore } from './stores/session.store';
 
 const rootElement = document.querySelector<HTMLElement>('#app');
@@ -48,6 +51,9 @@ const router = new Router(root);
 
 async function boot(): Promise<void> {
   try {
+    // Public CMS content is applied before the first route so the landing page
+    // and document title use runtime branding. Failure keeps build defaults.
+    await contentService.init();
     await router.start();
   } catch (error) {
     console.error('[app] boot failed', error);

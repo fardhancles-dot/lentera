@@ -3,8 +3,8 @@ import { AVATAR_KEYS, AVATAR_LABELS, avatarMarkup, isAvatarKey } from '../compon
 import { createButton, createField } from '../components/forms';
 import { icon } from '../components/icons';
 import { showToast } from '../components/toast';
-import { lampMarkup } from '../components/brandArt';
-import { brand } from '../config/brand';
+import { brandMark } from '../components/brandMark';
+import { contentService } from '../services/content.service';
 import { profileService } from '../services/profile.service';
 import { sessionStore } from '../stores/session.store';
 import { el } from '../utils/dom';
@@ -68,9 +68,9 @@ async function render(ctx: Parameters<PageModule['render']>[0]): Promise<void> {
   const root = el('div', { class: 'onboarding' }, [
     el('div', { class: 'onboarding__top' }, [
       el('a', { class: 'brand', attrs: { href: '/' } }, [
-        el('span', { class: 'brand__mark', html: lampMarkup(30) }),
+        brandMark(30),
         el('span', { class: 'brand__text' }, [
-          el('span', { class: 'brand__name', text: brand.name }),
+          el('span', { class: 'brand__name', text: contentService.settings.siteName }),
           el('span', { class: 'brand__tag', text: 'Profil awal' }),
         ]),
       ]),

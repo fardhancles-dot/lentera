@@ -3,10 +3,10 @@ import { AVATAR_KEYS, AVATAR_LABELS, avatar, avatarMarkup, isAvatarKey } from '.
 import { createButton, createField } from '../components/forms';
 import { icon } from '../components/icons';
 import {
-  playerProgressError,
-  playerProgressPanel,
-  playerProgressSkeleton,
-} from '../components/playerSummary';
+  createLevelProgress,
+  levelProgressError,
+  tierBadge,
+} from '../components/levelProgress';
 import { showToast } from '../components/toast';
 import { pageHeader, renderAppLayout } from '../layouts/appLayout';
 import { profileService } from '../services/profile.service';
@@ -35,37 +35,40 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     text: profile.bio || 'Belum ada bio. Ceritakan sedikit tentang dirimu.',
   });
   const avatarSlot = el('div', { class: 'profile-hero__avatar' }, [avatar(profile.avatar_key, 'xl')]);
+  const tierSlot = el('div', { class: 'profile-hero__tier' });
+  const levelSlot = el('div', { class: 'profile-hero__level' });
 
   const hero = el('section', { class: 'profile-hero' }, [
     el('div', { class: 'profile-hero__banner' }),
     el('div', { class: 'profile-hero__body' }, [
       avatarSlot,
-      el('div', { class: 'profile-hero__identity' }, [
-        el('div', {}, [
-          nameEl,
-          handleEl,
-          el('div', { class: 'profile-hero__badges' }, [
-            el('span', { class: 'badge badge--muted', text: ROLE_LABEL[role] }),
-            el('span', { class: 'badge badge--blue' }, [
-              icon('clock', 12),
-              `Bergabung ${formatDate(profile.created_at)}`,
-            ]),
+      el('div', { class: 'profile-hero__main' }, [
+        el('div', { class: 'profile-hero__top' }, [
+          el('div', { class: 'profile-hero__identity' }, [nameEl, handleEl]),
+          tierSlot,
+        ]),
+        levelSlot,
+        el('div', { class: 'profile-hero__badges' }, [
+          el('span', { class: 'badge badge--muted', text: ROLE_LABEL[role] }),
+          el('span', { class: 'badge badge--blue' }, [
+            icon('clock', 12),
+            `Bergabung ${formatDate(profile.created_at)}`,
           ]),
         ]),
-      ]),
-      bioEl,
-      el('div', { class: 'profile-meta' }, [
-        el('div', { class: 'profile-meta__item' }, [
-          el('span', { class: 'profile-meta__label', text: 'Email' }),
-          el('span', { class: 'profile-meta__value', text: email }),
-        ]),
-        el('div', { class: 'profile-meta__item' }, [
-          el('span', { class: 'profile-meta__label', text: 'Target harian' }),
-          el('span', { class: 'profile-meta__value', text: `${settings.daily_goal_minutes} menit` }),
-        ]),
-        el('div', { class: 'profile-meta__item' }, [
-          el('span', { class: 'profile-meta__label', text: 'Zona waktu' }),
-          el('span', { class: 'profile-meta__value', text: settings.timezone.replace('_', ' ') }),
+        bioEl,
+        el('div', { class: 'profile-meta' }, [
+          el('div', { class: 'profile-meta__item' }, [
+            el('span', { class: 'profile-meta__label', text: 'Email' }),
+            el('span', { class: 'profile-meta__value', text: email }),
+          ]),
+          el('div', { class: 'profile-meta__item' }, [
+            el('span', { class: 'profile-meta__label', text: 'Target harian' }),
+            el('span', { class: 'profile-meta__value', text: `${settings.daily_goal_minutes} menit` }),
+          ]),
+          el('div', { class: 'profile-meta__item' }, [
+            el('span', { class: 'profile-meta__label', text: 'Zona waktu' }),
+            el('span', { class: 'profile-meta__value', text: settings.timezone.replace('_', ' ') }),
+          ]),
         ]),
       ]),
     ]),
@@ -195,37 +198,29 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     })();
   });
 
-  const progressBody = el('div');
-  const progressCard = el('section', { class: 'card card--padded' }, [
-    el('div', { class: 'card__header' }, [
-      el('div', {}, [
-        el('h2', { class: 'card__title', text: 'Progres akun' }),
-        el('p', { class: 'card__subtitle', text: 'Ringkasan level, Hearts, Streak, dan Koin.' }),
-      ]),
-      el('a', { class: 'btn btn--secondary btn--sm', attrs: { href: '/wallet' } }, [
-        icon('bag', 16),
-        'Wallet',
-      ]),
-    ]),
-    progressBody,
-  ]);
+  let levelProgress: ReturnType<typeof createLevelProgress> | null = null;
 
-  const paintProgress = (state: PlayerStoreState) => {
+  const paintLevel = (state: PlayerStoreState) => {
     if (state.data) {
-      progressBody.replaceChildren(playerProgressPanel(state.data));
-    } else if (state.status === 'error') {
-      progressBody.replaceChildren(
-        playerProgressError(state.error ?? 'Progres gagal dimuat.', () => {
-          void playerStore.load(true);
-        }),
-      );
-    } else {
-      progressBody.replaceChildren(playerProgressSkeleton());
+      const level = state.data.level;
+      tierSlot.replaceChildren(tierBadge(level.title));
+
+      if (levelProgress?.element.isConnected) {
+        levelProgress.update(level.level, level.progressPercent);
+      } else {
+        levelProgress = createLevelProgress(level.level, level.progressPercent);
+        levelSlot.replaceChildren(levelProgress.element);
+      }
+      return;
+    }
+
+    if (state.status === 'error') {
+      levelSlot.replaceChildren(levelProgressError());
     }
   };
 
-  ctx.onCleanup(playerStore.subscribe(paintProgress));
-  paintProgress(playerStore.getState());
+  ctx.onCleanup(playerStore.subscribe(paintLevel));
+  paintLevel(playerStore.getState());
   void playerStore.load();
 
   const accountCard = el('section', { class: 'card card--padded' }, [
@@ -265,7 +260,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
           el('div', { style: { marginTop: '1.25rem' } }, [form]),
         ]),
       ]),
-      el('div', { class: 'dashboard-aside' }, [progressCard, accountCard, privacyCard]),
+      el('div', { class: 'dashboard-aside' }, [accountCard, privacyCard]),
     ]),
   ]);
 

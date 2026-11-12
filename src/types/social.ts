@@ -53,6 +53,7 @@ export interface FriendProfile {
   weeklyXp: number | null;
   level: number | null;
   levelTitle: string | null;
+  levelProgressPercent: number | null;
   currentStreak: number | null;
   longestStreak: number | null;
   completedLessons: number | null;

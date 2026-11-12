@@ -18,6 +18,9 @@
     "test:e2e": "node --env-file=.env node_modules/@playwright/test/cli.js test",
     "test:sql": "node scripts/test-sql.mjs",
     "verify:supabase": "node scripts/verify-supabase.mjs",
+    "verify:admin-deploy": "node --env-file=.env scripts/verify-admin-deploy.mjs",
+    "verify:admin-browser": "node --env-file=.env scripts/verify-admin-browser.mjs",
+    "verify:admin-deep": "node --env-file=.env scripts/verify-admin-deep.mjs",
     "setup:supabase": "node scripts/setup-supabase.mjs",
     "db:apply-catalog-fix": "node scripts/apply-catalog-fix.mjs",
     "seed:build": "tsx scripts/generate-curriculum-sql.ts"

@@ -57,35 +57,52 @@ test('audio engine starts and schedules sound after a user gesture', async ({ pa
   expect(errors.filter((error) => /audio/i.test(error))).toEqual([]);
 });
 
-test('map renders, level buttons work with the keyboard, and the canvas resizes', async ({ page }) => {
+test('adventure map renders every level, scrolls over a fixed backdrop, and fits a phone', async ({
+  page,
+}) => {
   const errors = collectErrors(page);
   const session = await login(page);
   test.skip(!session.ok, session.ok ? '' : session.reason);
 
   await page.goto('/learn/bahasa-inggris');
-  const frame = page.locator('.adventure-map__frame');
-  await expect(frame.locator('canvas')).toBeVisible({ timeout: 30_000 });
+  const map = page.locator('.journey-map');
+  const scroll = page.locator('.journey-map__scroll');
 
-  const levels = page.locator('.adventure-map__level');
-  const levelCount = await levels.count();
-  const area = page.locator('.adventure-map__area');
+  await expect(map).toBeVisible({ timeout: 30_000 });
+  await expect(map.locator('.journey-map__title')).not.toBeEmpty();
+  await expect(map.locator('.journey-stop').first()).toBeVisible();
 
-  await expect(area).toHaveText(new RegExp(`Area \\d+ dari ${levelCount}`));
-  await expect(page.locator('.adventure-map__legend')).toContainText('Sedang dikerjakan');
+  const stops = map.locator('.journey-stop');
+  expect(await stops.count()).toBeGreaterThan(3);
+  await expect(map.locator('.journey-stop--reward').first()).toBeVisible();
 
-  if (levelCount > 1) {
-    const second = levels.nth(1);
-    await second.focus();
-    await expect(second).toBeFocused();
-    await page.keyboard.press('Enter');
+  const canScroll = await scroll.evaluate((element) => element.scrollHeight > element.clientHeight + 20);
+  expect(canScroll).toBe(true);
 
-    await expect(second).toHaveAttribute('aria-pressed', 'true');
-    const title = (await second.textContent())?.trim() ?? '';
-    await expect(page.locator('.adventure-map__title')).toHaveText(title);
-    await expect(area).toHaveText(new RegExp(`Area 2 dari ${levelCount}`));
+  const active = map.locator('.journey-stop[aria-current="step"]');
+  expect(await active.count()).toBeLessThanOrEqual(1);
+  if (await active.count()) {
+    await expect(active).toHaveAttribute('aria-current', 'step');
   }
 
-  await expect(page.locator('.adventure-map [role="status"]')).not.toBeEmpty();
+  // Reset to the top, then scroll manually so the movement check does not
+  // depend on where the active node happened to be auto-focused.
+  await scroll.evaluate((element) => {
+    element.scrollTop = 0;
+  });
+  await page.waitForTimeout(100);
+  const tracked = stops.nth(3);
+  const backdropBefore = await map.locator('.journey-map__backdrop').boundingBox();
+  const activeBefore = await tracked.boundingBox();
+  await scroll.evaluate((element) => {
+    element.scrollTop += 120;
+  });
+  await page.waitForTimeout(180);
+  const backdropAfter = await map.locator('.journey-map__backdrop').boundingBox();
+  const activeAfter = await tracked.boundingBox();
+
+  expect(Math.abs((backdropAfter?.y ?? 0) - (backdropBefore?.y ?? 0))).toBeLessThan(2);
+  expect(activeAfter?.y ?? 0).toBeLessThan((activeBefore?.y ?? 0) - 80);
 
   const mute = page.locator('.topbar__actions button[aria-pressed]');
   if (await mute.count()) {
@@ -96,18 +113,24 @@ test('map renders, level buttons work with the keyboard, and the canvas resizes'
   }
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.waitForTimeout(900);
-  await expect(frame.locator('canvas')).toBeVisible();
+  await page.waitForTimeout(400);
+  await expect(map).toBeVisible();
+  await expect(stops.first()).toBeVisible();
 
-  const box = await frame.boundingBox();
-  expect(box?.height ?? 0).toBeGreaterThan(300);
+  const box = await map.boundingBox();
+  expect(box?.height ?? 0).toBeGreaterThan(500);
 
-  // A phone gets the compact logical canvas (node labels stay 15px) instead of
-  // shrinking the desktop map, and its nodes must use the compact coordinates.
-  await expect(frame.locator('canvas')).toHaveAttribute('width', '420');
+  const orbBox = await tracked.locator('.journey-stop__orb').boundingBox();
+  expect(orbBox?.height ?? 0).toBeGreaterThanOrEqual(60);
+
+  const overflow = await page.evaluate(() => {
+    const root = document.documentElement;
+    return root.scrollWidth - root.clientWidth;
+  });
+  expect(overflow, 'horizontal overflow in px').toBeLessThanOrEqual(2);
 
   const navItems = page.locator('.bottom-nav__item');
-  expect(await navItems.count()).toBe(6);
+  expect(await navItems.count()).toBe(5);
   for (let index = 0; index < (await navItems.count()); index += 1) {
     const itemBox = await navItems.nth(index).boundingBox();
     expect(itemBox?.height ?? 0).toBeGreaterThanOrEqual(44);

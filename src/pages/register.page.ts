@@ -5,12 +5,28 @@ import { showToast } from '../components/toast';
 import { appEnv } from '../config/env';
 import { renderAuthLayout } from '../layouts/authLayout';
 import { authService } from '../services/auth.service';
+import { contentService } from '../services/content.service';
 import { sessionStore } from '../stores/session.store';
 import { el } from '../utils/dom';
 
 const meta = { title: 'Daftar' };
 
 async function render(ctx: Parameters<PageModule['render']>[0]): Promise<void> {
+  if (!contentService.settings.registrationEnabled) {
+    await renderAuthLayout(
+      ctx,
+      el('div', { class: 'auth-card card' }, [
+        el('h1', { class: 'auth-card__title', text: 'Registrasi sedang ditutup' }),
+        el('p', {
+          class: 'auth-card__subtitle',
+          text: 'Pendaftaran akun baru dinonaktifkan sementara oleh administrator. Masuk jika kamu sudah punya akun.',
+        }),
+        el('a', { class: 'btn', attrs: { href: '/login' }, text: 'Masuk' }),
+      ]),
+    );
+    return;
+  }
+
   const displayNameField = createField({
     label: 'Nama tampilan',
     name: 'displayName',

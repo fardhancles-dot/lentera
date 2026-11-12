@@ -1,5 +1,6 @@
 import { stripBase, withBase } from './basePath';
 import { brand } from '../config/brand';
+import { contentService } from '../services/content.service';
 import { sessionStore } from '../stores/session.store';
 
 export interface RouteContext {
@@ -31,6 +32,11 @@ const routes: RouteDefinition[] = [
     pattern: '/',
     access: 'public',
     load: () => import('../pages/welcome.page'),
+  },
+  {
+    pattern: '/p/:slug',
+    access: 'public',
+    load: () => import('../pages/info.page'),
   },
   {
     pattern: '/login',
@@ -141,6 +147,16 @@ const routes: RouteDefinition[] = [
     pattern: '/players/:username',
     access: 'onboarded',
     load: () => import('../pages/player.page'),
+  },
+  {
+    pattern: '/admin',
+    access: 'staff',
+    load: () => import('../pages/admin.page'),
+  },
+  {
+    pattern: '/admin/:section',
+    access: 'staff',
+    load: () => import('../pages/admin.page'),
   },
   {
     pattern: '/developer',
@@ -357,7 +373,7 @@ export class Router {
       const ctx = this.createContext(path, params, query);
       await notFound.render(ctx);
       this.currentUrl = url;
-      document.title = `Halaman tidak ditemukan · ${brand.name}`;
+      document.title = `Halaman tidak ditemukan · ${contentService.settings.siteName || brand.name}`;
       return;
     }
 
@@ -395,7 +411,7 @@ export class Router {
 
     const title =
       typeof module.meta.title === 'function' ? module.meta.title(params) : module.meta.title;
-    document.title = `${title} · ${brand.name}`;
+    document.title = `${title} · ${contentService.settings.siteName || brand.name}`;
 
     if (!initial) {
       window.scrollTo(0, 0);

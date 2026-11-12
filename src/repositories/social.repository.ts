@@ -7,6 +7,11 @@ function raise(error: { message: string; code?: string } | null): never {
   throw wrapped;
 }
 
+export interface PlayerLevelThreshold {
+  level: number;
+  xpRequired: number;
+}
+
 /**
  * Semua state sosial dan liga ditulis RPC security definer. Browser tidak
  * pernah mengirim XP, peringkat, atau jumlah hadiah.
@@ -53,6 +58,26 @@ export const socialRepository = {
     });
     if (error) raise(error);
     return data;
+  },
+
+  /**
+   * Level thresholds are public reference data. The profile RPC returns level
+   * and total XP; this lets the browser derive the same progress bar the server
+   * uses without adding gameplay state to the client.
+   */
+  async getLevelThresholds(): Promise<PlayerLevelThreshold[]> {
+    const { data, error } = await requireSupabase()
+      .from('player_levels')
+      .select('level, xp_required')
+      .order('level', { ascending: true });
+    if (error) raise(error);
+
+    return (data ?? [])
+      .map((row) => ({
+        level: Number(row.level),
+        xpRequired: Number(row.xp_required),
+      }))
+      .filter((row) => Number.isFinite(row.level) && Number.isFinite(row.xpRequired));
   },
 
   async getFriendActivity(limit = 20): Promise<Json> {

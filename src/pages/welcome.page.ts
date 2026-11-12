@@ -1,7 +1,8 @@
 import type { PageModule } from '../app/router';
-import { lampMarkup } from '../components/brandArt';
+import { brandMark } from '../components/brandMark';
 import { icon, type IconName } from '../components/icons';
 import { brand } from '../config/brand';
+import { contentService } from '../services/content.service';
 import { sessionStore } from '../stores/session.store';
 import { el } from '../utils/dom';
 
@@ -33,6 +34,7 @@ const FEATURES: Array<{ icon: IconName; title: string; body: string }> = [
 function render(ctx: Parameters<PageModule['render']>[0]): void {
   const state = sessionStore.getState();
   const signedIn = state.status === 'authenticated';
+  const site = contentService.settings;
 
   const navActions = signedIn
     ? [
@@ -60,10 +62,10 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
   const page = el('div', { class: 'landing' }, [
     el('header', { class: 'landing__nav' }, [
       el('a', { class: 'brand', attrs: { href: '/' } }, [
-        el('span', { class: 'brand__mark', html: lampMarkup(30) }),
+        brandMark(30),
         el('span', { class: 'brand__text' }, [
-          el('span', { class: 'brand__name', text: brand.name }),
-          el('span', { class: 'brand__tag', text: brand.tagline }),
+          el('span', { class: 'brand__name', text: site.siteName }),
+          el('span', { class: 'brand__tag', text: site.tagline }),
         ]),
       ]),
       el('div', { class: 'landing__nav-actions' }, navActions),
@@ -76,14 +78,18 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
             el('span', { class: 'dot' }),
             el('span', { text: 'Game edukasi 2D untuk SMA/SMK' }),
           ]),
-          el('h1', { class: 'hero__title' }, [
-            'Belajar sambil ',
-            el('em', { text: 'menjelajah' }),
-            ' petualangan.',
-          ]),
+          site.heroTitle
+            ? el('h1', { class: 'hero__title', text: site.heroTitle })
+            : el('h1', { class: 'hero__title' }, [
+                'Belajar sambil ',
+                el('em', { text: 'menjelajah' }),
+                ' petualangan.',
+              ]),
           el('p', {
             class: 'hero__lede',
-            text: 'Lentera mengubah materi sekolah menjadi perjalanan yang seru. Selesaikan lesson, kumpulkan XP dan Koin, lalu jaga semangat belajarmu setiap hari.',
+            text:
+              site.heroDescription ||
+              `${site.siteName} mengubah materi sekolah menjadi perjalanan yang seru. Selesaikan lesson, kumpulkan XP dan Koin, lalu jaga semangat belajarmu setiap hari.`,
           }),
           el('div', { class: 'hero__actions' }, [
             signedIn
@@ -91,8 +97,8 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
                   'Buka beranda',
                   icon('arrow-right', 20),
                 ])
-              : el('a', { class: 'btn btn--lg', attrs: { href: '/register' } }, [
-                  'Mulai gratis',
+              : el('a', { class: 'btn btn--lg', attrs: { href: site.heroCtaHref || '/register' } }, [
+                  site.heroCtaLabel || 'Mulai gratis',
                   icon('arrow-right', 20),
                 ]),
             el('a', {
@@ -142,8 +148,16 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     ]),
 
     el('footer', { class: 'landing__footer' }, [
-      el('span', { text: brand.copyright }),
-      el('span', { text: `Versi ${brand.version} · dibangun bertahap` }),
+      el('span', { class: 'landing__footer-links' }, [
+        ...contentService.pages.map((entry) =>
+          el('a', { attrs: { href: `/p/${entry.slug}` }, text: entry.title }),
+        ),
+        site.supportUrl
+          ? el('a', { attrs: { href: site.supportUrl }, text: 'Bantuan' })
+          : null,
+      ]),
+      el('span', { text: site.copyright || brand.copyright }),
+      el('span', { text: site.footerText || `Versi ${brand.version} · dibangun bertahap` }),
     ]),
   ]);
 

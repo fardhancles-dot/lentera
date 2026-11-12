@@ -66,6 +66,12 @@ try {
   await run('supabase/migrations/20261110150000_subject_overview_owner.sql');
   await run('supabase/migrations/20261111100000_social_league.sql');
   await run('supabase/migrations/20261111110000_developer_dashboard.sql');
+  await run('supabase/migrations/20261112100000_one_question_per_level.sql');
+  await run('supabase/migrations/20261112110000_admin_foundation.sql');
+  await run('supabase/migrations/20261112120000_admin_curriculum.sql');
+  await run('supabase/migrations/20261112130000_admin_content.sql');
+  await run('supabase/migrations/20261112140000_admin_gamification.sql');
+  await run('supabase/migrations/20261112150000_maintenance_mode.sql');
 
   const content = await db.query(`
     select
@@ -482,7 +488,11 @@ try {
 
   const started = await db.query('select public.start_lesson($1) as payload', [firstNode.node_id]);
   const start = started.rows[0].payload;
-  check(start.attemptId && start.questions.length === 5, 'start_lesson returns 5 questions');
+  check(
+    start.attemptId && start.questions.length === 1,
+    'start_lesson returns exactly one question per level',
+    String(start.questions?.length),
+  );
   const rawPayload = JSON.stringify(start);
   check(!rawPayload.includes('is_correct'), 'payload never exposes is_correct');
   check(!rawPayload.includes('question_answers'), 'payload never exposes answer table');
@@ -495,52 +505,74 @@ try {
        (select answer from public.question_answers where question_id = q.id order by id limit 1) as answer
      from public.questions q
      where q.lesson_id = $1 and q.is_active
-     order by q.sort_order`,
+     order by q.sort_order, q.id
+     limit 1`,
     [firstNode.lesson_id],
   );
-  check(details.rows.length === 5, 'question bank loaded for grading');
+  check(details.rows.length === 1, 'the level question is loaded for grading');
 
-  let first = true;
-  for (const question of details.rows) {
-    let answer;
-    if (first) {
-      answer = question.type === 'multiple_choice'
-        ? { optionId: question.wrong_option }
-        : { text: 'jawaban-salah' };
-      first = false;
-    } else {
-      answer = question.type === 'multiple_choice'
-        ? { optionId: question.correct_option }
-        : { text: question.answer };
-    }
+  const question = details.rows[0];
+  check(
+    question.id === start.questions[0].id,
+    'the played question is the first question of the lesson bank',
+  );
+  const wrongAnswer = question.type === 'multiple_choice'
+    ? { optionId: question.wrong_option }
+    : { text: 'jawaban-salah' };
+  const wrongResult = await db.query(
+    'select public.submit_attempt_answer($1, $2, $3::jsonb) as payload',
+    [attemptId, question.id, JSON.stringify(wrongAnswer)],
+  );
+  const wrongPayload = wrongResult.rows[0].payload;
+  check(wrongPayload.isCorrect === false, 'wrong answer is graded incorrect');
+  check(Boolean(wrongPayload.explanation), 'wrong answer returns an explanation');
+  check(Boolean(wrongPayload.correctAnswer), 'wrong answer returns the correct answer for feedback');
+  check(wrongPayload.totalCount === 1, 'answer feedback reports a one-question level');
 
-    const result = await db.query(
-      'select public.submit_attempt_answer($1, $2, $3::jsonb) as payload',
-      [attemptId, question.id, JSON.stringify(answer)],
-    );
-    const payload = result.rows[0].payload;
-    if (question === details.rows[0]) {
-      check(payload.isCorrect === false, 'wrong answer is graded incorrect');
-      check(Boolean(payload.explanation), 'wrong answer returns an explanation');
-      check(Boolean(payload.correctAnswer), 'wrong answer returns the correct answer for feedback');
+  const duplicate = await db.query(
+    'select public.submit_attempt_answer($1, $2, $3::jsonb) as payload',
+    [attemptId, question.id, JSON.stringify(wrongAnswer)],
+  );
+  check(duplicate.rows[0].payload.alreadyAnswered === true, 'duplicate answer is idempotent');
 
-      const duplicate = await db.query(
-        'select public.submit_attempt_answer($1, $2, $3::jsonb) as payload',
-        [attemptId, question.id, JSON.stringify(answer)],
-      );
-      check(duplicate.rows[0].payload.alreadyAnswered === true, 'duplicate answer is idempotent');
-    }
-  }
+  const failed = await db.query('select public.complete_lesson_attempt($1) as payload', [attemptId]);
+  check(
+    failed.rows[0].payload.passed === false &&
+      failed.rows[0].payload.correctCount === 0 &&
+      failed.rows[0].payload.totalCount === 1 &&
+      failed.rows[0].payload.accuracy === 0,
+    'one wrong answer fails a one-question level',
+    JSON.stringify(failed.rows[0].payload),
+  );
+  check(
+    failed.rows[0].payload.xpAwarded === 0 && failed.rows[0].payload.coinsAwarded === 0,
+    'a failed level grants no XP or Coins',
+  );
 
-  const early = await db.query('select public.complete_lesson_attempt($1) as payload', [attemptId]);
-  check(Boolean(early.rows[0].payload.passed), 'lesson completes with 80% accuracy');
+  const retryStart = await db.query('select public.start_lesson($1) as payload', [firstNode.node_id]);
+  const retryAttempt = retryStart.rows[0].payload.attemptId;
+  check(
+    retryStart.rows[0].payload.questions.length === 1 &&
+      retryStart.rows[0].payload.questions[0].id === question.id,
+    'retrying a level presents the same single question',
+  );
+  const correctAnswer = question.type === 'multiple_choice'
+    ? { optionId: question.correct_option }
+    : { text: question.answer };
+  await db.query(
+    'select public.submit_attempt_answer($1, $2, $3::jsonb)',
+    [retryAttempt, question.id, JSON.stringify(correctAnswer)],
+  );
+
+  const early = await db.query('select public.complete_lesson_attempt($1) as payload', [retryAttempt]);
+  check(Boolean(early.rows[0].payload.passed), 'the correct answer completes the level');
 
   const summary = early.rows[0].payload;
-  check(summary.correctCount === 4 && summary.totalCount === 5, 'summary counts 4 of 5 correct');
-  check(summary.accuracy === 80, 'accuracy is 80');
+  check(summary.correctCount === 1 && summary.totalCount === 1, 'summary counts 1 of 1 correct');
+  check(summary.accuracy === 100, 'accuracy is 100');
   check(summary.xpAwarded === 10 && summary.coinsAwarded === 2, 'rewards awarded once on first pass');
 
-  const repeat = await db.query('select public.complete_lesson_attempt($1) as payload', [attemptId]);
+  const repeat = await db.query('select public.complete_lesson_attempt($1) as payload', [retryAttempt]);
   check(repeat.rows[0].payload.alreadyCompleted === true, 'repeat completion is idempotent');
   check(repeat.rows[0].payload.xpAwarded === 0, 'repeat completion grants no XP');
 
@@ -582,9 +614,11 @@ try {
     `select q.id, q.type,
        (select id from public.question_options where question_id = q.id and is_correct limit 1) as correct_option,
        (select answer from public.question_answers where question_id = q.id order by id limit 1) as answer
-     from public.questions q where q.lesson_id = $1 and q.is_active order by q.sort_order`,
+     from public.questions q where q.lesson_id = $1 and q.is_active
+     order by q.sort_order, q.id limit 1`,
     [secondNode.lesson_id],
   );
+  check(reviewQuestions.rows.length === 1, 'the next level also delivers one question');
   for (const question of reviewQuestions.rows) {
     const answer = question.type === 'multiple_choice'
       ? { optionId: question.correct_option }
@@ -601,6 +635,7 @@ try {
 
   const replayStart = await db.query('select public.start_lesson($1) as payload', [firstNode.node_id]);
   const replayId = replayStart.rows[0].payload.attemptId;
+  check(replayStart.rows[0].payload.questions.length === 1, 'replay also loads one question');
   for (const question of details.rows) {
     const answer = question.type === 'multiple_choice'
       ? { optionId: question.correct_option }
@@ -1070,9 +1105,11 @@ try {
     `select q.id,
        (select id from public.question_options where question_id = q.id and is_correct limit 1) as correct_option,
        (select answer from public.question_answers where question_id = q.id order by id limit 1) as answer
-     from public.questions q where q.lesson_id = $1 and q.is_active order by q.sort_order`,
+     from public.questions q where q.lesson_id = $1 and q.is_active
+     order by q.sort_order, q.id limit 1`,
     [questLesson.lesson_id],
   );
+  check(questAttempt.rows[0].payload.questions.length === 1, 'quest lesson attempt carries one question');
   for (const question of questQuestions.rows) {
     const answer = question.correct_option
       ? { optionId: question.correct_option }
@@ -1140,51 +1177,60 @@ try {
   await db.query(`update public.user_roles set role = 'player' where user_id = $1`, [user1]);
   const miniStart = miniStartResult.rows[0].payload;
   const miniPayload = JSON.stringify(miniStart);
-  check(miniStart.questions.length === 20, 'mini-game lesson payload has 20 questions');
+  check(
+    miniStart.questions.length === 1,
+    'a lesson with a 20-question bank still delivers one question',
+    String(miniStart.questions?.length),
+  );
   check(!miniPayload.includes('is_correct'), 'mini-game payload never exposes is_correct');
   check(!miniPayload.includes('question_answers'), 'mini-game payload never exposes answers');
   check(!miniPayload.includes('right_label'), 'mini-game payload never exposes pair rows');
-  const matchingQuestion = miniStart.questions.find((question) => question.type === 'matching_pairs');
-  check(
-    matchingQuestion?.leftItems.length === 4 && matchingQuestion?.rightItems.length === 4,
-    'matching payload sends separate four-item columns',
-  );
-  const pictureQuestion = miniStart.questions.find(
-    (question) => question.type === 'picture_identification',
-  );
-  check(
-    pictureQuestion?.media.some(
-      (media) => media.kind === 'image' && media.url === '/assets/pictures/book.svg',
-    ),
-    'picture payload includes the image media',
-  );
-  const fillQuestion = miniStart.questions.find((question) => question.type === 'fill_blank');
-  check(
-    fillQuestion?.prompt.includes('__'),
-    'fill blank payload keeps the inline blank marker',
-  );
 
-  const listeningQuestion = miniStart.questions.find(
-    (question) => question.type === 'listening',
+  // Every active subject uses the same one-question level flow.
+  const subjectNodes = await db.query(
+    `select distinct on (s.slug) s.slug, n.id as node_id
+     from public.subjects s
+     join public.courses c on c.subject_id = s.id
+     join public.course_levels lv on lv.course_id = c.id
+     join public.units u on u.course_level_id = lv.id
+     join public.learning_nodes n on n.unit_id = u.id
+     where s.status = 'active' and n.is_active and n.lesson_id is not null
+       and exists (
+         select 1 from public.questions q
+         where q.lesson_id = n.lesson_id and q.is_active
+       )
+     order by s.slug, lv.sort_order, u.sort_order, n.sort_order`,
+  );
+  const playableSubjects = await db.query(
+    `select count(distinct s.id)::int as count
+     from public.subjects s
+     join public.courses c on c.subject_id = s.id
+     join public.course_levels lv on lv.course_id = c.id
+     join public.units u on u.course_level_id = lv.id
+     join public.learning_nodes n on n.unit_id = u.id
+     where s.status = 'active' and n.is_active and n.lesson_id is not null
+       and exists (
+         select 1 from public.questions q
+         where q.lesson_id = n.lesson_id and q.is_active
+       )`,
   );
   check(
-    typeof listeningQuestion?.scene?.speech === 'string' &&
-      listeningQuestion.scene.speech.length > 0,
-    'listening payload includes the speech transcript for text-to-speech',
+    subjectNodes.rows.length === playableSubjects.rows[0].count,
+    'every active subject with playable content is checked',
+    `${subjectNodes.rows.length} vs ${playableSubjects.rows[0].count}`,
   );
-  const conversationQuestion = miniStart.questions.find(
-    (question) => question.type === 'conversation',
-  );
-  check(
-    conversationQuestion?.scene?.npc?.name === 'Bu Rani' &&
-      conversationQuestion?.scene?.screens?.length === 1,
-    'conversation payload includes the NPC scene',
-  );
-  const storyQuestion = miniStart.questions.find((question) => question.type === 'story');
-  check(
-    storyQuestion?.scene?.screens?.length === 3,
-    'story payload includes all three screens',
-  );
+  await db.query(`update public.user_roles set role = 'developer' where user_id = $1`, [user1]);
+  for (const row of subjectNodes.rows) {
+    const payload = (
+      await db.query('select public.start_lesson($1) as payload', [row.node_id])
+    ).rows[0].payload;
+    check(
+      payload.questions.length === 1,
+      `${row.slug} level delivers exactly one question`,
+      String(payload.questions?.length),
+    );
+  }
+  await db.query(`update public.user_roles set role = 'player' where user_id = $1`, [user1]);
 
   // -------------------------------------------------------------------------
   // Stage 5 remainder: level rewards, milestones, quests, achievements,
@@ -2205,6 +2251,528 @@ try {
     [],
     'broadcast_link_invalid',
   );
+
+  // -------------------------------------------------------------------------
+  // Admin CMS: permission context, full curriculum chain, question security,
+  // catalog writes, and granular permission enforcement.
+  // -------------------------------------------------------------------------
+  const adminContext = await db.query('select public.admin_get_context() as payload');
+  const adminContextPayload = adminContext.rows[0].payload;
+  check(adminContextPayload.role === 'developer', 'developer gets the admin context');
+  check(
+    ['curriculum.edit', 'questions.edit', 'content.manage', 'system.manage', 'audit.read']
+      .every((permission) => adminContextPayload.permissions.includes(permission)),
+    'developer implicitly holds every admin permission',
+    JSON.stringify(adminContextPayload.permissions),
+  );
+  check(adminContextPayload.catalog.length === 18, 'permission catalog exposes 18 entries');
+
+  const adminOverview = await db.query('select public.admin_get_overview() as payload');
+  const adminOverviewPayload = adminOverview.rows[0].payload;
+  check(
+    adminOverviewPayload.players.total >= 4 &&
+      adminOverviewPayload.content.lessons === 57 &&
+      adminOverviewPayload.content.questions === 231,
+    'admin overview reads live player and content totals',
+    JSON.stringify(adminOverviewPayload.content),
+  );
+
+  const createdSubject = await db.query(
+    `select public.admin_save_subject($1::jsonb, 'Tambah mapel uji') as payload`,
+    [JSON.stringify({
+      slug: 'mapel-uji-admin', name: 'Mapel Uji Admin', shortName: 'Uji',
+      description: 'Mapel untuk pengujian CMS.', category: 'uji', iconKey: 'book',
+      accentColor: '#123456', status: 'development', isPrimary: false, sortOrder: 99,
+    })],
+  );
+  const subjectRow = createdSubject.rows[0].payload;
+  check(subjectRow.slug === 'mapel-uji-admin' && subjectRow.status === 'development', 'admin creates a development subject');
+
+  const createdCourse = await db.query(
+    `select public.admin_save_course($1::jsonb, 'Tambah kursus uji') as payload`,
+    [JSON.stringify({
+      subjectId: subjectRow.id, slug: 'kursus-uji-admin', title: 'Kursus Uji Admin',
+      description: 'Kursus CMS.', category: 'uji', iconKey: 'book', sortOrder: 1,
+      isPublished: false,
+    })],
+  );
+  const courseRow = createdCourse.rows[0].payload;
+  check(Boolean(courseRow.id) && !courseRow.is_published, 'admin creates an unpublished course');
+
+  const createdLevel = await db.query(
+    `select public.admin_save_level($1::jsonb, 'Tambah level uji') as payload`,
+    [JSON.stringify({
+      courseId: courseRow.id, slug: 'level-uji-admin', title: 'Level Uji Admin',
+      description: 'Level CMS.', difficulty: 'beginner', sortOrder: 1, isPublished: false,
+    })],
+  );
+  const levelRow = createdLevel.rows[0].payload;
+  check(Boolean(levelRow.id) && !levelRow.is_published, 'admin creates an unpublished level');
+
+  const createdUnit = await db.query(
+    `select public.admin_save_unit($1::jsonb, 'Tambah unit uji') as payload`,
+    [JSON.stringify({
+      levelId: levelRow.id, slug: 'unit-uji-admin', title: 'Unit Uji Admin',
+      description: 'Unit CMS.', objectives: ['Tujuan satu', 'Tujuan dua'],
+      rewardCoins: 3, sortOrder: 1, isPublished: false,
+    })],
+  );
+  const adminUnitRow = createdUnit.rows[0].payload;
+  check(
+    Boolean(adminUnitRow.id) && adminUnitRow.objectives.length === 2 && adminUnitRow.reward_coins === 3,
+    'admin creates a unit with objectives and rewards',
+    JSON.stringify(adminUnitRow),
+  );
+
+  const createdLesson = await db.query(
+    `select public.admin_save_lesson($1::jsonb, 'Tambah lesson uji') as payload`,
+    [JSON.stringify({
+      unitId: adminUnitRow.id, slug: 'lesson-uji-admin', title: 'Lesson Uji Admin',
+      description: 'Lesson CMS.', kind: 'lesson', estimatedMinutes: 4,
+      xpReward: 12, coinReward: 4, heartsEnabled: true, sortOrder: 1,
+      isPublished: false,
+    })],
+  );
+  const lessonRow = createdLesson.rows[0].payload;
+  check(
+    Boolean(lessonRow.id) && lessonRow.xp_reward === 12 && !lessonRow.is_published,
+    'admin creates an unpublished lesson with rewards',
+  );
+
+  const createdNode = await db.query(
+    `select public.admin_save_node($1::jsonb, 'Tambah node uji') as payload`,
+    [JSON.stringify({
+      unitId: adminUnitRow.id, slug: 'node-uji-admin', title: 'Node Uji Admin',
+      description: 'Node CMS.', nodeType: 'lesson', lessonId: lessonRow.id,
+      sortOrder: 1, isActive: false,
+    })],
+  );
+  const nodeRow = createdNode.rows[0].payload;
+  check(Boolean(nodeRow.id) && nodeRow.lesson_id === lessonRow.id, 'admin links a map node to its lesson');
+
+  const createdQuestion = await db.query(
+    `select public.admin_save_question($1::jsonb, 'Tambah soal uji') as payload`,
+    [JSON.stringify({
+      lessonId: lessonRow.id, slug: 'soal-uji-admin', type: 'multiple_choice',
+      instruction: 'Pilih jawaban benar.', prompt: 'Satu ditambah satu sama dengan?',
+      explanation: 'Satu tambah satu adalah dua.', difficulty: 'beginner',
+      points: 10, sortOrder: 1, isActive: false,
+      options: [
+        { label: 'Dua', isCorrect: true, sortOrder: 0 },
+        { label: 'Tiga', isCorrect: false, sortOrder: 1 },
+      ],
+      answers: [], pairs: [], media: [], scene: {},
+    })],
+  );
+  const questionRow = createdQuestion.rows[0].payload;
+  check(
+    questionRow.slug === 'soal-uji-admin' && questionRow.options.length === 2 &&
+      questionRow.options.filter((option) => option.isCorrect).length === 1,
+    'admin saves a question with exactly one correct key',
+    JSON.stringify(questionRow),
+  );
+
+  const listedQuestions = await db.query(
+    'select public.admin_list_questions($1) as payload',
+    [lessonRow.id],
+  );
+  const listedQuestion = listedQuestions.rows[0].payload.items[0];
+  check(
+    listedQuestion?.prompt === 'Satu ditambah satu sama dengan?' && listedQuestion.isActive === false,
+    'question bank lists the archived draft',
+    JSON.stringify(listedQuestions.rows[0].payload),
+  );
+
+  await expectError(
+    'question save rejects multiple correct options',
+    'select public.admin_save_question($1::jsonb)',
+    [JSON.stringify({
+      lessonId: lessonRow.id, slug: 'soal-invalid-admin', type: 'multiple_choice',
+      prompt: 'Pilih?', options: [
+        { label: 'A', isCorrect: true }, { label: 'B', isCorrect: true },
+      ],
+    })],
+    'question_exactly_one_correct',
+  );
+
+  const archivedQuestion = await db.query(
+    "select public.admin_set_question_active($1, true, 'Aktifkan kembali') as payload",
+    [questionRow.id],
+  );
+  check(archivedQuestion.rows[0].payload.isActive === true, 'admin can reactivate an archived question');
+
+  const curriculums = await db.query('select public.admin_list_curriculum() as payload');
+  const curriculumSubject = curriculums.rows[0].payload.find((row) => row.slug === 'mapel-uji-admin');
+  check(
+    curriculumSubject?.courses?.[0]?.levels?.[0]?.units?.[0]?.lessons?.[0]?.slug === 'lesson-uji-admin',
+    'curriculum tree returns the full admin-created hierarchy',
+  );
+
+  const gamification = await db.query('select public.admin_get_gamification() as payload');
+  const gamificationPayload = gamification.rows[0].payload;
+  check(
+    gamificationPayload.quests.length >= 6 && gamificationPayload.shopItems.length === 2 &&
+      gamificationPayload.heartSettings.editable === false,
+    'gamification catalog reads quests, shop, and read-only Heart constants',
+    JSON.stringify(gamificationPayload.heartSettings),
+  );
+
+  const savedAchievement = await db.query(
+    `select public.admin_save_game_catalog('achievement', $1::jsonb, 'Tambah achievement uji') as payload`,
+    [JSON.stringify({
+      code: 'admin-uji-achievement', title: 'Achievement Uji',
+      description: 'Dibuat dari CMS.', metric: 'lesson', target: 5,
+      icon: 'trophy', sortOrder: 99, isActive: true,
+    })],
+  );
+  check(
+    savedAchievement.rows[0].payload.code === 'admin-uji-achievement' &&
+      savedAchievement.rows[0].payload.metric === 'lesson',
+    'admin creates an achievement with a supported metric',
+  );
+
+  await expectError(
+    'achievement save rejects an unsupported metric',
+    "select public.admin_save_game_catalog('achievement', $1::jsonb)",
+    [JSON.stringify({
+      code: 'admin-bad-achievement', title: 'Salah', metric: 'followers', target: 1,
+    })],
+    'metric_invalid',
+  );
+
+  await db.query(
+    `select public.admin_save_game_catalog('player_level', $1::jsonb, 'Uji level pemain')`,
+    [JSON.stringify({ level: 3, title: 'Pelajar', xpRequired: 250, rewardCoins: 5 })],
+  );
+  await db.query(
+    `select public.admin_save_game_catalog('streak_milestone', $1::jsonb, 'Uji milestone')`,
+    [JSON.stringify({ days: 3, title: 'Tiga Hari Konsisten', rewardCoins: 20, icon: 'flame', sortOrder: 1 })],
+  );
+  await db.query(
+    `select public.admin_save_game_catalog('league_tier', $1::jsonb, 'Uji tier liga')`,
+    [JSON.stringify({ tier: 2, name: 'Tunas', accent: '#58CC02', sortOrder: 2 })],
+  );
+  await db.query(
+    `select public.admin_save_game_catalog('shop_item', $1::jsonb, 'Uji item toko')`,
+    [JSON.stringify({
+      slug: 'admin-uji-item', name: 'Item Uji', kind: 'heart_potion',
+      priceCoins: 12, maxStack: 2, icon: 'heart', sortOrder: 99, isActive: false,
+      description: 'Item uji CMS.',
+    })],
+  );
+  const eventRow = gamificationPayload.events[0];
+  if (eventRow) {
+    await db.query(
+      `select public.admin_save_game_catalog('event', $1::jsonb, 'Uji event')`,
+      [JSON.stringify({
+        id: eventRow.id, weekStart: eventRow.weekStart, title: eventRow.title,
+        description: eventRow.description, targetXp: eventRow.targetXp,
+        rewardCoins: eventRow.rewardCoins, rewardXp: eventRow.rewardXp,
+        startsAt: eventRow.startsAt, endsAt: eventRow.endsAt, isActive: true,
+      })],
+    );
+  }
+  const catalogKinds = await db.query(`
+    select
+      (select reward_coins from public.player_levels where level = 3) as level_reward,
+      (select name from public.league_tiers where tier = 2) as tier_name,
+      (select count(*)::int from public.shop_items where slug = 'admin-uji-item') as test_item
+  `);
+  check(
+    catalogKinds.rows[0].level_reward === 5 &&
+      catalogKinds.rows[0].tier_name === 'Tunas' &&
+      catalogKinds.rows[0].test_item === 1,
+    'all editable game catalogs save through the admin RPC',
+    JSON.stringify(catalogKinds.rows[0]),
+  );
+
+  const socialFriendships = await db.query(
+    "select public.admin_list_social('', '', 1, 10) as payload",
+  );
+  check(
+    typeof socialFriendships.rows[0].payload.total === 'number' &&
+      Array.isArray(socialFriendships.rows[0].payload.items),
+    'admin social list returns paginated friendships',
+  );
+  const adminQuests = await db.query(
+    "select public.admin_list_friend_quests('') as payload",
+  );
+  check(Array.isArray(adminQuests.rows[0].payload), 'admin friend quest list returns quests');
+
+  const settingsSave = await db.query(
+    `select public.admin_save_site_settings($1::jsonb, 'Uji pengaturan situs') as payload`,
+    [JSON.stringify({ siteName: 'Lentera Uji', tagline: 'Belajar', registrationEnabled: false })],
+  );
+  check(
+    settingsSave.rows[0].payload.site_name === 'Lentera Uji' &&
+      settingsSave.rows[0].payload.registration_enabled === false,
+    'admin saves site settings',
+  );
+  await db.exec('reset role');
+  await expectError(
+    'disabled registration is enforced by the database trigger',
+    `insert into auth.users (email) values ('blocked-registration@example.com')`,
+    [],
+    'registration_disabled',
+  );
+  await db.exec('set role authenticated');
+  await asUser(user1);
+  await db.query(
+    `select public.admin_save_site_settings($1::jsonb, 'Pulihkan registrasi')`,
+    [JSON.stringify({ siteName: 'Lentera', registrationEnabled: true })],
+  );
+
+  const savedPage = await db.query(
+    `select public.admin_save_page($1::jsonb, 'Uji halaman CMS') as payload`,
+    [JSON.stringify({
+      slug: 'halaman-uji-admin', title: 'Halaman Uji', summary: 'Uji blok.',
+      status: 'draft', metaTitle: 'Halaman Uji', metaDescription: 'Deskripsi uji.',
+      blocks: [
+        { type: 'heading', text: 'Judul Uji' },
+        { type: 'paragraph', text: 'Paragraf uji.' },
+        { type: 'list', items: ['Satu', 'Dua'] },
+      ],
+    })],
+  );
+  check(
+    savedPage.rows[0].payload.blocks.length === 3,
+    'admin saves a structured content page',
+  );
+  await expectError(
+    'content page rejects an unsupported block',
+    'select public.admin_save_page($1::jsonb)',
+    [JSON.stringify({
+      slug: 'halaman-uji-invalid', title: 'Invalid', status: 'draft',
+      blocks: [{ type: 'script', text: 'alert(1)' }],
+    })],
+    'block_type_invalid',
+  );
+
+  const savedAnnouncement = await db.query(
+    `select public.admin_save_announcement($1::jsonb, 'Uji pengumuman') as payload`,
+    [JSON.stringify({
+      title: 'Pengumuman Uji', body: 'Isi pengumuman.', link: '/app',
+      audience: 'all', startsAt: new Date().toISOString(), isActive: true,
+    })],
+  );
+  check(
+    savedAnnouncement.rows[0].payload.title === 'Pengumuman Uji',
+    'admin saves an announcement',
+  );
+  const audience = await db.query("select public.admin_estimate_audience('all') as count");
+  check(audience.rows[0].count >= 4, 'admin estimates broadcast audience');
+
+  // Public CMS reads: drafts stay hidden, published pages and announcements
+  // reach anonymous visitors, and staff-only announcements stay staff-only.
+  await db.query("select set_config('app.user_id', '', false)");
+  const draftPublic = await db.query(
+    "select public.get_public_page('halaman-uji-admin') as payload",
+  );
+  check(draftPublic.rows[0].payload === null, 'draft content page is not public');
+
+  await asUser(user1);
+  await db.query(
+    `select public.admin_save_page($1::jsonb, 'Terbitkan halaman uji')`,
+    [JSON.stringify({
+      id: savedPage.rows[0].payload.id,
+      slug: 'halaman-uji-admin',
+      title: 'Halaman Uji',
+      summary: 'Uji blok.',
+      status: 'published',
+      blocks: savedPage.rows[0].payload.blocks,
+    })],
+  );
+  await db.query(
+    `select public.admin_save_announcement($1::jsonb, 'Uji pengumuman staff')`,
+    [JSON.stringify({
+      title: 'Khusus Staff', body: 'Hanya staff.', audience: 'staff',
+      startsAt: new Date().toISOString(), isActive: true,
+    })],
+  );
+
+  await db.query("select set_config('app.user_id', '', false)");
+  const publicPage = await db.query(
+    "select public.get_public_page('halaman-uji-admin') as payload",
+  );
+  check(
+    publicPage.rows[0].payload?.blocks?.length === 3,
+    'published content page is readable by the public',
+  );
+  const publicSite = await db.query('select public.get_public_site_content() as payload');
+  check(
+    publicSite.rows[0].payload.settings.siteName === 'Lentera' &&
+      publicSite.rows[0].payload.pages.some((page) => page.slug === 'halaman-uji-admin'),
+    'public site content exposes settings and published page links',
+  );
+  const anonAnnouncements = await db.query('select public.get_active_announcements() as payload');
+  check(
+    anonAnnouncements.rows[0].payload.some((item) => item.title === 'Pengumuman Uji') &&
+      !anonAnnouncements.rows[0].payload.some((item) => item.title === 'Khusus Staff'),
+    'anonymous visitors see public announcements but not staff announcements',
+  );
+  await asUser(user1);
+  const staffAnnouncements = await db.query('select public.get_active_announcements() as payload');
+  check(
+    staffAnnouncements.rows[0].payload.some((item) => item.title === 'Khusus Staff'),
+    'staff announcements are visible to staff',
+  );
+
+  const media = await db.query(
+    `select public.admin_register_media(
+       'test/uji.png', 'https://example.com/uji.png', 'image', 'image/png',
+       1024, 'Gambar uji', 640, 480
+     ) as payload`,
+  );
+  check(
+    media.rows[0].payload.alt_text === 'Gambar uji' &&
+      media.rows[0].payload.width === 640,
+    'admin registers media metadata',
+  );
+  await expectError(
+    'media register rejects SVG',
+    `select public.admin_register_media(
+       'test/uji.svg', 'https://example.com/uji.svg', 'image', 'image/svg+xml',
+       100, 'SVG', null, null
+     )`,
+    [],
+    'media_type_forbidden',
+  );
+
+  const health = await db.query('select public.admin_content_health() as payload');
+  check(
+    Array.isArray(health.rows[0].payload.publishedLessonsWithoutQuestions),
+    'content health reports missing-question lessons',
+  );
+
+  await db.exec('reset role');
+  const adminSubjectAudit = await db.query(
+    `select count(*)::int as count from public.audit_logs
+     where action = 'curriculum_subject_save' and target_id = $1`,
+    [subjectRow.id],
+  );
+  check(adminSubjectAudit.rows[0].count === 1, 'subject creation writes an audit entry');
+  await db.exec('set role authenticated');
+  await asUser(user1);
+
+  await db.exec('reset role');
+  const adminUser = await db.query(
+    `insert into auth.users (email) values ('admin-cms@example.com') returning id`,
+  );
+  const adminUserId = adminUser.rows[0].id;
+  await db.exec('set role authenticated');
+  await asUser(user1);
+  await db.query(
+    "select public.admin_set_user_role($1, 'admin', 'Uji admin CMS')",
+    [adminUserId],
+  );
+  await asUser(adminUserId);
+  const adminWorks = await db.query('select public.admin_get_overview() as payload');
+  check(Boolean(adminWorks.rows[0].payload), 'admin role can read the admin overview');
+  await expectError(
+    'admin without roles.manage cannot change permissions',
+    "select public.admin_set_role_permission('admin', 'questions.edit', false, 'uji')",
+    [],
+    'admin_permission_denied',
+  );
+  await asUser(user1);
+  await db.query(
+    "select public.admin_set_role_permission('admin', 'questions.edit', false, 'Uji pencabutan izin')",
+  );
+  await asUser(adminUserId);
+  await expectError(
+    'admin without questions.edit cannot save a question',
+    'select public.admin_save_question($1::jsonb)',
+    [JSON.stringify({
+      lessonId: lessonRow.id, slug: 'soal-tanpa-izin', type: 'multiple_choice',
+      prompt: 'Pilih?', options: [
+        { label: 'A', isCorrect: true }, { label: 'B', isCorrect: false },
+      ],
+    })],
+    'admin_permission_denied',
+  );
+  await asUser(user1);
+  await db.query(
+    "select public.admin_set_role_permission('admin', 'questions.edit', true, 'Pulihkan izin')",
+  );
+  await asUser(adminUserId);
+  const restoredSave = await db.query(
+    `select public.admin_save_question($1::jsonb, 'Izin dipulihkan') as payload`,
+    [JSON.stringify({
+      lessonId: lessonRow.id, slug: 'soal-izin-pulih', type: 'multiple_choice',
+      prompt: 'Pilih?', options: [
+        { label: 'A', isCorrect: true }, { label: 'B', isCorrect: false },
+      ],
+    })],
+  );
+  check(restoredSave.rows[0].payload.slug === 'soal-izin-pulih', 'restored permission allows the save');
+
+  await asUser(user1);
+  await db.query("select public.admin_set_user_role($1, 'player', 'Selesai uji')", [adminUserId]);
+  await asUser(adminUserId);
+  await expectError(
+    'a demoted admin loses dashboard access',
+    'select public.admin_get_overview()',
+    [],
+    'admin_permission_denied',
+  );
+
+  // Maintenance mode: the database guard blocks player writes, keeps reads
+  // available, and exempts staff so they can still operate and turn it off.
+  await db.exec('reset role');
+  await db.query("update public.user_roles set role = 'admin' where user_id = $1", [user1]);
+  await db.exec('set role authenticated');
+  await asUser(user1);
+  const maintenanceOn = await db.query(
+    "select public.admin_save_site_settings($1::jsonb, 'Aktifkan maintenance') as payload",
+    [JSON.stringify({ siteName: 'Lentera', maintenanceMode: true })],
+  );
+  check(
+    maintenanceOn.rows[0].payload.maintenance_mode === true,
+    'admin can enable maintenance mode',
+  );
+
+  await asUser(user2);
+  await expectError(
+    'maintenance mode blocks player writes',
+    'update public.user_settings set locale = locale where user_id = $1',
+    [user2],
+    'pemeliharaan',
+  );
+  const readDuringMaintenance = await db.query(
+    'select count(*)::int as count from public.subjects',
+  );
+  check(
+    readDuringMaintenance.rows[0].count > 0,
+    'reads remain available during maintenance',
+  );
+
+  await asUser(user1);
+  const grantDuringMaintenance = await db.query(
+    "select public.grant_reward($1, 2, 3, 'Hadiah saat maintenance') as payload",
+    [user2],
+  );
+  check(
+    Boolean(grantDuringMaintenance.rows[0].payload),
+    'staff writes remain allowed during maintenance',
+  );
+
+  await db.query(
+    "select public.admin_save_site_settings($1::jsonb, 'Matikan maintenance')",
+    [JSON.stringify({ siteName: 'Lentera', maintenanceMode: false })],
+  );
+  await asUser(user2);
+  let writesResumed = false;
+  try {
+    await db.query(
+      'update public.user_settings set locale = locale where user_id = $1',
+      [user2],
+    );
+    writesResumed = true;
+  } catch {
+    writesResumed = false;
+  }
+  check(writesResumed, 'player writes resume after maintenance is disabled');
+
   await db.exec('reset role');
   await db.query("update public.user_roles set role = 'player' where user_id = $1", [user1]);
 

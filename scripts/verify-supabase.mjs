@@ -230,10 +230,10 @@ try {
   ok('start_lesson membuat attempt');
 
   const payloadText = JSON.stringify(start);
-  if (Array.isArray(start.questions) && start.questions.length === 20) {
-    ok('payload berisi 20 soal');
+  if (Array.isArray(start.questions) && start.questions.length === 1) {
+    ok('payload berisi tepat 1 soal per level');
   } else {
-    fail('payload berisi 20 soal', String(start.questions?.length));
+    fail('payload berisi tepat 1 soal per level', String(start.questions?.length));
   }
   if (!payloadText.includes('is_correct')) ok('payload tidak membocorkan is_correct');
   else fail('payload tidak membocorkan is_correct');
@@ -241,40 +241,6 @@ try {
   else fail('payload tidak membocorkan tabel jawaban');
   if (!payloadText.includes('right_label')) ok('payload tidak membocorkan baris pasangan');
   else fail('payload tidak membocorkan baris pasangan');
-
-  const matching = start.questions.find((question) => question.type === 'matching_pairs');
-  if (matching?.leftItems.length === 4 && matching?.rightItems.length === 4) {
-    ok('matching mengirim dua kolom terpisah');
-  } else {
-    fail('matching mengirim dua kolom terpisah');
-  }
-
-  const picture = start.questions.find(
-    (question) => question.type === 'picture_identification',
-  );
-  if (
-    picture?.media.some(
-      (media) => media.kind === 'image' && media.url === '/assets/pictures/book.svg',
-    )
-  ) {
-    ok('picture mengirim media gambar');
-  } else {
-    fail('picture mengirim media gambar');
-  }
-
-  const fill = start.questions.find((question) => question.type === 'fill_blank');
-  if (/_{2,}/.test(fill?.prompt ?? '')) ok('fill blank menyimpan penanda rumpang');
-  else fail('fill blank menyimpan penanda rumpang');
-
-  for (const type of ['listening', 'speaking', 'conversation', 'story']) {
-    const sceneQuestion = start.questions.find((question) => question.type === type);
-    const hasScene =
-      sceneQuestion?.scene &&
-      typeof sceneQuestion.scene === 'object' &&
-      Object.keys(sceneQuestion.scene).length > 0;
-    if (hasScene) ok(`scene ${type} terkirim`);
-    else fail(`scene ${type} terkirim`);
-  }
 
   let correct = 0;
   for (const question of start.questions) {
@@ -302,8 +268,8 @@ try {
     else fail(`nilai soal ${question.type}`, 'jawaban uji dinilai salah');
   }
 
-  if (correct === 20) ok('20 jawaban uji dinilai benar di server');
-  else fail('20 jawaban uji dinilai benar di server', `${correct}/20`);
+  if (correct === 1) ok('jawaban uji dinilai benar di server');
+  else fail('jawaban uji dinilai benar di server', `${correct}/1`);
 
   const { data: summary, error: summaryError } = await supabase.rpc(
     'complete_lesson_attempt',
@@ -312,13 +278,10 @@ try {
   if (summaryError) {
     fail('complete_lesson_attempt', summaryError.message);
   } else {
-    if (summary.totalCount === 20 && summary.correctCount === 20) {
-      ok('hasil lesson menghitung 20/20');
+    if (summary.totalCount === 1 && summary.correctCount === 1) {
+      ok('hasil lesson menghitung 1/1');
     } else {
-      fail(
-        'hasil lesson menghitung 20/20',
-        `${summary.correctCount}/${summary.totalCount}`,
-      );
+      fail('hasil lesson menghitung 1/1', `${summary.correctCount}/${summary.totalCount}`);
     }
     if (summary.accuracy === 100) ok('akurasi hasil 100%');
     else fail('akurasi hasil 100%', String(summary.accuracy));

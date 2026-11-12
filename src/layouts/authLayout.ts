@@ -1,10 +1,12 @@
 import { brand } from '../config/brand';
-import { lampMarkup } from '../components/brandArt';
+import { contentService } from '../services/content.service';
+import { brandMark } from '../components/brandMark';
 import { el } from '../utils/dom';
 import type { RouteContext } from '../app/router';
 
 export async function renderAuthLayout(ctx: RouteContext, card: HTMLElement): Promise<void> {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const site = contentService.settings;
 
   const root = el('div', { class: 'auth-shell' }, [
     el('section', { class: 'auth-visual', attrs: { 'aria-hidden': 'true' } }, [
@@ -12,10 +14,10 @@ export async function renderAuthLayout(ctx: RouteContext, card: HTMLElement): Pr
       el('span', { class: 'auth-visual__leaf auth-visual__leaf--b' }),
       el('div', { class: 'auth-visual__inner' }, [
         el('div', { class: 'brand' }, [
-          el('span', { class: 'brand__mark', html: lampMarkup(30) }),
+          brandMark(30),
           el('span', { class: 'brand__text' }, [
-            el('span', { class: 'brand__name', text: brand.name }),
-            el('span', { class: 'brand__tag', text: brand.tagline }),
+            el('span', { class: 'brand__name', text: site.siteName }),
+            el('span', { class: 'brand__tag', text: site.tagline }),
           ]),
         ]),
         el('div', { class: 'auth-visual__copy' }, [
@@ -31,15 +33,15 @@ export async function renderAuthLayout(ctx: RouteContext, card: HTMLElement): Pr
     el('section', { class: 'auth-panel' }, [
       el('div', { class: 'auth-panel__top' }, [
         el('a', { class: 'topbar__mobile-brand', attrs: { href: '/' } }, [
-          el('span', { class: 'brand__mark', html: lampMarkup(24) }),
-          el('span', { text: brand.name }),
+          brandMark(24),
+          el('span', { text: site.siteName }),
         ]),
         el('a', { class: 'btn btn--ghost btn--sm', attrs: { href: '/' } }, ['Beranda']),
       ]),
       el('div', { class: 'auth-panel__body' }, [card]),
       el('p', {
         class: 'auth-panel__legal',
-        text: `© ${new Date().getFullYear()} ${brand.copyrightName} · v${brand.version}`,
+        text: site.copyright || `© ${new Date().getFullYear()} ${brand.copyrightName} · v${brand.version}`,
       }),
     ]),
   ]);

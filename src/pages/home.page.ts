@@ -1,13 +1,7 @@
 import type { PageModule } from '../app/router';
 import { kikoMarkup } from '../components/brandArt';
 import { icon } from '../components/icons';
-import {
-  playerProgressError,
-  playerProgressPanel,
-  playerProgressSkeleton,
-} from '../components/playerSummary';
 import { renderAppLayout } from '../layouts/appLayout';
-import { playerStore, type PlayerStoreState } from '../stores/player.store';
 import { sessionStore } from '../stores/session.store';
 import { el, formatDate } from '../utils/dom';
 
@@ -108,42 +102,6 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     el('div', { class: 'greeting-card__mascot', html: kikoMarkup(200) }),
   ]);
 
-  const progressionBody = el('div');
-  const progressionCard = el('section', { class: 'card card--padded' }, [
-    el('div', { class: 'card__header' }, [
-      el('div', {}, [
-        el('h2', { class: 'card__title', text: 'Progres akun' }),
-        el('p', {
-          class: 'card__subtitle',
-          text: 'Level, Koin, Hearts, dan Streak dihitung di server.',
-        }),
-      ]),
-      el('a', { class: 'btn btn--secondary btn--sm', attrs: { href: '/wallet' } }, [
-        icon('bag', 16),
-        'Buka wallet',
-      ]),
-    ]),
-    progressionBody,
-  ]);
-
-  const paintProgression = (state: PlayerStoreState) => {
-    if (state.data) {
-      progressionBody.replaceChildren(playerProgressPanel(state.data));
-    } else if (state.status === 'error') {
-      progressionBody.replaceChildren(
-        playerProgressError(state.error ?? 'Progres gagal dimuat.', () => {
-          void playerStore.load(true);
-        }),
-      );
-    } else {
-      progressionBody.replaceChildren(playerProgressSkeleton());
-    }
-  };
-
-  ctx.onCleanup(playerStore.subscribe(paintProgression));
-  paintProgression(playerStore.getState());
-  void playerStore.load();
-
   const goalCard = el('section', { class: 'card card--padded goal-card' }, [
     el('div', { class: 'goal-card__top' }, [
       el('div', {}, [
@@ -201,23 +159,6 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     ),
   ]);
 
-  const communityCard = el('section', { class: 'card card--padded' }, [
-    el('div', { class: 'card__header' }, [
-      el('div', {}, [
-        el('h2', { class: 'card__title', text: 'Komunitas' }),
-        el('p', {
-          class: 'card__subtitle',
-          text: 'Naik liga, berteman, dan ikuti event mingguan.',
-        }),
-      ]),
-    ]),
-    el('div', { class: 'social-shortcuts' }, [
-      socialShortcut('/leaderboard', 'trophy', 'Liga & Peringkat', 'XP mingguan dan hadiah periode'),
-      socialShortcut('/friends', 'users', 'Teman', 'Cari pemain dan lihat aktivitas'),
-      socialShortcut('/notifications', 'bell', 'Notifikasi', 'Permintaan teman dan hasil liga'),
-    ]),
-  ]);
-
   const accountCard = el('section', { class: 'card card--padded' }, [
     el('div', { class: 'card__header' }, [
       el('div', {}, [
@@ -264,28 +205,12 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
   const content = el('div', {}, [
     greetingCard,
     el('div', { class: 'dashboard-grid', style: { marginTop: '1.25rem' } }, [
-      el('div', { class: 'dashboard-main' }, [progressionCard, goalCard, communityCard, roadmapCard]),
+      el('div', { class: 'dashboard-main' }, [goalCard, roadmapCard]),
       el('div', { class: 'dashboard-aside' }, [accountCard, statusCard, tipCard]),
     ]),
   ]);
 
   renderAppLayout(ctx, { active: 'home', title: 'Beranda', content });
-}
-
-function socialShortcut(
-  href: string,
-  iconName: Parameters<typeof icon>[0],
-  title: string,
-  body: string,
-): HTMLElement {
-  return el('a', { class: 'social-shortcut', attrs: { href } }, [
-    el('span', { class: 'social-shortcut__icon' }, [icon(iconName, 20)]),
-    el('span', { class: 'social-shortcut__copy' }, [
-      el('strong', { text: title }),
-      el('span', { text: body }),
-    ]),
-    icon('chevron-right', 18),
-  ]);
 }
 
 function statusItem(text: string): HTMLElement {

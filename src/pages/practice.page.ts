@@ -107,7 +107,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
 
         if (playable.length === 0) {
           listSlot.className = '';
-          listSlot.append(
+          listSlot.replaceChildren(
             el('div', { class: 'card empty-state' }, [
               el('span', { class: 'empty-state__art' }, [icon('target', 34)]),
               el('h2', { class: 'empty-state__title', text: 'Belum ada bank soal' }),
@@ -203,7 +203,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
 
         paintMastery();
         listSlot.className = '';
-        listSlot.append(grid);
+        listSlot.replaceChildren(grid);
         paint();
       } catch (error) {
         console.error('[practice] failed to load modes', error);
@@ -215,7 +215,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
           'Coba lagi',
         ]);
         retry.addEventListener('click', load);
-        listSlot.append(
+        listSlot.replaceChildren(
           el('div', { class: 'card empty-state' }, [
             el('span', { class: 'empty-state__art' }, [icon('alert', 34)]),
             el('h2', { class: 'empty-state__title', text: 'Latihan gagal dimuat' }),

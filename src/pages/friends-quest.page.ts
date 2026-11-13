@@ -365,7 +365,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
         if (disposed || !listSlot.isConnected) return;
         listSlot.className = '';
         if (quests.length === 0) {
-          listSlot.append(
+          listSlot.replaceChildren(
             el('div', { class: 'card empty-state' }, [
               el('span', { class: 'empty-state__art' }, [icon('users', 34)]),
               el('h2', { class: 'empty-state__title', text: 'Belum ada Friends Quest' }),
@@ -397,7 +397,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
           }
         };
 
-        listSlot.append(
+        listSlot.replaceChildren(
           el(
             'div',
             { class: 'friend-quest-grid' },
@@ -413,7 +413,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
           'Coba lagi',
         ]);
         retry.addEventListener('click', load);
-        listSlot.append(
+        listSlot.replaceChildren(
           el('div', { class: 'card empty-state' }, [
             el('span', { class: 'empty-state__art' }, [icon('alert', 34)]),
             el('h2', { class: 'empty-state__title', text: 'Friends Quest gagal dimuat' }),

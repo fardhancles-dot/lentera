@@ -526,7 +526,37 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: var(--space-3);
+}
+
+.goal-card__progress {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.goal-card__progress-copy {
+  display: grid;
+  gap: 4px;
+  flex: 1 1 140px;
+  min-width: 0;
+}
+
+.goal-card__headline {
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.goal-card__detail {
+  overflow-wrap: anywhere;
+}
+
+.goal-card__footer {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .goal-ring {
@@ -1152,11 +1182,10 @@
 }
 
 @media (max-width: 640px) {
+  /* The decorative mascot sits behind the copy; on phone widths it overlaps
+     the greeting and actions, so it is hidden instead of obscuring text. */
   .greeting-card__mascot {
-    width: 118px;
-    right: -14px;
-    bottom: -16px;
-    opacity: 0.45;
+    display: none;
   }
 }
 
@@ -1209,7 +1238,7 @@
 .subject-grid {
   display: grid;
   gap: var(--space-4);
-  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
 }
 
 .subject-card {
@@ -1264,12 +1293,14 @@
 .subject-card__title {
   font-size: var(--text-lg);
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .subject-card__description {
   flex: 1;
   font-size: var(--text-sm);
   color: var(--muted-strong);
+  overflow-wrap: anywhere;
 }
 
 .subject-card__meta {

@@ -790,10 +790,12 @@ input[type='range'] {
 .loading-screen {
   display: grid;
   place-items: center;
+  align-content: center;
   gap: var(--space-4);
   min-height: 60dvh;
   color: var(--muted-strong);
   font-weight: 700;
+  text-align: center;
 }
 
 .muted {

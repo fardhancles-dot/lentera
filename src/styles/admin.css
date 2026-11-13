@@ -315,6 +315,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 0.8rem;
   margin-bottom: 0.7rem;
 }
@@ -323,6 +324,12 @@
   display: flex;
   gap: 0.4rem;
   flex-wrap: wrap;
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+
+.admin-panel__actions .btn {
+  white-space: nowrap;
 }
 
 .admin-metrics {

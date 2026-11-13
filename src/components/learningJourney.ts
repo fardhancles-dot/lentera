@@ -28,11 +28,13 @@ type StopState = 'completed' | 'active' | 'locked';
 
 function stopState(stop: JourneyStop): StopState {
   if (stop.node.status === 'completed') return 'completed';
+  if (stop.kind === 'level' && stop.node.questionCount === 0) return 'locked';
   if (stop.node.status === 'locked') return 'locked';
   return 'active';
 }
 
 function stopHref(subjectSlug: string, stop: JourneyStop): string | null {
+  if (stop.kind === 'level' && stop.node.questionCount === 0) return null;
   if (stop.node.status === 'locked') return null;
   if (stop.kind === 'reward') {
     return `/learn/${subjectSlug}/reward/${stop.node.slug}`;
@@ -48,6 +50,7 @@ function stopLabel(stop: JourneyStop): string {
     if (stop.node.status === 'locked') return 'Terkunci';
     return `+${formatNumber(stop.node.rewardCoins)} Koin · +${stop.node.rewardXp} XP`;
   }
+  if (stop.kind === 'level' && stop.node.questionCount === 0) return 'Belum ada soal';
   return stop.node.title;
 }
 
@@ -57,11 +60,13 @@ function stopAriaLabel(stop: JourneyStop): string {
   }
 
   const status =
-    stop.node.status === 'completed'
-      ? 'selesai, buka untuk mengulang'
-      : stop.node.status === 'locked'
-        ? 'terkunci'
-        : 'aktif, buka untuk bermain';
+    stop.kind === 'level' && stop.node.questionCount === 0
+      ? 'belum ada soal'
+      : stop.node.status === 'completed'
+        ? 'selesai, buka untuk mengulang'
+        : stop.node.status === 'locked'
+          ? 'terkunci'
+          : 'aktif, buka untuk bermain';
   return `Level ${stop.levelNumber}, ${stop.node.title}, ${status}.`;
 }
 
@@ -212,9 +217,11 @@ function createStop(
   if (state === 'locked') {
     element.setAttribute(
       'title',
-      stop.kind === 'reward'
-        ? 'Selesaikan level sebelumnya untuk membuka hadiah.'
-        : 'Selesaikan level sebelumnya untuk membuka level ini.',
+      stop.kind === 'level' && stop.node.questionCount === 0
+        ? 'Bank soal level ini belum tersedia.'
+        : stop.kind === 'reward'
+          ? 'Selesaikan level sebelumnya untuk membuka hadiah.'
+          : 'Selesaikan level sebelumnya untuk membuka level ini.',
     );
   }
 
@@ -301,7 +308,7 @@ export function createLearningJourney(
     el('h1', { class: 'journey-map__title', text: subject.name }),
     el('span', {
       class: 'journey-map__meta',
-      text: `${path.totalNodes} Level · ${formatNumber(path.questionCount)} Soal`,
+      text: `${stops.filter((stop) => stop.kind === 'level').length} Level · ${formatNumber(path.questionCount)} Soal`,
       attrs: { 'data-journey-meta': 'levels-questions' },
     }),
   ]);

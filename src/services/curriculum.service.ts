@@ -229,21 +229,38 @@ export const curriculumService = {
       }
     }
 
-    const playableNodes = orderedNodes.filter((node) => Boolean(node.lesson_id));
+    // A level can only play when its own lesson bank has an active question.
+    // Empty legacy levels stay visible but must not consume the single
+    // "available" slot, otherwise every later level stays locked forever.
+    const hasPlayableQuestion = (node: LearningNodeRow): boolean => {
+      if (!node.lesson_id) return false;
+      if (node.question_id) return true;
+      return (statsByLesson.get(node.lesson_id)?.question_count ?? 0) > 0;
+    };
+
+    const contentNodes = orderedNodes.filter(hasPlayableQuestion);
     const statuses = resolveNodeStatuses(
-      playableNodes.map((node) => node.id),
+      contentNodes.map((node) => node.id),
       completedNodeIds,
       { developerPreview: options.developerPreview, startedNodeIds },
     );
     const statusByNode = new Map(
-      playableNodes.map((node, index) => [node.id, statuses[index]!] as const),
+      contentNodes.map((node, index) => [node.id, statuses[index]!] as const),
     );
 
     // Checkpoint/reward nodes do not gate progress. A reward opens once every
-    // earlier lesson is complete, and stays completed after it is claimed.
+    // earlier playable lesson is complete, and stays completed after claimed.
     let lastPlayableComplete = true;
     for (const node of orderedNodes) {
       if (node.lesson_id) {
+        if (!hasPlayableQuestion(node)) {
+          statusByNode.set(node.id, 'locked');
+          // The empty level still owns the reward that follows it, so that
+          // reward stays locked; later levels remain available because the
+          // empty node no longer consumes the unlock chain.
+          lastPlayableComplete = false;
+          continue;
+        }
         lastPlayableComplete = statusByNode.get(node.id) === 'completed';
       } else if (node.node_type === 'reward' && claimedRewardIds.has(node.id)) {
         statusByNode.set(node.id, 'completed');
@@ -282,7 +299,9 @@ export const curriculumService = {
             );
 
           for (const node of unitNodes) {
-            if (!node.playable) continue;
+            // Levels without a question are shown on the map as "Belum ada
+            // soal", but they do not count toward playable-level progress.
+            if (!node.playable || node.questionCount === 0) continue;
             questionCount += node.questionCount;
             totalNodes += 1;
             if (node.status === 'completed') completedNodes += 1;
@@ -305,14 +324,17 @@ export const curriculumService = {
           description: level.description,
           difficulty: level.difficulty,
           nodeCount: pathUnits.reduce(
-            (sum, unit) => sum + unit.nodes.filter((node) => node.playable).length,
+            (sum, unit) =>
+              sum +
+              unit.nodes.filter((node) => node.playable && node.questionCount > 0).length,
             0,
           ),
           completedCount: pathUnits.reduce(
             (sum, unit) =>
               sum +
               unit.nodes.filter(
-                (node) => node.playable && node.status === 'completed',
+                (node) =>
+                  node.playable && node.questionCount > 0 && node.status === 'completed',
               ).length,
             0,
           ),
@@ -407,6 +429,11 @@ function buildPathNode(
 ): PathNode {
   const lesson = node.lesson_id ? lessonById.get(node.lesson_id) : undefined;
   const stats = node.lesson_id ? statsByLesson.get(node.lesson_id) : undefined;
+  // A linked question is authoritative. Legacy levels created before question
+  // links existed still play the first active question from their own lesson
+  // bank (the server does the same fallback), so availability must read the
+  // bank instead of only the link column.
+  const hasPlayableQuestion = Boolean(node.question_id) || (stats?.question_count ?? 0) > 0;
 
   return {
     id: node.id,
@@ -419,9 +446,9 @@ function buildPathNode(
     questionId: node.question_id ?? null,
     levelNumber: node.level_number ?? null,
     playable: Boolean(node.lesson_id && lesson),
-    // A level plays exactly one linked question. Legacy questions in the same
-    // lesson stay available to practice/mastery but are not counted as levels.
-    questionCount: node.question_id ? 1 : 0,
+    // A level plays exactly one question. The rest of a legacy lesson bank
+    // stays available to practice/mastery but is not counted as a level.
+    questionCount: hasPlayableQuestion ? 1 : 0,
     topics: stats?.topics ?? [],
     questionTypes: stats?.question_types ?? [],
     estimatedMinutes: lesson?.estimated_minutes ?? 0,

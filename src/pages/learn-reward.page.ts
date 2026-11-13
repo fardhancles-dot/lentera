@@ -212,7 +212,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
 
         if (!detail) {
           host.className = '';
-          host.append(
+          host.replaceChildren(
             el('div', { class: 'card empty-state' }, [
               el('span', { class: 'empty-state__art' }, [icon('gift', 34)]),
               el('h2', { class: 'empty-state__title', text: 'Hadiah tidak ditemukan' }),
@@ -262,7 +262,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
           'Coba lagi',
         ]);
         retry.addEventListener('click', load);
-        host.append(
+        host.replaceChildren(
           el('div', { class: 'card empty-state' }, [
             el('span', { class: 'empty-state__art' }, [icon('alert', 34)]),
             el('h2', { class: 'empty-state__title', text: 'Hadiah gagal dimuat' }),

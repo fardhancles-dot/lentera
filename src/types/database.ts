@@ -263,6 +263,21 @@ export type AnswerAttemptRow = {
   answered_at: string;
 };
 
+export type StudySessionRow = {
+  id: string;
+  user_id: string;
+  attempt_id: string;
+  node_id: string | null;
+  lesson_id: string | null;
+  subject_id: string | null;
+  local_date: string;
+  started_at: string;
+  last_active_at: string;
+  ended_at: string | null;
+  duration_seconds: number;
+  created_at: string;
+};
+
 export type UserWalletRow = {
   user_id: string;
   coins: number;
@@ -659,6 +674,12 @@ export type Database = {
         Update: Record<string, unknown>;
         Relationships: [];
       };
+      study_sessions: {
+        Row: StudySessionRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
       answer_attempts: {
         Row: AnswerAttemptRow;
         Insert: Record<string, unknown>;
@@ -893,6 +914,14 @@ export type Database = {
       };
       get_player_state: {
         Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      get_my_daily_goal: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      ping_study_session: {
+        Args: { p_attempt_id: string };
         Returns: Json;
       };
       get_my_wallet: {

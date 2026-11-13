@@ -73,6 +73,8 @@ try {
   await run('supabase/migrations/20261112140000_admin_gamification.sql');
   await run('supabase/migrations/20261112150000_maintenance_mode.sql');
   await run('supabase/migrations/20261113100000_auto_levels.sql');
+  await run('supabase/migrations/20261114100000_daily_goal_study_sessions.sql');
+  await run('supabase/migrations/20261114101000_development_subject_lesson_access.sql');
 
   const content = await db.query(`
     select
@@ -654,6 +656,98 @@ try {
     [user1],
   );
   check(ledgerAfterReplay.rows[0].count === 2, 'replay did not add a ledger row');
+
+  // -------------------------------------------------------------------------
+  // Daily target: sessions are written per attempt, heartbeat time is capped,
+  // and the same session cannot be counted twice.
+  // -------------------------------------------------------------------------
+  const goalStart = await db.query('select public.get_my_daily_goal() as payload');
+  check(
+    goalStart.rows[0].payload.goalMinutes === 10 &&
+      goalStart.rows[0].payload.percent >= 0 &&
+      goalStart.rows[0].payload.percent <= 100,
+    'get_my_daily_goal returns the saved target and a bounded percentage',
+    JSON.stringify(goalStart.rows[0].payload),
+  );
+
+  const sessions = await db.query(
+    'select count(*)::int as count from public.study_sessions where user_id = $1',
+    [user1],
+  );
+  check(
+    sessions.rows[0].count === 4,
+    'each completed attempt created exactly one study session',
+    String(sessions.rows[0].count),
+  );
+
+  // Heartbeats only apply to an attempt that is still in progress.
+  const heartbeatStart = await db.query(
+    'select public.start_lesson($1) as payload',
+    [firstNode.node_id],
+  );
+  const heartbeatAttempt = heartbeatStart.rows[0].payload.attemptId;
+  await db.query(
+    "update public.study_sessions set last_active_at = now() - interval '5 minutes' where attempt_id = $1",
+    [heartbeatAttempt],
+  );
+  const ping = await db.query('select public.ping_study_session($1) as payload', [heartbeatAttempt]);
+  check(
+    ping.rows[0].payload.recorded === true && ping.rows[0].payload.durationSeconds === 30,
+    'heartbeat credits at most 30 seconds of real elapsed time',
+    JSON.stringify(ping.rows[0].payload),
+  );
+  const pingAgain = await db.query('select public.ping_study_session($1) as payload', [heartbeatAttempt]);
+  check(
+    pingAgain.rows[0].payload.durationSeconds === 30,
+    'an immediate second heartbeat does not double count',
+    JSON.stringify(pingAgain.rows[0].payload),
+  );
+
+  await db.query(
+    "update public.study_sessions set last_active_at = now() - interval '1 hour' where attempt_id = $1",
+    [heartbeatAttempt],
+  );
+  const idlePing = await db.query('select public.ping_study_session($1) as payload', [heartbeatAttempt]);
+  check(
+    idlePing.rows[0].payload.durationSeconds === 60,
+    'an idle gap is capped instead of inflating the target',
+    JSON.stringify(idlePing.rows[0].payload),
+  );
+
+  const goalAfter = await db.query('select public.get_my_daily_goal() as payload');
+  check(
+    goalAfter.rows[0].payload.studiedSeconds === 60 &&
+      goalAfter.rows[0].payload.percent === 10 &&
+      goalAfter.rows[0].payload.sessionCount === 1,
+    'daily goal reads the recorded session and converts 1 of 10 minutes to 10%',
+    JSON.stringify(goalAfter.rows[0].payload),
+  );
+
+  // Development means "content still being written", not "closed". Inactive
+  // remains blocked. Publication flags are untouched by the test.
+  await db.query(
+    "update public.subjects set status = 'development' where slug = 'pemrograman-web'",
+  );
+  const developmentStart = await db.query(
+    'select public.start_lesson($1) as payload',
+    [firstNode.node_id],
+  );
+  check(
+    Boolean(developmentStart.rows[0].payload.attemptId),
+    'a development subject can still start its available lesson',
+  );
+  await db.query(
+    "update public.lesson_attempts set status = 'abandoned' where id = $1",
+    [developmentStart.rows[0].payload.attemptId],
+  );
+  await db.query("update public.subjects set status = 'inactive' where slug = 'pemrograman-web'");
+  await expectError(
+    'an inactive subject still rejects start_lesson',
+    'select public.start_lesson($1)',
+    [firstNode.node_id],
+    'lesson_not_found',
+  );
+  await db.query("update public.subjects set status = 'active' where slug = 'pemrograman-web'");
 
   // RLS: user one must not see user two's attempt, and cannot edit a wallet.
   await db.query(

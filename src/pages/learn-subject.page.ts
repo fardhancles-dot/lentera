@@ -103,7 +103,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
 
         if (!path) {
           host.className = '';
-          host.append(
+          host.replaceChildren(
             renderUnavailable(
               null,
               'Alamat yang dibuka tidak cocok dengan mata pelajaran yang tersedia.',
@@ -114,7 +114,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
 
         if (!hasJourneyStops(path)) {
           host.className = '';
-          host.append(
+          host.replaceChildren(
             renderUnavailable(
               path,
               path.subject.status === 'development'
@@ -137,7 +137,9 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
             showToast(
               stop.kind === 'reward'
                 ? 'Selesaikan level sebelumnya untuk membuka hadiah.'
-                : 'Selesaikan level sebelumnya untuk membuka level ini.',
+                : stop.node.questionCount === 0
+                  ? 'Bank soal level ini belum tersedia di database.'
+                  : 'Selesaikan level sebelumnya untuk membuka level ini.',
               'default',
             ),
         });
@@ -149,7 +151,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
         if (disposed || !host.isConnected) return;
         host.className = '';
         const message = error instanceof Error ? error.message : 'Peta belajar gagal dimuat.';
-        host.append(renderError(message, load));
+        host.replaceChildren(renderError(message, load));
       }
     })();
   };

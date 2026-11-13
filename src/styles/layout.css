@@ -480,7 +480,13 @@ html.app-drawer-open body {
 .drawer__nav {
   display: grid;
   gap: 4px;
+  flex: 1;
+  min-height: 0;
   margin-top: var(--space-4);
+  padding-bottom: var(--space-3);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .drawer-nav__item {

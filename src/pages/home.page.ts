@@ -2,6 +2,7 @@ import type { PageModule } from '../app/router';
 import { kikoMarkup } from '../components/brandArt';
 import { icon } from '../components/icons';
 import { renderAppLayout } from '../layouts/appLayout';
+import { studyService } from '../services/study.service';
 import { sessionStore } from '../stores/session.store';
 import { el, formatDate } from '../utils/dom';
 
@@ -63,6 +64,14 @@ function greetingForHour(hour: number): string {
   return 'Selamat malam';
 }
 
+function formatStudyDuration(totalSeconds: number): string {
+  const seconds = Math.max(0, Math.round(totalSeconds));
+  if (seconds < 60) return `${seconds} detik`;
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  return rest > 0 ? `${minutes} menit ${rest} detik` : `${minutes} menit`;
+}
+
 function summaryRow(label: string, value: Node | string): HTMLElement {
   return el('div', { class: 'summary-list__row' }, [
     el('span', { class: 'summary-list__label', text: label }),
@@ -102,30 +111,49 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     el('div', { class: 'greeting-card__mascot', html: kikoMarkup(200) }),
   ]);
 
+  const goalPercent = el('div', { class: 'goal-ring__inner', text: '0%' });
+  const goalRing = el(
+    'div',
+    {
+      class: 'goal-ring',
+      attrs: {
+        role: 'progressbar',
+        'aria-label': 'Progres target harian',
+        'aria-valuemin': '0',
+        'aria-valuemax': '100',
+        'aria-valuenow': '0',
+      },
+    },
+    [goalPercent],
+  );
+  goalRing.style.setProperty('--pct', '0');
+
+  const goalBadge = el('span', { class: 'badge' }, [`${goal} menit`]);
+  const goalHeadline = el('p', {
+    class: 'goal-card__headline',
+    text: 'Belum ada sesi belajar hari ini',
+  });
+  const goalDetail = el('p', {
+    class: 'small muted goal-card__detail',
+    text: 'Mulai lesson untuk mulai mencatat durasi belajar.',
+  });
+
   const goalCard = el('section', { class: 'card card--padded goal-card' }, [
     el('div', { class: 'goal-card__top' }, [
       el('div', {}, [
         el('h2', { class: 'card__title', text: 'Target harian' }),
         el('p', {
           class: 'card__subtitle',
-          text: 'Target yang kamu pilih saat mendaftar.',
+          text: 'Dihitung dari durasi belajar yang benar-benar tercatat di database.',
         }),
       ]),
-      el('span', { class: 'badge' }, [`${goal} menit`]),
+      goalBadge,
     ]),
-    el('div', { style: { display: 'flex', alignItems: 'center', gap: '1rem' } }, [
-      el('div', { class: 'goal-ring', attrs: { style: '--pct: 0' } }, [
-        el('div', { class: 'goal-ring__inner', text: '0%' }),
-      ]),
-      el('div', {}, [
-        el('p', { style: { fontWeight: '800' }, text: 'Belum ada sesi belajar hari ini' }),
-        el('p', {
-          class: 'small muted',
-          text: 'Durasi belajar per sesi belum dicatat; target ini masih menjadi pengingat harian.',
-        }),
-      ]),
+    el('div', { class: 'goal-card__progress' }, [
+      goalRing,
+      el('div', { class: 'goal-card__progress-copy' }, [goalHeadline, goalDetail]),
     ]),
-    el('div', { style: { display: 'flex', justifyContent: 'flex-end' } }, [
+    el('div', { class: 'goal-card__footer' }, [
       el('a', { class: 'small', attrs: { href: '/settings' } }, ['Ubah target harian']),
     ]),
   ]);
@@ -211,6 +239,38 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
   ]);
 
   renderAppLayout(ctx, { active: 'home', title: 'Beranda', content });
+
+  void studyService
+    .loadDailyGoal()
+    .then((progress) => {
+      if (!goalCard.isConnected) return;
+
+      goalBadge.textContent = `${progress.goalMinutes} menit`;
+      goalRing.style.setProperty('--pct', String(progress.percent));
+      goalRing.setAttribute('aria-valuenow', String(progress.percent));
+      goalRing.setAttribute(
+        'aria-valuetext',
+        `${formatStudyDuration(progress.studiedSeconds)} dari ${progress.goalMinutes} menit`,
+      );
+      goalPercent.textContent = `${progress.percent}%`;
+
+      if (progress.sessionCount === 0) {
+        goalHeadline.textContent = 'Belum ada sesi belajar hari ini';
+        goalDetail.textContent = 'Mulai lesson untuk mulai mencatat durasi belajar.';
+        return;
+      }
+
+      goalHeadline.textContent = `${formatStudyDuration(progress.studiedSeconds)} dari ${progress.goalMinutes} menit`;
+      goalDetail.textContent =
+        progress.percent >= 100
+          ? 'Target hari ini sudah tercapai. Kerja bagus!'
+          : `${progress.sessionCount} sesi belajar hari ini · sisa ${formatStudyDuration(progress.remainingSeconds)}`;
+    })
+    .catch((error) => {
+      if (!goalCard.isConnected) return;
+      console.error('[home] failed to load daily goal', error);
+      goalDetail.textContent = 'Progres belajar hari ini belum bisa dimuat. Coba muat ulang halaman.';
+    });
 }
 
 function statusItem(text: string): HTMLElement {

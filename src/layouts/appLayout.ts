@@ -60,10 +60,10 @@ const MOBILE_NAV_KEYS: readonly NavKey[] = [
 ];
 
 const DRAWER_NAV_KEYS: readonly NavKey[] = [
-  'settings',
+  'friends',
   'leaderboard',
   'notifications',
-  'friends',
+  'settings',
 ];
 
 export interface AppLayoutOptions {
@@ -94,7 +94,11 @@ function navLink(item: NavItem, active: NavKey, compact: boolean): HTMLAnchorEle
   return link;
 }
 
-function drawerNavLink(item: NavItem, active: NavKey): HTMLAnchorElement {
+function drawerNavLink(
+  item: NavItem,
+  active: NavKey,
+  label = item.label,
+): HTMLAnchorElement {
   return el(
     'a',
     {
@@ -106,7 +110,7 @@ function drawerNavLink(item: NavItem, active: NavKey): HTMLAnchorElement {
     },
     [
       el('span', { class: 'drawer-nav__icon' }, [icon(item.icon, 20)]),
-      el('span', { class: 'drawer-nav__label', text: item.label }),
+      el('span', { class: 'drawer-nav__label', text: label }),
       el('span', { class: 'drawer-nav__chevron' }, [icon('chevron-right', 18)]),
     ],
   );
@@ -210,7 +214,13 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
   const isStaff = user.role === 'developer' || user.role === 'admin';
   const site = contentService.settings;
   const visibleNav = NAV_ITEMS.filter((item) => item.key !== 'developer' || isStaff);
-  const drawerItems = DRAWER_NAV_KEYS.map(
+  // Players get Teman → Liga → Notifikasi → Pengaturan. Staff sees the same
+  // order with Admin Dashboard directly below Pengaturan. The /admin route is
+  // still guarded by the router and every admin RPC, not by this menu alone.
+  const drawerKeys: readonly NavKey[] = isStaff
+    ? [...DRAWER_NAV_KEYS, 'developer']
+    : DRAWER_NAV_KEYS;
+  const drawerItems = drawerKeys.map(
     (key) => NAV_ITEMS.find((item) => item.key === key)!,
   );
 
@@ -309,7 +319,13 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
     [icon('close', 20)],
   );
 
-  const drawerLinks = drawerItems.map((item) => drawerNavLink(item, options.active));
+  const drawerLinks = drawerItems.map((item) =>
+    drawerNavLink(
+      item,
+      options.active,
+      item.key === 'developer' ? 'Admin Dashboard' : item.label,
+    ),
+  );
 
   drawerPanel.append(
     el('div', { class: 'drawer__header' }, [

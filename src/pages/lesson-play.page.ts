@@ -12,6 +12,7 @@ import {
   type LessonStart,
   type LessonSummary,
 } from '../services/lesson.service';
+import { studyService } from '../services/study.service';
 import { playerStore, type PlayerStoreState } from '../stores/player.store';
 import { sessionStore } from '../stores/session.store';
 import { el, formatNumber } from '../utils/dom';
@@ -82,6 +83,42 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
   let summary: LessonSummary | null = null;
   let heartsSlot: HTMLElement | null = null;
   let resultStage: { destroy: () => void } | null = null;
+  let heartbeatTimer: number | null = null;
+  let lastInteractionAt = Date.now();
+
+  const markInteraction = () => {
+    lastInteractionAt = Date.now();
+  };
+
+  const stopHeartbeat = () => {
+    if (heartbeatTimer === null) return;
+    window.clearInterval(heartbeatTimer);
+    heartbeatTimer = null;
+  };
+
+  // The server measures elapsed time itself. This only proves the lesson screen
+  // is still in use, so an idle tab cannot inflate the daily target.
+  const startHeartbeat = () => {
+    stopHeartbeat();
+    heartbeatTimer = window.setInterval(() => {
+      if (disposed || !start || document.visibilityState !== 'visible') return;
+      if (Date.now() - lastInteractionAt > 90_000) return;
+      void studyService.ping(start.attemptId).catch(() => undefined);
+    }, 25_000);
+  };
+
+  const onVisibilityChange = () => {
+    if (document.visibilityState === 'hidden') {
+      const attemptId = start?.attemptId;
+      if (attemptId) void studyService.ping(attemptId).catch(() => undefined);
+    } else {
+      lastInteractionAt = Date.now();
+    }
+  };
+
+  document.addEventListener('pointerdown', markInteraction, { passive: true });
+  document.addEventListener('keydown', markInteraction);
+  document.addEventListener('visibilitychange', onVisibilityChange);
 
   const paintHearts = (state: PlayerStoreState) => {
     if (!heartsSlot) return;
@@ -108,6 +145,10 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
   ctx.onCleanup(playerStore.subscribe(paintHearts));
   ctx.onCleanup(() => {
     disposed = true;
+    stopHeartbeat();
+    document.removeEventListener('pointerdown', markInteraction);
+    document.removeEventListener('keydown', markInteraction);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
     resultStage?.destroy();
     resultStage = null;
   });
@@ -165,6 +206,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
         answeredCount = 0;
         summary = null;
         renderGame();
+        startHeartbeat();
       } catch (error) {
         if (disposed) return;
         const message =
@@ -453,6 +495,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
   const finish = async (progressBar: HTMLElement, progress: HTMLElement) => {
     if (!start || busy || disposed) return;
     busy = true;
+    stopHeartbeat();
     setProgress(progressBar, progress, start.questions.length, start.questions.length);
     ctx.outlet.replaceChildren(
       el('div', { class: 'play-loading' }, [

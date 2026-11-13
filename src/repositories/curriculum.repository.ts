@@ -248,6 +248,7 @@ export const curriculumRepository = {
       .from('learning_nodes')
       .select('*')
       .in('unit_id', ids)
+      .eq('is_active', true)
       .order('sort_order', { ascending: true });
     if (error) raise(error);
     return data;

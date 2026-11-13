@@ -4,100 +4,23 @@ import { subjectIconName } from '../components/subjectIcon';
 import { pageHeader, renderAppLayout } from '../layouts/appLayout';
 import { curriculumService, type SubjectCard } from '../services/curriculum.service';
 import { sessionStore } from '../stores/session.store';
-import { el, formatNumber, trapFocus } from '../utils/dom';
+import { el, formatNumber } from '../utils/dom';
 
 const meta = { title: 'Belajar' };
 
-function openDevelopmentDialog(ctx: Parameters<PageModule['render']>[0], subjectName: string): void {
-  const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-  let closed = false;
-
-  const close = () => {
-    if (closed) return;
-    closed = true;
-    document.removeEventListener('keydown', onKeyDown);
-    releaseFocus();
-    backdrop.remove();
-    previousFocus?.focus({ preventScroll: true });
-  };
-
-  const onKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      close();
-    }
-  };
-
-  const closeButton = el(
-    'button',
-    { class: 'icon-btn', attrs: { type: 'button', 'aria-label': 'Tutup dialog' } },
-    [icon('close', 20)],
-  );
-  closeButton.addEventListener('click', close);
-
-  const dialog = el(
-    'div',
-    {
-      class: 'dialog',
-      attrs: {
-        role: 'dialog',
-        'aria-modal': 'true',
-        'aria-labelledby': 'development-dialog-title',
-        'aria-describedby': 'development-dialog-body',
-      },
-    },
-    [
-      el('div', { class: 'dialog__top' }, [
-        el('span', { class: 'dialog__eyebrow' }, [icon('sparkles', 14), 'Dalam pengembangan']),
-        closeButton,
-      ]),
-      el('h2', { class: 'dialog__title', attrs: { id: 'development-dialog-title' } }, [
-        subjectName,
-      ]),
-      el('p', { class: 'dialog__body', attrs: { id: 'development-dialog-body' } }, [
-        'Fitur bahasa daerah ini sedang dikembangkan oleh developer.',
-      ]),
-      el('div', { class: 'dialog__actions' }, [
-        el('button', { class: 'btn btn--secondary', attrs: { type: 'button' } }, ['Mengerti']),
-      ]),
-    ],
-  );
-
-  const confirm = dialog.querySelector<HTMLButtonElement>('.dialog__actions .btn');
-  confirm?.addEventListener('click', close);
-
-  const backdrop = el('div', { class: 'dialog-backdrop' }, [dialog]);
-  backdrop.addEventListener('click', (event) => {
-    if (event.target === backdrop) close();
-  });
-
-  const releaseFocus = trapFocus(dialog);
-
-  document.addEventListener('keydown', onKeyDown);
-  document.body.append(backdrop);
-  ctx.onCleanup(close);
-  closeButton.focus();
-}
-
-function subjectCard(ctx: Parameters<PageModule['render']>[0], subject: SubjectCard): HTMLElement {
+function subjectCard(subject: SubjectCard): HTMLElement {
   const isDevelopment = subject.status === 'development';
+  const hasContent = subject.level_count > 0 || subject.question_count > 0;
   const accent = subject.accent_color || '#58CC02';
 
-  const root = isDevelopment
-    ? el('button', {
-        class: 'subject-card subject-card--muted',
-        attrs: { type: 'button', 'aria-haspopup': 'dialog' },
-      })
-    : el('a', {
-        class: 'subject-card',
-        attrs: { href: `/learn/${subject.slug}` },
-      });
+  // "Dalam pengembangan" no longer blocks opening the map. Whether a level can
+  // actually be played is decided by its own bank, not by the subject label.
+  const root = el('a', {
+    class: `subject-card${isDevelopment && !hasContent ? ' subject-card--muted' : ''}`,
+    attrs: { href: `/learn/${subject.slug}` },
+  });
 
   root.style.setProperty('--subject-accent', accent);
-
-  if (isDevelopment) {
-    root.addEventListener('click', () => openDevelopmentDialog(ctx, subject.name));
-  }
 
   const iconBox = el('span', { class: 'subject-card__icon' }, [
     icon(subjectIconName(subject.icon_key), 24),
@@ -110,9 +33,11 @@ function subjectCard(ctx: Parameters<PageModule['render']>[0], subject: SubjectC
       : el('span', { class: 'badge' }, ['Aktif']);
 
   const metaRow = el('div', { class: 'subject-card__meta' }, [
-    isDevelopment
-      ? el('span', { text: 'Belum ada level dan soal' })
-      : el('span', { text: `${subject.level_count} level · ${formatNumber(subject.question_count)} soal` }),
+    el('span', {
+      text: hasContent
+        ? `${subject.level_count} level · ${formatNumber(subject.question_count)} soal`
+        : 'Belum ada level dan soal',
+    }),
   ]);
 
   const progress = el('div', {
@@ -137,29 +62,24 @@ function subjectCard(ctx: Parameters<PageModule['render']>[0], subject: SubjectC
     el('h2', { class: 'subject-card__title', text: subject.name }),
     el('p', { class: 'subject-card__description', text: subject.description }),
     metaRow,
-    isDevelopment
-      ? el('span', { class: 'subject-card__cta' }, [
-          'Lihat status',
-          icon('chevron-right', 16),
-        ])
-      : el('div', { class: 'subject-card__progress' }, [
-          progress,
-          el('span', {
-            class: 'subject-card__progress-label',
-            text:
-              subject.completedLevels > 0
-                ? `${subject.completedLevels}/${subject.level_count} level selesai`
-                : 'Belum dimulai',
-          }),
-        ]),
-    ...(isDevelopment
-      ? []
-      : [
-          el('span', { class: 'subject-card__cta' }, [
-            'Buka peta belajar',
-            icon('arrow-right', 16),
+    ...(hasContent
+      ? [
+          el('div', { class: 'subject-card__progress' }, [
+            progress,
+            el('span', {
+              class: 'subject-card__progress-label',
+              text:
+                subject.completedLevels > 0
+                  ? `${subject.completedLevels}/${subject.level_count} level selesai`
+                  : 'Belum dimulai',
+            }),
           ]),
-        ]),
+        ]
+      : []),
+    el('span', { class: 'subject-card__cta' }, [
+      hasContent ? 'Buka peta belajar' : 'Lihat peta belajar',
+      icon('arrow-right', 16),
+    ]),
   );
 
   return root;
@@ -212,7 +132,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
 
         if (subjects.length === 0) {
           listSlot.className = '';
-          listSlot.append(
+          listSlot.replaceChildren(
             el('div', { class: 'card empty-state' }, [
               el('span', { class: 'empty-state__art' }, [icon('book', 34)]),
               el('h2', { class: 'empty-state__title', text: 'Kurikulum belum tersedia' }),
@@ -248,8 +168,8 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
         );
 
         listSlot.className = '';
-        listSlot.append(
-          el('div', { class: 'subject-grid' }, subjects.map((subject) => subjectCard(ctx, subject))),
+        listSlot.replaceChildren(
+          el('div', { class: 'subject-grid' }, subjects.map((subject) => subjectCard(subject))),
           el('div', { class: 'banner banner--warning', style: { marginTop: '1.25rem' } }, [
             icon('info', 18),
             el('div', {}, [
@@ -271,7 +191,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
           'Coba lagi',
         ]);
         retry.addEventListener('click', load);
-        listSlot.append(
+        listSlot.replaceChildren(
           el('div', { class: 'card empty-state' }, [
             el('span', { class: 'empty-state__art' }, [icon('alert', 34)]),
             el('h2', { class: 'empty-state__title', text: 'Mata pelajaran gagal dimuat' }),

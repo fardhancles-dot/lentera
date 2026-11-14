@@ -10,6 +10,10 @@ import { el, formatNumber } from '../utils/dom';
 
 const meta = { title: 'Wallet' };
 
+// The wallet RPC returns up to 30 entries for future-proofing. The page only
+// shows the five newest; older rows stay untouched in the database.
+const HISTORY_LIMIT = 5;
+
 const SOURCE_LABELS: Record<string, string> = {
   lesson: 'Lesson selesai',
   practice: 'Sesi latihan',
@@ -362,15 +366,23 @@ function buildWallet(state: PlayerWallet): HTMLElement {
     ]),
 
     el('div', { class: 'wallet-history' }, [
-      el('section', { class: 'card card--padded' }, [
+      el('section', { class: 'card card--padded wallet-history__card' }, [
         el('h2', { class: 'card__title', text: 'Riwayat Koin' }),
-        el('p', { class: 'card__subtitle', text: '30 transaksi terakhir, terbaru lebih dulu.' }),
-        transactionList(state.transactions, 'coin', 'Belum ada transaksi Koin.'),
+        el('p', { class: 'card__subtitle', text: '5 aktivitas terbaru.' }),
+        transactionList(
+          state.transactions.slice(0, HISTORY_LIMIT),
+          'coin',
+          'Belum ada transaksi Koin.',
+        ),
       ]),
-      el('section', { class: 'card card--padded' }, [
+      el('section', { class: 'card card--padded wallet-history__card' }, [
         el('h2', { class: 'card__title', text: 'Riwayat XP' }),
-        el('p', { class: 'card__subtitle', text: 'XP dari lesson, latihan, dan hadiah quest.' }),
-        transactionList(state.xpTransactions, 'sparkles', 'Belum ada XP tercatat.'),
+        el('p', { class: 'card__subtitle', text: '5 aktivitas terbaru.' }),
+        transactionList(
+          state.xpTransactions.slice(0, HISTORY_LIMIT),
+          'sparkles',
+          'Belum ada XP tercatat.',
+        ),
       ]),
     ]),
   ]);

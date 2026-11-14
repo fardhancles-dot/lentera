@@ -9,17 +9,22 @@ import { lampMarkup } from './brandArt';
 export function brandMark(size: number, className = 'brand__mark'): HTMLElement {
   const logo = contentService.settings.logoUrl;
   if (logo) {
-    return el('span', { class: className }, [
-      el('img', {
-        attrs: {
-          src: logo,
-          alt: '',
-          width: size,
-          height: size,
-          style: `width:${size}px;height:${size}px;object-fit:contain;`,
-        },
-      }),
-    ]);
+    const wrap = el('span', { class: className });
+    const image = el('img', {
+      attrs: {
+        src: logo,
+        alt: '',
+        width: size,
+        height: size,
+        style: `width:${size}px;height:${size}px;object-fit:contain;`,
+      },
+    });
+    // A deleted or unreachable upload must not leave a broken brand image.
+    image.addEventListener('error', () => {
+      wrap.innerHTML = lampMarkup(size);
+    }, { once: true });
+    wrap.append(image);
+    return wrap;
   }
   return el('span', { class: className, html: lampMarkup(size) });
 }

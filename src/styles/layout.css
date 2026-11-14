@@ -423,11 +423,11 @@ html.app-drawer-open body {
   inset: 0 auto 0 0;
   display: flex;
   flex-direction: column;
-  width: min(320px, 86vw);
+  width: min(272px, 76vw);
   padding:
-    calc(14px + env(safe-area-inset-top, 0px))
-    var(--space-4)
-    calc(18px + env(safe-area-inset-bottom, 0px));
+    calc(12px + env(safe-area-inset-top, 0px))
+    var(--space-3)
+    calc(16px + env(safe-area-inset-bottom, 0px));
   background: #fff;
   box-shadow: 22px 0 60px -34px rgba(35, 48, 38, 0.6);
   transform: translateX(-102%);
@@ -442,8 +442,8 @@ html.app-drawer-open body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3);
-  padding: 0 0 var(--space-4);
+  gap: var(--space-2);
+  padding: 0 2px 10px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -455,34 +455,40 @@ html.app-drawer-open body {
 }
 
 .drawer__brand .brand__mark {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
 }
 
 .drawer__brand .brand__mark svg {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
 }
 
 .drawer__brand-name {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 
 .drawer__close {
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   flex: 0 0 auto;
+}
+
+.drawer__close svg {
+  width: 18px;
+  height: 18px;
 }
 
 .drawer__nav {
   display: grid;
-  gap: 4px;
+  gap: 2px;
+  align-content: start;
   flex: 1;
   min-height: 0;
-  margin-top: var(--space-4);
+  margin-top: 10px;
   padding-bottom: var(--space-3);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -492,13 +498,13 @@ html.app-drawer-open body {
 .drawer-nav__item {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  min-height: 54px;
-  padding: 0 var(--space-3);
-  border-radius: var(--radius-md);
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 8px;
+  border-radius: 12px;
   color: var(--ink-soft);
   font-weight: 800;
-  font-size: var(--text-sm);
+  font-size: 0.8125rem;
   text-decoration: none;
   transition:
     background-color 0.16s var(--ease-out),
@@ -518,12 +524,17 @@ html.app-drawer-open body {
 .drawer-nav__icon {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 26px;
+  height: 26px;
   flex: 0 0 auto;
-  border-radius: 11px;
+  border-radius: 8px;
   background: var(--green-50);
   color: var(--green-700);
+}
+
+.drawer-nav__icon svg {
+  width: 16px;
+  height: 16px;
 }
 
 .drawer-nav__item[aria-current='page'] .drawer-nav__icon {
@@ -539,6 +550,11 @@ html.app-drawer-open body {
   display: grid;
   place-items: center;
   color: var(--muted);
+}
+
+.drawer-nav__chevron svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* Bottom nav */

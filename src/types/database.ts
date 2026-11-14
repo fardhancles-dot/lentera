@@ -84,7 +84,9 @@ export type SubjectRow = {
   short_name: string | null;
   description: string;
   category: string;
+  learn_category: string;
   icon_key: string;
+  icon_url: string | null;
   accent_color: string;
   status: SubjectStatus;
   is_primary: boolean;
@@ -111,6 +113,8 @@ export type SubjectOverviewRow = {
   unit_count: number;
   lesson_count: number;
   question_count: number;
+  learn_category: string;
+  icon_url: string | null;
 };
 
 export type CourseRow = {
@@ -186,6 +190,18 @@ export type LearningNodeRow = {
   reward_coins: number;
   reward_xp: number;
   created_at: string;
+};
+
+export type LearningSectionRow = {
+  id: string;
+  subject_id: string;
+  title: string;
+  description: string;
+  start_level: number;
+  end_level: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 };
 
 export type LessonQuestionStatsRow = {
@@ -610,6 +626,12 @@ export type Database = {
       };
       learning_nodes: {
         Row: LearningNodeRow;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+        Relationships: [];
+      };
+      learning_sections: {
+        Row: LearningSectionRow;
         Insert: Record<string, unknown>;
         Update: Record<string, unknown>;
         Relationships: [];

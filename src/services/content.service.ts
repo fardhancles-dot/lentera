@@ -1,3 +1,4 @@
+import { basePath } from '../app/basePath';
 import { brand } from '../config/brand';
 import { contentRepository } from '../repositories/content.repository';
 import type {
@@ -134,14 +135,31 @@ function applyBranding(settings: PublicSiteSettings): void {
     if (description) description.content = settings.description;
   }
 
-  if (settings.faviconUrl) {
-    let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'icon';
-      document.head.append(link);
-    }
-    link.href = settings.faviconUrl;
+  const existing = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+  const link = existing ?? document.createElement('link');
+  if (!existing) {
+    link.rel = 'icon';
+    document.head.append(link);
+  }
+  const defaultFavicon = `${basePath}/favicon.svg`;
+  const useDefaultFavicon = (): void => {
+    link.href = defaultFavicon;
+    link.type = 'image/svg+xml';
+  };
+
+  if (!settings.faviconUrl) {
+    // Deleting the uploaded icon must restore the built-in Lentera favicon.
+    useDefaultFavicon();
+  } else {
+    const favicon = settings.faviconUrl;
+    link.removeAttribute('type');
+    link.setAttribute('href', favicon);
+    // Probe the upload; a missing file falls back without a broken tab icon.
+    const probe = new Image();
+    probe.addEventListener('error', () => {
+      if (link.getAttribute('href') === favicon) useDefaultFavicon();
+    }, { once: true });
+    probe.src = favicon;
   }
 }
 

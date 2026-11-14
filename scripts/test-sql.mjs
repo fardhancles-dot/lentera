@@ -75,6 +75,148 @@ try {
   await run('supabase/migrations/20261113100000_auto_levels.sql');
   await run('supabase/migrations/20261114100000_daily_goal_study_sessions.sql');
   await run('supabase/migrations/20261114101000_development_subject_lesson_access.sql');
+  await run('supabase/migrations/20261115100000_learning_sections.sql');
+  await run('supabase/migrations/20261115101000_subject_learn_categories.sql');
+  await run('supabase/migrations/20261115102000_subject_category_in_form.sql');
+  await run('supabase/migrations/20261115110000_subject_icon_url.sql');
+
+  const saveSubjectDef = await db.query(
+    `select pg_get_functiondef('public.admin_save_subject(jsonb,text)'::regprocedure) as def`,
+  );
+  check(
+    saveSubjectDef.rows[0].def.includes('learn_category'),
+    'admin_save_subject saves the subject category from the form payload',
+  );
+
+  // Learn categories are fixed to three values and every existing subject must
+  // land in Mapel Umum without touching its identity or content.
+  const categoryTotals = await db.query(
+    `select
+       (select count(*)::int from public.subjects) as subjects,
+       (select count(*)::int from public.subjects where learn_category = 'umum') as umum,
+       (select count(*)::int from public.subject_overview where learn_category = 'umum') as view_umum`,
+  );
+  check(
+    categoryTotals.rows[0].umum === categoryTotals.rows[0].subjects &&
+      categoryTotals.rows[0].view_umum === categoryTotals.rows[0].subjects,
+    'every existing subject starts in Mapel Umum and the catalog exposes it',
+    JSON.stringify(categoryTotals.rows[0]),
+  );
+
+  const newSubjectRow = await db.query(
+    `insert into public.subjects (slug, name, category, icon_key)
+     values ('uji-kategori', 'Uji Kategori', 'umum', 'book')
+     returning id, learn_category`,
+  );
+  check(
+    newSubjectRow.rows[0].learn_category === 'umum',
+    'a new subject defaults to Mapel Umum',
+    String(newSubjectRow.rows[0].learn_category),
+  );
+  await expectError(
+    'an unknown learn category is rejected',
+    'update public.subjects set learn_category = $2 where id = $1',
+    [newSubjectRow.rows[0].id, 'campuran'],
+    'subjects_learn_category_valid',
+  );
+  await db.query('delete from public.subjects where id = $1', [newSubjectRow.rows[0].id]);
+
+  // Uploaded subject icons are additive: the catalog exposes the URL while the
+  // built-in icon_key stays the fallback for subjects without an image.
+  const iconSubject = await db.query(
+    `insert into public.subjects (slug, name, category, icon_key, icon_url)
+     values ('uji-ikon', 'Uji Ikon', 'umum', 'book', 'https://example.test/icon.webp')
+     returning id`,
+  );
+  const iconView = await db.query(
+    `select icon_url, icon_key from public.subject_overview where slug = 'uji-ikon'`,
+  );
+  check(
+    iconView.rows[0].icon_url === 'https://example.test/icon.webp' &&
+      iconView.rows[0].icon_key === 'book',
+    'the catalog exposes an uploaded subject icon next to the fallback key',
+    JSON.stringify(iconView.rows[0]),
+  );
+  const saveIconDef = await db.query(
+    `select pg_get_functiondef('public.admin_save_subject(jsonb,text)'::regprocedure) as def`,
+  );
+  check(
+    saveIconDef.rows[0].def.includes('icon_url'),
+    'admin_save_subject stores the uploaded subject icon',
+  );
+  await db.query('delete from public.subjects where id = $1', [iconSubject.rows[0].id]);
+
+  // Material dividers are an additive map overlay: they must not touch levels.
+  const sectionSubject = await db.query(
+    `select id from public.subjects where slug = 'pemrograman-web'`,
+  );
+  const sectionSubjectId = sectionSubject.rows[0].id;
+  const insertedSections = await db.query(
+    `insert into public.learning_sections
+       (subject_id, title, description, start_level, end_level, is_active)
+     values ($1, 'Dasar', '', 1, 3, true), ($1, 'Draf', '', 4, 9, false)
+     returning id`,
+    [sectionSubjectId],
+  );
+  check(insertedSections.rows.length === 2, 'dividers store active and inactive rows');
+
+  await expectError(
+    'a divider range cannot be inverted',
+    `insert into public.learning_sections
+       (subject_id, title, description, start_level, end_level)
+     values ($1, 'Terbalik', '', 5, 2)`,
+    [sectionSubjectId],
+    'learning_sections_range_valid',
+  );
+
+  await db.exec('set role authenticated');
+  try {
+    const visibleSections = await db.query(
+      'select count(*)::int as count from public.learning_sections',
+    );
+    check(
+      visibleSections.rows[0].count === 1,
+      'players only read active dividers',
+      String(visibleSections.rows[0].count),
+    );
+    await expectError(
+      'players cannot write dividers directly',
+      `insert into public.learning_sections
+         (subject_id, title, description, start_level, end_level)
+       values ($1, 'Palsu', '', 10, 12)`,
+      [sectionSubjectId],
+      'permission denied',
+    );
+  } finally {
+    await db.exec('reset role');
+  }
+
+  const levelsBeforeDelete = await db.query(
+    `select count(*)::int as count
+     from public.learning_nodes n
+     join public.units u on u.id = n.unit_id
+     join public.course_levels lv on lv.id = u.course_level_id
+     join public.courses c on c.id = lv.course_id
+     where c.subject_id = $1`,
+    [sectionSubjectId],
+  );
+  await db.query('delete from public.learning_sections where id = $1', [
+    insertedSections.rows[0].id,
+  ]);
+  const levelsAfterDelete = await db.query(
+    `select count(*)::int as count
+     from public.learning_nodes n
+     join public.units u on u.id = n.unit_id
+     join public.course_levels lv on lv.id = u.course_level_id
+     join public.courses c on c.id = lv.course_id
+     where c.subject_id = $1`,
+    [sectionSubjectId],
+  );
+  check(
+    levelsBeforeDelete.rows[0].count === levelsAfterDelete.rows[0].count,
+    'deleting a divider leaves levels and questions untouched',
+    `${levelsBeforeDelete.rows[0].count} vs ${levelsAfterDelete.rows[0].count}`,
+  );
 
   const content = await db.query(`
     select

@@ -1,6 +1,12 @@
 import type { PageModule } from '../app/router';
 import { icon } from '../components/icons';
 import { subjectIconName } from '../components/subjectIcon';
+import {
+  DEFAULT_SUBJECT_CATEGORY,
+  SUBJECT_CATEGORIES,
+  normalizeSubjectCategory,
+  type SubjectCategoryKey,
+} from '../config/subjectCategories';
 import { pageHeader, renderAppLayout } from '../layouts/appLayout';
 import { curriculumService, type SubjectCard } from '../services/curriculum.service';
 import { sessionStore } from '../stores/session.store';
@@ -8,77 +14,57 @@ import { el, formatNumber } from '../utils/dom';
 
 const meta = { title: 'Belajar' };
 
+function summaryStat(value: number, label: string): HTMLElement {
+  return el('div', { class: 'stat' }, [
+    el('span', { class: 'stat__value', text: formatNumber(value) }),
+    el('span', { class: 'stat__label', text: label }),
+  ]);
+}
+
 function subjectCard(subject: SubjectCard): HTMLElement {
   const isDevelopment = subject.status === 'development';
-  const hasContent = subject.level_count > 0 || subject.question_count > 0;
   const accent = subject.accent_color || '#58CC02';
 
   // "Dalam pengembangan" no longer blocks opening the map. Whether a level can
   // actually be played is decided by its own bank, not by the subject label.
   const root = el('a', {
-    class: `subject-card${isDevelopment && !hasContent ? ' subject-card--muted' : ''}`,
+    class: 'subject-card',
     attrs: { href: `/learn/${subject.slug}` },
   });
 
   root.style.setProperty('--subject-accent', accent);
 
-  const iconBox = el('span', { class: 'subject-card__icon' }, [
-    icon(subjectIconName(subject.icon_key), 24),
-  ]);
+  // An admin-uploaded image wins; otherwise the built-in icon for icon_key is
+  // used, so a subject never shows a broken image.
+  const fallbackIcon = (): SVGElement => icon(subjectIconName(subject.icon_key), 22);
+  const image = subject.icon_url
+    ? el('img', {
+        attrs: {
+          src: subject.icon_url,
+          alt: '',
+          loading: 'lazy',
+          decoding: 'async',
+        },
+      })
+    : null;
+  // A removed or unreachable upload falls back to the built-in icon instead of
+  // leaving an empty box in the list.
+  image?.addEventListener('error', () => image.replaceWith(fallbackIcon()), { once: true });
 
-  const badge = isDevelopment
-    ? el('span', { class: 'badge badge--muted' }, ['Dalam pengembangan'])
-    : subject.question_count === 0
-      ? el('span', { class: 'badge badge--yellow' }, ['Bank soal menyusul'])
-      : el('span', { class: 'badge' }, ['Aktif']);
+  const iconBox = el('span', { class: 'subject-card__icon' }, [image ?? fallbackIcon()]);
 
-  const metaRow = el('div', { class: 'subject-card__meta' }, [
-    el('span', {
-      text: hasContent
-        ? `${subject.level_count} level · ${formatNumber(subject.question_count)} soal`
-        : 'Belum ada level dan soal',
-    }),
-  ]);
-
-  const progress = el('div', {
-    class: 'progress progress--thin',
-    attrs: {
-      role: 'progressbar',
-      'aria-label': `Progres ${subject.name}`,
-      'aria-valuemin': '0',
-      'aria-valuemax': '100',
-      'aria-valuenow': String(subject.progressPercent),
-    },
-  });
-  const bar = el('span', { class: 'progress__bar' });
-  bar.style.width = `${subject.progressPercent}%`;
-  progress.append(bar);
+  // Only subjects that cannot be played yet get a label; playable subjects
+  // show nothing but their icon and name.
+  const status =
+    isDevelopment || subject.question_count === 0 ? 'Dalam pengembangan' : '';
 
   root.append(
-    el('div', { class: 'subject-card__top' }, [
-      iconBox,
-      badge,
-    ]),
-    el('h2', { class: 'subject-card__title', text: subject.name }),
-    el('p', { class: 'subject-card__description', text: subject.description }),
-    metaRow,
-    ...(hasContent
-      ? [
-          el('div', { class: 'subject-card__progress' }, [
-            progress,
-            el('span', {
-              class: 'subject-card__progress-label',
-              text:
-                subject.completedLevels > 0
-                  ? `${subject.completedLevels}/${subject.level_count} level selesai`
-                  : 'Belum dimulai',
-            }),
-          ]),
-        ]
-      : []),
-    el('span', { class: 'subject-card__cta' }, [
-      hasContent ? 'Buka peta belajar' : 'Lihat peta belajar',
-      icon('arrow-right', 16),
+    iconBox,
+    el('div', { class: 'subject-card__body' }, [
+      el('h2', { class: 'subject-card__title', text: subject.name }),
+      status
+        ? el('span', { class: 'subject-card__status', text: status })
+        : null,
     ]),
   );
 
@@ -150,26 +136,106 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
         const levels = active.reduce((sum, subject) => sum + subject.level_count, 0);
         const questions = active.reduce((sum, subject) => sum + subject.question_count, 0);
 
-        summarySlot.append(
-          el('div', { class: 'learn-summary' }, [
-            el('div', { class: 'stat' }, [
-              el('span', { class: 'stat__value', text: String(active.length) }),
-              el('span', { class: 'stat__label', text: 'Mapel aktif' }),
+        // Exactly three fixed categories. Placement is admin-defined; nothing
+        // is grouped by subject name, and a missing value falls back to Umum.
+        const counts = new Map<SubjectCategoryKey, number>();
+        for (const subject of subjects) {
+          const key = normalizeSubjectCategory(subject.learn_category);
+          counts.set(key, (counts.get(key) ?? 0) + 1);
+        }
+
+        let activeCategory: SubjectCategoryKey = DEFAULT_SUBJECT_CATEGORY;
+
+        const tabs = SUBJECT_CATEGORIES.map((category) => {
+          const tab = el(
+            'button',
+            {
+              class: 'learn-category',
+              attrs: {
+                type: 'button',
+                'data-category': category.key,
+                'aria-pressed': 'false',
+                title: category.description,
+              },
+            },
+            [
+              el('span', { class: 'learn-category__label', text: category.label }),
+              el('span', {
+                class: 'learn-category__count',
+                text: String(counts.get(category.key) ?? 0),
+              }),
+            ],
+          );
+          tab.addEventListener('click', () => {
+            if (activeCategory === category.key) return;
+            activeCategory = category.key;
+            paint();
+          });
+          return { category, tab };
+        });
+
+        const gridSlot = el('div', {});
+
+        const paint = (): void => {
+          for (const { category, tab } of tabs) {
+            const selected = category.key === activeCategory;
+            tab.classList.toggle('is-active', selected);
+            tab.setAttribute('aria-pressed', String(selected));
+          }
+
+          const visible = subjects.filter(
+            (subject) => normalizeSubjectCategory(subject.learn_category) === activeCategory,
+          );
+          const visibleActive = visible.filter((subject) => subject.status === 'active');
+
+          summarySlot.replaceChildren(
+            el('div', { class: 'learn-summary' }, [
+              summaryStat(visibleActive.length, 'Mapel aktif'),
+              summaryStat(
+                visibleActive.reduce((sum, subject) => sum + subject.level_count, 0),
+                'Level',
+              ),
+              summaryStat(
+                visibleActive.reduce((sum, subject) => sum + subject.question_count, 0),
+                'Soal',
+              ),
             ]),
-            el('div', { class: 'stat' }, [
-              el('span', { class: 'stat__value', text: formatNumber(levels) }),
-              el('span', { class: 'stat__label', text: 'Level' }),
-            ]),
-            el('div', { class: 'stat' }, [
-              el('span', { class: 'stat__value', text: formatNumber(questions) }),
-              el('span', { class: 'stat__label', text: 'Soal' }),
-            ]),
-          ]),
-        );
+          );
+
+          if (visible.length === 0) {
+            gridSlot.replaceChildren(
+              el('div', { class: 'card empty-state' }, [
+                el('span', { class: 'empty-state__art' }, [icon('book', 34)]),
+                el('h2', { class: 'empty-state__title', text: 'Belum ada mata pelajaran' }),
+                el('p', {
+                  class: 'empty-state__body',
+                  text: 'Belum ada mata pelajaran dalam kategori ini.',
+                }),
+              ]),
+            );
+            return;
+          }
+
+          gridSlot.replaceChildren(
+            el(
+              'div',
+              { class: 'subject-grid' },
+              visible.map((subject) => subjectCard(subject)),
+            ),
+          );
+        };
 
         listSlot.className = '';
         listSlot.replaceChildren(
-          el('div', { class: 'subject-grid' }, subjects.map((subject) => subjectCard(subject))),
+          el(
+            'div',
+            {
+              class: 'learn-categories',
+              attrs: { role: 'group', 'aria-label': 'Kategori mata pelajaran' },
+            },
+            tabs.map(({ tab }) => tab),
+          ),
+          gridSlot,
           el('div', { class: 'banner banner--warning', style: { marginTop: '1.25rem' } }, [
             icon('info', 18),
             el('div', {}, [
@@ -181,6 +247,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
             ]),
           ]),
         );
+        paint();
       } catch (error) {
         console.error('[learn] failed to load subjects', error);
         if (!listSlot.isConnected) return;

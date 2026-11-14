@@ -100,11 +100,30 @@ export interface CurriculumSubject {
   description: string;
   category: string;
   iconKey: string;
+  iconUrl: string | null;
   accentColor: string;
   status: string;
   isPrimary: boolean;
   sortOrder: number;
   courses: CurriculumCourse[];
+}
+
+export interface AdminSubjectCategory {
+  id: string;
+  slug: string;
+  name: string;
+  status: string;
+  learnCategory: string;
+}
+
+export interface AdminLearningSection {
+  id: string;
+  subjectId: string;
+  title: string;
+  description: string;
+  startLevel: number;
+  endLevel: number;
+  isActive: boolean;
 }
 
 export interface AdminQuestionListItem {

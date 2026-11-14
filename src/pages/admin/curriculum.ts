@@ -1,14 +1,23 @@
+import { icon } from '../../components/icons';
+import { subjectIconName } from '../../components/subjectIcon';
 import { showToast } from '../../components/toast';
+import {
+  SUBJECT_CATEGORIES,
+  normalizeSubjectCategory,
+  subjectCategoryLabel,
+} from '../../config/subjectCategories';
 import { adminService } from '../../services/admin.service';
-import type { CurriculumLesson } from '../../types/admin';
+import type { AdminLearningSection, CurriculumLesson } from '../../types/admin';
 import type { Json } from '../../types/database';
 import { el, formatNumber } from '../../utils/dom';
 import { openQuestionById, openQuestionEditor, subjectLevels } from './questions';
 import { reorderControls } from './reorder';
 import type { AdminSectionContext } from './ui';
 import {
+  askReason,
   badge,
   button,
+  can,
   checkbox,
   errorState,
   field,
@@ -49,12 +58,37 @@ function hidden(name: string, value: string): HTMLInputElement {
   return input(name, value, 'hidden');
 }
 
+// Shows the current subject image (or the built-in fallback) and previews a
+// newly picked file before the form is submitted.
+function subjectIconUpload(currentUrl: string, iconKey: string): HTMLElement {
+  const preview = el('span', { class: 'admin-icon-preview' });
+  const paint = (url: string | null): void => {
+    preview.replaceChildren(
+      url
+        ? el('img', { attrs: { src: url, alt: '' } })
+        : icon(subjectIconName(iconKey), 22),
+    );
+  };
+  paint(currentUrl || null);
+
+  const file = input('iconFile', '', 'file', {
+    accept: 'image/png,image/jpeg,image/webp',
+  });
+  file.addEventListener('change', () => {
+    const selected = file.files?.[0];
+    paint(selected ? URL.createObjectURL(selected) : currentUrl || null);
+  });
+
+  return el('span', { class: 'admin-icon-upload' }, [preview, file]);
+}
+
 export function openCurriculumForm(
   kind: CurriculumKind,
   item: Record<string, unknown> | null,
   parentId: string,
   lessons: CurriculumLesson[],
   onDone: () => void,
+  options: { learnCategory?: string } = {},
 ): void {
   const content = el('div', { class: 'admin-form-grid' });
   const reason = input('reason', '', 'text', {
@@ -70,8 +104,29 @@ export function openCurriculumForm(
         field('Nama mapel', input('name', get(item, 'name'), 'text', { required: true, maxlength: '80' })),
         field('Slug', input('slug', get(item, 'slug'), 'text', { required: true, maxlength: '60' })),
         field('Nama pendek', input('shortName', get(item, 'shortName'))),
-        field('Kategori', input('category', get(item, 'category', ) || 'umum')),
-        field('Ikon', input('iconKey', get(item, 'iconKey') || 'book')),
+        hidden('category', get(item, 'category') || 'umum'),
+        field(
+          'Kategori mata pelajaran',
+          select(
+            'learnCategory',
+            SUBJECT_CATEGORIES.map((category) => ({
+              value: category.key,
+              label: category.label,
+            })),
+            normalizeSubjectCategory(options.learnCategory),
+          ),
+          'Menentukan tab mapel di halaman Belajar. Pilihan: Mapel Umum, Bahasa Daerah, Bahasa Asing.',
+        ),
+        field(
+          'Gambar ikon',
+          subjectIconUpload(get(item, 'iconUrl'), get(item, 'iconKey') || 'book'),
+          'PNG, JPG, atau WebP maksimal 2 MB. Tanpa gambar, ikon bawaan dipakai di card.',
+        ),
+        field(
+          'Ikon bawaan',
+          input('iconKey', get(item, 'iconKey') || 'book'),
+          'Dipakai bila belum ada gambar ikon. Contoh: book, calculator, language.',
+        ),
         field('Warna aksen', input('accentColor', get(item, 'accentColor') || '#58CC02', 'text', { pattern: '#[0-9A-Fa-f]{6}' })),
         field(
           'Status',
@@ -86,7 +141,7 @@ export function openCurriculumForm(
           ),
         ),
         field('Urutan', input('sortOrder', getNum(item, 'sortOrder'), 'number', { min: '0' })),
-        field('Deskripsi', textarea('description', get(item, 'description'), 3)),
+        hidden('description', get(item, 'description')),
         checkbox('isPrimary', getBool(item, 'isPrimary', false), 'Tampilkan sebagai mata pelajaran utama'),
       ]),
     );
@@ -232,7 +287,27 @@ export function openCurriculumForm(
           sortOrder: numOf(data, 'sortOrder'),
           description: valueOf(data, 'description'),
           isPrimary: boolOf(data, 'isPrimary'),
+          learnCategory: normalizeSubjectCategory(valueOf(data, 'learnCategory')),
         });
+
+        const iconFile = form.querySelector<HTMLInputElement>('input[name="iconFile"]')?.files?.[0];
+        if (iconFile) {
+          const mime = iconFile.type.toLowerCase();
+          if (!['image/png', 'image/jpeg', 'image/webp'].includes(mime)) {
+            throw new Error('Format ikon harus PNG, JPG, JPEG, atau WebP.');
+          }
+          if (iconFile.size > 2 * 1024 * 1024) {
+            throw new Error('Ukuran gambar ikon maksimal 2 MB.');
+          }
+          const media = await adminService.uploadMedia(
+            iconFile,
+            `Ikon ${valueOf(data, 'name')}`,
+            null,
+            null,
+          );
+          base.iconUrl = media.url;
+        }
+
         await adminService.saveSubject(base as Json, reasonText);
       } else if (kind === 'course') {
         Object.assign(base, {
@@ -305,6 +380,90 @@ export function openCurriculumForm(
   });
 }
 
+function openSectionForm(
+  subjectId: string,
+  section: AdminLearningSection | null,
+  onDone: () => void,
+): void {
+  const content = el('div', {});
+  content.append(
+    formGrid([
+      hidden('id', section?.id ?? ''),
+      field(
+        'Judul materi',
+        input('title', section?.title ?? '', 'text', {
+          required: true,
+          maxlength: '80',
+          placeholder: 'Contoh: Keluarga',
+        }),
+      ),
+      field(
+        'Level awal',
+        input('startLevel', section?.startLevel ?? 1, 'number', { min: '1', required: true }),
+        'Pemisah tampil tepat sebelum level ini.',
+      ),
+      field(
+        'Level akhir',
+        input('endLevel', section?.endLevel ?? 1, 'number', { min: '1', required: true }),
+      ),
+      field(
+        'Deskripsi (opsional)',
+        textarea('description', section?.description ?? '', 2, { maxlength: '280' }),
+      ),
+      checkbox('isActive', section?.isActive ?? true, 'Tampilkan pemisah di peta'),
+      field(
+        'Alasan perubahan',
+        input('reason', '', 'text', {
+          minlength: '3',
+          maxlength: '160',
+          placeholder: 'Contoh: menambah materi baru',
+        }),
+        'Wajib 3–160 karakter dan masuk audit log.',
+      ),
+    ]),
+    el('p', {
+      class: 'form-hint',
+      text: 'Pemisah hanya penanda materi. Nomor level, soal, progres, dan reward tidak diubah.',
+    }),
+  );
+
+  openDialog({
+    title: `${section ? 'Edit' : 'Tambah'} pemisah materi`,
+    subtitle: 'Judul tampil di peta permainan sebelum level awal rentangnya.',
+    content,
+    submitLabel: section ? 'Simpan perubahan' : 'Tambah pemisah',
+    onSubmit: async (form) => {
+      const data = new FormData(form);
+      const reasonText = valueOf(data, 'reason');
+      if (reasonText.length < 3) throw new Error('Alasan minimal 3 karakter.');
+      const title = valueOf(data, 'title').trim();
+      if (!title) throw new Error('Judul materi wajib diisi.');
+      const startLevel = numOf(data, 'startLevel', 0);
+      const endLevel = numOf(data, 'endLevel', 0);
+      if (startLevel < 1) throw new Error('Level awal minimal 1.');
+      if (endLevel < startLevel) {
+        throw new Error('Level akhir tidak boleh lebih kecil dari level awal.');
+      }
+
+      const id = valueOf(data, 'id');
+      await adminService.saveSection(
+        {
+          ...(id ? { id } : {}),
+          subjectId,
+          title,
+          description: valueOf(data, 'description').trim(),
+          startLevel,
+          endLevel,
+          isActive: boolOf(data, 'isActive'),
+        } as Json,
+        reasonText,
+      );
+      showToast('Pemisah materi tersimpan.', 'success');
+      onDone();
+    },
+  });
+}
+
 function detailsSummary(
   title: string,
   meta: string,
@@ -326,6 +485,16 @@ export async function renderCurriculum(ctx: AdminSectionContext): Promise<void> 
   try {
     const curriculum = await adminService.getCurriculum();
     const reload = () => void renderCurriculum(ctx);
+
+    // Kategori halaman Belajar. Only the category column is written, so IDs,
+    // levels, questions, and player progress stay attached to the same subject.
+    const categories = await adminService.listSubjectCategories().catch((error) => {
+      console.warn('[admin] kategori mapel tidak tersedia', error);
+      return [];
+    });
+    const learnCategoryBySubject = new Map(
+      categories.map((category) => [category.id, category.learnCategory] as const),
+    );
     const allLessons = curriculum.flatMap((subject) =>
       subject.courses.flatMap((course) =>
         course.levels.flatMap((level) =>
@@ -465,11 +634,15 @@ export async function renderCurriculum(ctx: AdminSectionContext): Promise<void> 
       tree.append(
         detailsSummary(
           subject.name,
-          `${subject.status} · ${subject.courses.length} kursus`,
+          `${subject.status} · ${subject.courses.length} kursus · ${subjectCategoryLabel(
+            learnCategoryBySubject.get(subject.id),
+          )}`,
           [
             reorderControls('subject', subjectIds, curriculum.indexOf(subject), reload),
             button('Edit mapel', 'settings', () =>
-              openCurriculumForm('subject', { ...subject }, subject.id, allLessons, reload)),
+              openCurriculumForm('subject', { ...subject }, subject.id, allLessons, reload, {
+                learnCategory: learnCategoryBySubject.get(subject.id),
+              })),
           ],
           children,
         ),
@@ -503,8 +676,99 @@ export async function renderMap(ctx: AdminSectionContext): Promise<void> {
       subjects[0]?.id ?? '',
     );
 
+    // Material dividers are optional labels over a level range. They never
+    // create levels or questions, so this panel only edits the label rows.
+    const canEdit = can(ctx, 'curriculum.edit');
+    const sectionsSlot = el('div', {});
+    let sectionSubjectId = subjectSelect.value;
+
+    const removeSection = async (
+      section: AdminLearningSection,
+      subjectId: string,
+    ): Promise<void> => {
+      const reason = await askReason(
+        'Hapus pemisah materi',
+        `Hapus penanda "${section.title}"? Level, soal, dan progres pemain tidak ikut terhapus.`,
+        'Hapus pemisah',
+      );
+      if (!reason) return;
+
+      try {
+        await adminService.deleteSection(section.id, reason);
+        showToast('Pemisah materi dihapus.', 'success');
+        void loadSections(subjectId);
+      } catch (error) {
+        showToast(
+          error instanceof Error ? error.message : 'Pemisah materi gagal dihapus.',
+          'error',
+        );
+      }
+    };
+
+    const loadSections = async (subjectId: string): Promise<void> => {
+      sectionSubjectId = subjectId;
+
+      if (!subjectId) {
+        sectionsSlot.replaceChildren(
+          el('p', { class: 'form-hint', text: 'Pilih mata pelajaran dulu.' }),
+        );
+        return;
+      }
+
+      sectionsSlot.replaceChildren(loading('Memuat pemisah materi…'));
+
+      try {
+        const sections = await adminService.listSections(subjectId);
+        if (!sectionsSlot.isConnected) return;
+
+        if (sections.length === 0) {
+          sectionsSlot.replaceChildren(
+            el('p', {
+              class: 'form-hint',
+              text: 'Belum ada pemisah materi. Peta tetap tampil seperti biasa tanpa penanda materi.',
+            }),
+          );
+          return;
+        }
+
+        sectionsSlot.replaceChildren(
+          table(
+            ['Materi', 'Rentang level', 'Status', 'Aksi'],
+            sections.map((section) => [
+              el('span', {}, [
+                el('strong', { text: section.title }),
+                section.description
+                  ? el('span', { class: 'admin-sub', text: ` ${section.description}` })
+                  : null,
+              ]),
+              `Level ${section.startLevel}–${section.endLevel}`,
+              badge(section.isActive ? 'Aktif' : 'Nonaktif', section.isActive ? 'ok' : 'muted'),
+              el('span', { class: 'admin-row-actions' }, [
+                canEdit
+                  ? button('Edit', 'settings', () =>
+                      openSectionForm(subjectId, section, () => void loadSections(subjectId)))
+                  : badge('Hanya baca', 'muted'),
+                canEdit
+                  ? button('Hapus', null, () => void removeSection(section, subjectId))
+                  : null,
+              ]),
+            ]),
+          ),
+        );
+      } catch (error) {
+        if (!sectionsSlot.isConnected) return;
+        sectionsSlot.replaceChildren(
+          errorState(
+            error instanceof Error ? error.message : 'Pemisah materi gagal dimuat.',
+            () => void loadSections(subjectId),
+          ),
+        );
+      }
+    };
+
     const draw = (): void => {
       const subject = curriculum.find((entry) => entry.id === subjectSelect.value);
+      void loadSections(subject?.id ?? '');
       const levels = subjectLevels(subject).sort(
         (a, b) => (a.levelNumber ?? 0) - (b.levelNumber ?? 0),
       );
@@ -569,21 +833,39 @@ export async function renderMap(ctx: AdminSectionContext): Promise<void> {
 
     subjectSelect.addEventListener('change', draw);
 
-    ctx.root.replaceChildren(
-      panel(
-        'Map level',
-        'Level dibuat dari soal di Bank Soal. Halaman ini memantau hubungan level dengan soal.',
-        [
-          el('div', { class: 'admin-filters' }, [subjectSelect]),
-          summary,
-          levelSlot,
-          el('p', {
-            class: 'form-hint',
-            text: 'Posisi, jalur, reward, dan animasi peta tetap memakai renderer yang sudah ada. Pengaturan node lanjutan tersedia di Struktur pembelajaran.',
-          }),
-        ],
-      ),
+    const mapPanel = panel(
+      'Map level',
+      'Level dibuat dari soal di Bank Soal. Halaman ini memantau hubungan level dengan soal.',
+      [
+        el('div', { class: 'admin-filters' }, [subjectSelect]),
+        summary,
+        levelSlot,
+        el('p', {
+          class: 'form-hint',
+          text: 'Posisi, jalur, reward, dan animasi peta tetap memakai renderer yang sudah ada. Pengaturan node lanjutan tersedia di Struktur pembelajaran.',
+        }),
+      ],
     );
+
+    const sectionsPanel = panel(
+      'Pemisah materi',
+      'Judul materi tampil di peta tepat sebelum level awal rentangnya. Level, soal, progres, dan reward tidak berubah.',
+      [sectionsSlot],
+      canEdit
+        ? [
+            button('Tambah pemisah', 'plus', () => {
+              const subjectId = sectionSubjectId;
+              if (!subjectId) {
+                showToast('Pilih mata pelajaran dulu.', 'error');
+                return;
+              }
+              openSectionForm(subjectId, null, () => void loadSections(subjectId));
+            }),
+          ]
+        : [],
+    );
+
+    ctx.root.replaceChildren(mapPanel, sectionsPanel);
     draw();
   } catch (error) {
     ctx.root.replaceChildren(

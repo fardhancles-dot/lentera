@@ -1,8 +1,10 @@
+import { lampMarkup } from '../../components/brandArt';
 import { showToast } from '../../components/toast';
 import { adminService } from '../../services/admin.service';
 import type { AdminAnnouncement, AdminContentPage, AdminSiteSettings } from '../../types/admin';
 import type { Json } from '../../types/database';
 import { el } from '../../utils/dom';
+import { createSquareImage } from '../../utils/squareImage';
 import { pickMedia } from './media';
 import type { AdminSectionContext } from './ui';
 import {
@@ -25,8 +27,169 @@ import {
   boolOf,
 } from './ui';
 
+function identityIconField(
+  settings: AdminSiteSettings,
+  logoUrl: HTMLInputElement,
+  faviconUrl: HTMLInputElement,
+): HTMLElement {
+  let currentUrl = settings.logoUrl || settings.faviconUrl;
+
+  const preview = el('span', { class: 'admin-identity__preview' });
+  const fallback = (): HTMLElement =>
+    el('span', { class: 'admin-identity__fallback', html: lampMarkup(40) });
+  const paint = (url: string): void => {
+    preview.replaceChildren();
+    if (!url) {
+      preview.append(fallback());
+      return;
+    }
+    const image = el('img', { attrs: { src: url, alt: 'Pratinjau ikon identitas' } });
+    image.addEventListener('error', () => preview.replaceChildren(fallback()), { once: true });
+    preview.append(image);
+  };
+
+  const file = el('input', {
+    class: 'admin-identity__file',
+    attrs: { type: 'file', accept: 'image/png,image/jpeg,image/webp' },
+  });
+  const upload = button(
+    currentUrl ? 'Ganti Gambar' : 'Upload Gambar',
+    null,
+    () => file.click(),
+    'primary',
+  );
+  const remove = button(
+    'Hapus Gambar',
+    'close',
+    () => {
+      void askConfirm(
+        'Hapus ikon identitas',
+        'Ikon bawaan Lentera akan dipakai lagi setelah pengaturan disimpan.',
+        'Hapus',
+      ).then((confirmed) => {
+        if (!confirmed) return;
+        setUrls('', '');
+        showToast('Ikon dihapus dari formulir. Simpan pengaturan untuk menerapkan.', 'success');
+      });
+    },
+    'danger',
+  );
+
+  const showState = (url: string): void => {
+    currentUrl = url;
+    paint(url);
+    upload.textContent = url ? 'Ganti Gambar' : 'Upload Gambar';
+    remove.style.display = url ? '' : 'none';
+  };
+
+  const setUrls = (logo: string, favicon: string): void => {
+    logoUrl.value = logo;
+    faviconUrl.value = favicon;
+    showState(logo || favicon);
+  };
+
+  // The URL fields stay available for manual overrides; keep the preview in
+  // sync with whatever the admin types.
+  const syncFromInputs = (): void => {
+    showState(logoUrl.value.trim() || faviconUrl.value.trim());
+  };
+  logoUrl.addEventListener('input', syncFromInputs);
+  faviconUrl.addEventListener('input', syncFromInputs);
+
+  const runUpload = async (selected: File): Promise<void> => {
+    const localUrl = URL.createObjectURL(selected);
+    paint(localUrl);
+    upload.disabled = true;
+    upload.textContent = 'Mengunggah…';
+    try {
+      const media = await adminService.uploadMedia(
+        selected,
+        'Ikon identitas website',
+        null,
+        null,
+      );
+
+      // Favicon gets its own square centre-crop so browsers never squeeze the
+      // original logo. If cropping fails, the original image remains usable.
+      let favicon = media.url;
+      let cropped = false;
+      try {
+        const square = await createSquareImage(selected);
+        const faviconMedia = await adminService.uploadMedia(
+          square,
+          'Favicon identitas website (persegi)',
+          null,
+          null,
+        );
+        favicon = faviconMedia.url;
+        cropped = true;
+      } catch (error) {
+        console.warn('[admin] favicon crop failed, using the original image', error);
+      }
+
+      setUrls(media.url, favicon);
+      showToast(
+        cropped
+          ? 'Ikon dan favicon persegi berhasil diunggah. Simpan pengaturan untuk menerapkan.'
+          : 'Ikon berhasil diunggah. Favicon memakai gambar asli karena pemotongan gagal.',
+        'success',
+      );
+    } catch (error) {
+      paint(currentUrl);
+      showToast(error instanceof Error ? error.message : 'Upload ikon gagal.', 'error');
+    } finally {
+      URL.revokeObjectURL(localUrl);
+      file.value = '';
+      upload.disabled = false;
+      upload.textContent = currentUrl ? 'Ganti Gambar' : 'Upload Gambar';
+    }
+  };
+
+  file.addEventListener('change', () => {
+    const selected = file.files?.[0];
+    if (!selected) return;
+    const mime = selected.type.toLowerCase();
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(mime)) {
+      showToast('Format ikon harus PNG, JPG, JPEG, atau WebP.', 'error');
+      file.value = '';
+      return;
+    }
+    if (selected.size > 2 * 1024 * 1024) {
+      showToast('Ukuran gambar ikon maksimal 2 MB.', 'error');
+      file.value = '';
+      return;
+    }
+    void runUpload(selected);
+  });
+
+  paint(currentUrl);
+  remove.style.display = currentUrl ? '' : 'none';
+
+  return el('div', { class: 'admin-field admin-identity-field' }, [
+    el('span', { class: 'admin-field__label', text: 'Ikon identitas website' }),
+    el('div', { class: 'admin-identity' }, [
+      preview,
+      el('div', { class: 'admin-identity__body' }, [
+        el('div', { class: 'admin-identity__actions' }, [upload, remove]),
+        file,
+        el('p', {
+          class: 'form-hint',
+          text: 'PNG, JPG, JPEG, atau WebP maksimal 2 MB. Favicon otomatis dipotong persegi dari bagian tengah gambar.',
+        }),
+        el('p', {
+          class: 'form-hint',
+          text: 'Dipakai di sidebar, header, halaman login, Admin Dashboard, dan favicon browser.',
+        }),
+      ]),
+    ]),
+  ]);
+}
+
 function settingsForm(settings: AdminSiteSettings, onSaved: () => void): HTMLElement {
+  const logoUrl = input('logoUrl', settings.logoUrl);
+  const faviconUrl = input('faviconUrl', settings.faviconUrl);
   const content = el('div', {}, [
+    identityIconField(settings, logoUrl, faviconUrl),
     formGrid([
       field('Nama website', input('siteName', settings.siteName, 'text', { required: true })),
       field('Tagline', input('tagline', settings.tagline)),
@@ -34,8 +197,8 @@ function settingsForm(settings: AdminSiteSettings, onSaved: () => void): HTMLEle
       field('Copyright', input('copyright', settings.copyright)),
       field('URL dukungan', input('supportUrl', settings.supportUrl)),
       field('Warna brand', input('primaryColor', settings.primaryColor, 'text', { pattern: '#[0-9A-Fa-f]{6}' })),
-      field('Favicon URL', input('faviconUrl', settings.faviconUrl)),
-      field('Logo URL', input('logoUrl', settings.logoUrl)),
+      field('Logo URL', logoUrl, 'Terisi otomatis dari upload; dapat diubah manual.'),
+      field('Favicon URL', faviconUrl, 'Kosongkan untuk memakai favicon bawaan Lentera.'),
       field('Judul hero', input('heroTitle', settings.heroTitle)),
       field('Deskripsi hero', textarea('heroDescription', settings.heroDescription, 2)),
       field('Label CTA', input('heroCtaLabel', settings.heroCtaLabel)),

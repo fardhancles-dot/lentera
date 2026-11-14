@@ -8,49 +8,6 @@ import { el, formatDate } from '../utils/dom';
 
 const meta = { title: 'Beranda' };
 
-const ROADMAP: Array<{ title: string; meta: string; state: 'done' | 'active' | 'todo' }> = [
-  {
-    title: 'Fondasi HTML5, Phaser, TypeScript, Supabase',
-    meta: 'Selesai — Vite, design system, router, Supabase client',
-    state: 'done',
-  },
-  {
-    title: 'Akun, login, profil, penyimpanan cloud',
-    meta: 'Aktif — register, reset password, profil, pengaturan, RLS',
-    state: 'done',
-  },
-  {
-    title: 'Mata pelajaran, level, unit, learning path, bank soal',
-    meta: 'Selesai — 10 mapel, 22 level, 57 lesson, 231 soal, 6 jenis node',
-    state: 'done',
-  },
-  {
-    title: 'Gameplay dan 20 mini-game',
-    meta: 'Selesai — lesson engine server-side, 20 mini-game, 12 tipe soal',
-    state: 'done',
-  },
-  {
-    title: 'XP, Koin, Hearts, Streak, dan wallet',
-    meta: 'Selesai — Hearts, Streak, level akun, quest, achievement, toko, dan riwayat wallet',
-    state: 'done',
-  },
-  {
-    title: 'Karakter, animasi, audio, adventure map',
-    meta: 'Selesai — peta Phaser, Kiko 13 state, audio sintetis, dan pipeline aset',
-    state: 'done',
-  },
-  {
-    title: 'Leaderboard, teman, Quest, sistem sosial',
-    meta: 'Selesai — Friends Quest, pertemanan, liga, leaderboard, event, dan notifikasi',
-    state: 'done',
-  },
-  {
-    title: 'Developer Dashboard dan administrasi',
-    meta: 'Dashboard, Reward Center, broadcast, dan audit log selesai; CRUD konten berikutnya',
-    state: 'done',
-  },
-];
-
 const ROLE_LABEL = {
   player: 'Pemain',
   admin: 'Admin',
@@ -158,35 +115,6 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     ]),
   ]);
 
-  const roadmapCard = el('section', { class: 'card card--padded' }, [
-    el('div', { class: 'card__header' }, [
-      el('div', {}, [
-        el('h2', { class: 'card__title', text: 'Peta pembangunan' }),
-        el('p', {
-          class: 'card__subtitle',
-          text: 'Ditampilkan terbuka supaya tidak ada fitur yang diklaim selesai sebelum benar-benar bekerja.',
-        }),
-      ]),
-    ]),
-    el(
-      'ol',
-      { class: 'roadmap' },
-      ROADMAP.map((item, index) =>
-        el('li', { class: 'roadmap__item', dataset: { state: item.state } }, [
-          el(
-            'span',
-            { class: 'roadmap__marker' },
-            [item.state === 'done' ? icon('check', 15) : String(index + 1)],
-          ),
-          el('div', {}, [
-            el('p', { class: 'roadmap__title', text: item.title }),
-            el('p', { class: 'roadmap__meta', text: item.meta }),
-          ]),
-        ]),
-      ),
-    ),
-  ]);
-
   const accountCard = el('section', { class: 'card card--padded' }, [
     el('div', { class: 'card__header' }, [
       el('div', {}, [
@@ -199,20 +127,6 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       summaryRow('Email', email),
       summaryRow('Peran', el('span', { class: 'badge badge--muted', text: ROLE_LABEL[role] })),
       summaryRow('Bergabung', formatDate(profile.created_at)),
-    ]),
-  ]);
-
-  const statusCard = el('section', { class: 'card card--padded' }, [
-    el('h2', { class: 'card__title', text: 'Status sistem' }),
-    el('p', { class: 'card__subtitle', text: 'Yang sudah aktif untuk akunmu saat ini.' }),
-    el('div', { class: 'status-list' }, [
-      statusItem('Sesi aman dengan Supabase Auth'),
-      statusItem('Profil & pengaturan tersimpan di cloud'),
-      statusItem('Row Level Security aktif di database'),
-      statusItem('Kurikulum dan bank soal tersimpan di database'),
-      statusItem('Lesson dinilai di server; XP & Koin tercatat'),
-      statusItem('Hearts, Streak, level, dan wallet dihitung server'),
-      statusItem('Developer Dashboard dan audit log staff-only aktif'),
     ]),
   ]);
 
@@ -233,8 +147,8 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
   const content = el('div', {}, [
     greetingCard,
     el('div', { class: 'dashboard-grid', style: { marginTop: '1.25rem' } }, [
-      el('div', { class: 'dashboard-main' }, [goalCard, roadmapCard]),
-      el('div', { class: 'dashboard-aside' }, [accountCard, statusCard, tipCard]),
+      el('div', { class: 'dashboard-main' }, [goalCard]),
+      el('div', { class: 'dashboard-aside' }, [accountCard, tipCard]),
     ]),
   ]);
 
@@ -271,13 +185,6 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       console.error('[home] failed to load daily goal', error);
       goalDetail.textContent = 'Progres belajar hari ini belum bisa dimuat. Coba muat ulang halaman.';
     });
-}
-
-function statusItem(text: string): HTMLElement {
-  return el('div', { class: 'status-item' }, [
-    el('span', { class: 'status-item__icon' }, [icon('check', 14)]),
-    el('span', { text }),
-  ]);
 }
 
 export { meta, render };

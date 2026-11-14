@@ -1,4 +1,4 @@
-import type { PathLevel, PathNode } from '../../services/curriculum.service';
+import type { PathLevel, PathNode, PathSection } from '../../services/curriculum.service';
 
 export type JourneyStopKind = 'level' | 'reward';
 
@@ -28,6 +28,33 @@ export interface JourneyLayoutOptions {
 export interface JourneyLayout {
   positions: JourneyPosition[];
   height: number;
+}
+
+export interface JourneyDividerEntry {
+  kind: 'divider';
+  section: PathSection;
+  /** Vertical centre of the divider label, in track pixels. */
+  y: number;
+}
+
+export interface JourneyStopEntry {
+  kind: 'stop';
+  stop: JourneyStop;
+  /** Index of this stop among all stops, not among map entries. */
+  stopIndex: number;
+  position: JourneyPosition;
+}
+
+export type JourneyEntry = JourneyDividerEntry | JourneyStopEntry;
+
+export interface JourneyTimeline extends JourneyLayout {
+  entries: JourneyEntry[];
+  /** Consecutive stop indexes between dividers, so the trail can pause there. */
+  groups: number[][];
+}
+
+export interface JourneyTimelineOptions extends JourneyLayoutOptions {
+  dividerGap?: number;
 }
 
 /**
@@ -128,6 +155,89 @@ export function layoutJourney(
   return {
     positions,
     height: top + Math.max(0, stops.length - 1) * step + bottom,
+  };
+}
+
+/**
+ * Places section dividers just before the level their range starts at. Dividers
+ * only consume vertical space, so level numbers, unlock order, and stop ids stay
+ * exactly as the database produced them. Sections that start past the last
+ * level are ignored rather than inventing a stop.
+ */
+export function buildJourneyTimeline(
+  stops: readonly JourneyStop[],
+  sections: readonly PathSection[] = [],
+  options: JourneyTimelineOptions = {},
+): JourneyTimeline {
+  const step = options.step ?? 112;
+  const top = options.top ?? 128;
+  const bottom = options.bottom ?? 150;
+  const dividerGap = options.dividerGap ?? 120;
+  const pattern = [50, 30, 70, 40, 60];
+
+  const pending = [...sections]
+    .filter(
+      (section) =>
+        Number.isFinite(section.startLevel) &&
+        Number.isFinite(section.endLevel) &&
+        section.startLevel >= 1 &&
+        section.endLevel >= section.startLevel,
+    )
+    .sort((a, b) => a.startLevel - b.startLevel);
+
+  const entries: JourneyEntry[] = [];
+  const positions: JourneyPosition[] = [];
+  const groups: number[][] = [];
+  let group: number[] = [];
+  let cursor = top;
+  let pendingIndex = 0;
+  let stopIndex = 0;
+
+  for (const stop of stops) {
+    // A divider opens a new material block, so it is placed before a level
+    // stop and always breaks the trail instead of crossing the label.
+    if (stop.kind === 'level') {
+      while (
+        pendingIndex < pending.length &&
+        pending[pendingIndex]!.startLevel <= stop.levelNumber
+      ) {
+        const section = pending[pendingIndex]!;
+        pendingIndex += 1;
+        if (group.length > 0) {
+          groups.push(group);
+          group = [];
+        }
+        // Centre the bare title in the free space between the previous level
+        // label (~66px below its centre) and the next level button, so the text
+        // never sits underneath an orb or the connecting trail.
+        entries.push({
+          kind: 'divider',
+          section,
+          y: cursor + dividerGap / 2 - 56,
+        });
+        cursor += dividerGap;
+      }
+    }
+
+    const position: JourneyPosition = {
+      x: stop.kind === 'reward' ? 50 : pattern[stopIndex % pattern.length]!,
+      y: cursor,
+    };
+
+    positions.push(position);
+    entries.push({ kind: 'stop', stop, stopIndex, position });
+    group.push(stopIndex);
+    stopIndex += 1;
+    cursor += step;
+  }
+
+  if (group.length > 0) groups.push(group);
+
+  return {
+    entries,
+    positions,
+    groups,
+    height: stops.length === 0 ? top + bottom : cursor - step + bottom,
   };
 }
 

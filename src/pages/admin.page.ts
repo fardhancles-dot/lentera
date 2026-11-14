@@ -1,6 +1,6 @@
 import type { PageModule } from '../app/router';
 import { avatar } from '../components/avatar';
-import { lampMarkup } from '../components/brandArt';
+import { brandMark } from '../components/brandMark';
 import { icon, type IconName } from '../components/icons';
 import { showToast } from '../components/toast';
 import { adminService } from '../services/admin.service';
@@ -192,7 +192,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
 
       const sidebar = el('aside', { class: 'admin-sidebar', attrs: { 'aria-label': 'Sidebar admin' } }, [
         el('a', { class: 'admin-brand', attrs: { href: '/admin' } }, [
-          el('span', { class: 'admin-brand__mark', html: lampMarkup(28) }),
+          brandMark(30, 'admin-brand__mark'),
           el('span', { class: 'admin-brand__text' }, [
             el('strong', { text: 'Lentera' }),
             el('span', { text: 'Admin CMS' }),

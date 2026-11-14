@@ -463,33 +463,24 @@
 .practice-grid {
   display: grid;
   gap: var(--space-4);
-  grid-template-columns: minmax(0, 1fr);
-}
-
-@media (min-width: 720px) {
-  .practice-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1280px) {
-  .practice-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+  /* Adapts to the real content width, so the desktop sidebar cannot squeeze
+     three columns into cards narrower than the tablet layout. */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
 }
 
 .practice-mode {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
   min-width: 0;
+  padding: var(--space-5);
 }
 
 .practice-mode__top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: var(--space-2);
 }
 
@@ -498,13 +489,26 @@
   place-items: center;
   width: 46px;
   height: 46px;
+  flex: 0 0 auto;
   border-radius: var(--radius-md);
   background: var(--green-100);
   color: var(--green-700);
 }
 
+/* Meta can be long ("90 detik · poin kecepatan · combo"). Let it wrap inside
+   the card instead of forcing the card wider than its grid column. */
+.practice-mode__top .badge {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 .practice-mode__title {
   font-size: var(--text-lg);
+  line-height: 1.25;
   overflow-wrap: anywhere;
 }
 
@@ -512,6 +516,7 @@
   color: var(--muted-strong);
   font-weight: 600;
   font-size: var(--text-sm);
+  line-height: 1.55;
   overflow-wrap: anywhere;
 }
 
@@ -595,24 +600,14 @@
   border-color: #f2dea1;
 }
 
-@media (min-width: 640px) {
-  .practice-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1040px) {
-  .practice-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
 /* Friends Quest */
 .friend-quest-cta {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  min-width: 0;
   margin: var(--space-4) 0;
+  padding: var(--space-4);
   color: inherit;
   text-decoration: none;
 }

@@ -1,13 +1,13 @@
 import { icon, type IconName } from './icons';
 import { subjectIconName } from './subjectIcon';
-import type { SubjectPath } from '../services/curriculum.service';
+import type { PathSection, SubjectPath } from '../services/curriculum.service';
 import { el, formatNumber } from '../utils/dom';
 import {
   activeJourneyIndex,
   buildJourneyStops,
+  buildJourneyTimeline,
   journeyPathD,
   journeySegmentD,
-  layoutJourney,
   type JourneyPosition,
   type JourneyStop,
 } from '../game/journey/model';
@@ -136,6 +136,7 @@ function appendTrail(
   svg: SVGSVGElement,
   stops: readonly JourneyStop[],
   positions: readonly JourneyPosition[],
+  groups: readonly number[][],
   height: number,
 ): void {
   svg.setAttribute('viewBox', `0 0 1000 ${height}`);
@@ -145,26 +146,54 @@ function appendTrail(
 
   if (positions.length === 0) return;
 
-  const base = document.createElementNS(SVG_NS, 'path');
-  base.setAttribute('d', journeyPathD(positions));
-  base.setAttribute('class', 'journey-map__trail-base');
-  base.setAttribute('vector-effect', 'non-scaling-stroke');
-  svg.append(base);
+  // The trail pauses at every material divider, so a section label never sits
+  // on top of the connecting line.
+  const trailGroups: readonly number[][] =
+    groups.length > 0 ? groups : [positions.map((_, index) => index)];
 
-  for (let index = 1; index < stops.length; index += 1) {
-    const segment = document.createElementNS(SVG_NS, 'path');
-    const state = stopState(stops[index]!);
-    segment.setAttribute(
-      'd',
-      journeySegmentD(positions[index - 1]!, positions[index]!),
-    );
-    segment.setAttribute(
-      'class',
-      `journey-map__trail-piece journey-map__trail-piece--${state}`,
-    );
-    segment.setAttribute('vector-effect', 'non-scaling-stroke');
-    svg.append(segment);
+  for (const group of trailGroups) {
+    if (group.length === 0) continue;
+    const groupPositions = group.map((index) => positions[index]!);
+
+    if (groupPositions.length > 1) {
+      const base = document.createElementNS(SVG_NS, 'path');
+      base.setAttribute('d', journeyPathD(groupPositions));
+      base.setAttribute('class', 'journey-map__trail-base');
+      base.setAttribute('vector-effect', 'non-scaling-stroke');
+      svg.append(base);
+    }
+
+    for (let index = 1; index < group.length; index += 1) {
+      const segment = document.createElementNS(SVG_NS, 'path');
+      const state = stopState(stops[group[index]!]!);
+      segment.setAttribute(
+        'd',
+        journeySegmentD(positions[group[index - 1]!]!, positions[group[index]!]!),
+      );
+      segment.setAttribute(
+        'class',
+        `journey-map__trail-piece journey-map__trail-piece--${state}`,
+      );
+      segment.setAttribute('vector-effect', 'non-scaling-stroke');
+      svg.append(segment);
+    }
   }
+}
+
+function createSectionDivider(section: PathSection, top: number): HTMLElement {
+  const element = el(
+    'h2',
+    {
+      class: 'journey-section',
+      attrs: {
+        'data-section-id': section.id,
+        'aria-label': `Materi: ${section.title}`,
+      },
+    },
+    [el('span', { class: 'journey-section__title', text: section.title })],
+  );
+  element.style.top = `${top}px`;
+  return element;
 }
 
 function createStop(
@@ -269,7 +298,7 @@ export function createLearningJourney(
 ): LearningJourneyHandle {
   const subject = path.subject;
   const stops = buildJourneyStops(path.levels);
-  const layout = layoutJourney(stops);
+  const timeline = buildJourneyTimeline(stops, path.sections ?? []);
   const activeIndex = activeJourneyIndex(stops);
   const reducedMotion = options.reducedMotion ?? false;
   const onLocked = options.onLocked ?? (() => undefined);
@@ -293,8 +322,22 @@ export function createLearningJourney(
     [icon('arrow-left', 20)],
   );
 
+  const fallbackIcon = (): SVGElement => icon(subjectIconName(subject.icon_key), 22);
+  const subjectImage =
+    typeof subject.icon_url === 'string' && subject.icon_url
+      ? el('img', {
+          attrs: {
+            src: subject.icon_url,
+            alt: '',
+            decoding: 'async',
+          },
+        })
+      : null;
+  subjectImage?.addEventListener('error', () => subjectImage.replaceWith(fallbackIcon()), {
+    once: true,
+  });
   const subjectBadge = el('span', { class: 'journey-map__subject-icon' }, [
-    icon(subjectIconName(subject.icon_key), 22),
+    subjectImage ?? fallbackIcon(),
   ]);
 
   const identity = el('div', { class: 'journey-map__identity' }, [
@@ -348,10 +391,10 @@ export function createLearningJourney(
   });
 
   const track = el('div', { class: 'journey-map__track' });
-  track.style.height = `${layout.height}px`;
+  track.style.height = `${timeline.height}px`;
 
   const svg = document.createElementNS(SVG_NS, 'svg');
-  appendTrail(svg, stops, layout.positions, layout.height);
+  appendTrail(svg, stops, timeline.positions, timeline.groups, timeline.height);
   track.append(svg);
 
   const stopElements: HTMLElement[] = [];
@@ -374,19 +417,24 @@ export function createLearningJourney(
     }, 120);
   };
 
-  stops.forEach((stop, index) => {
+  for (const entry of timeline.entries) {
+    if (entry.kind === 'divider') {
+      track.append(createSectionDivider(entry.section, entry.y));
+      continue;
+    }
+
     const element = createStop(
-      stop,
-      layout.positions[index]!,
+      entry.stop,
+      entry.position,
       activeIndex,
-      index,
+      entry.stopIndex,
       subject.slug,
       onLocked,
       saveScroll,
     );
-    stopElements.push(element);
+    stopElements[entry.stopIndex] = element;
     track.append(element);
-  });
+  }
 
   const activeStop = activeIndex >= 0 ? stops[activeIndex] : null;
   const live = el('p', {

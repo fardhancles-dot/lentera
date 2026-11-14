@@ -61,6 +61,13 @@ export const adminRepository = {
     call('admin_set_user_role', { p_user_id: userId, p_role: role, p_reason: reason }),
 
   getCurriculum: () => call('admin_list_curriculum'),
+  listSubjectCategories: () => call('admin_list_subject_categories'),
+  setSubjectCategory: (subjectId: string, category: string, reason: string) =>
+    call('admin_set_subject_category', {
+      p_subject_id: subjectId,
+      p_category: category,
+      p_reason: reason,
+    }),
   saveSubject: (payload: Json, reason: string) =>
     call('admin_save_subject', { p_payload: payload, p_reason: reason }),
   saveCourse: (payload: Json, reason: string) =>
@@ -73,6 +80,12 @@ export const adminRepository = {
     call('admin_save_lesson', { p_payload: payload, p_reason: reason }),
   saveNode: (payload: Json, reason: string) =>
     call('admin_save_node', { p_payload: payload, p_reason: reason }),
+  listSections: (subjectId: string | null) =>
+    call('admin_list_learning_sections', { p_subject_id: subjectId }),
+  saveSection: (payload: Json, reason: string) =>
+    call('admin_save_learning_section', { p_payload: payload, p_reason: reason }),
+  deleteSection: (sectionId: string, reason: string) =>
+    call('admin_delete_learning_section', { p_section_id: sectionId, p_reason: reason }),
   reorder: (entity: string, ids: string[], reason: string) =>
     call('admin_reorder', { p_entity: entity, p_ids: ids, p_reason: reason }),
 

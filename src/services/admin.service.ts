@@ -9,6 +9,7 @@ import type {
   AdminContext,
   AdminFriendQuest,
   AdminGamification,
+  AdminLearningSection,
   AdminMediaItem,
   AdminOverview,
   AdminPageResult,
@@ -16,6 +17,7 @@ import type {
   AdminQuestionListItem,
   AdminSiteSettings,
   AdminSocialLink,
+  AdminSubjectCategory,
   AdminUser,
   AdminUserDetail,
   CurriculumSubject,
@@ -29,9 +31,17 @@ const ERROR_MESSAGES: Record<string, string> = {
   subject_not_found: 'Mata pelajaran tidak ditemukan.',
   course_not_found: 'Kursus tidak ditemukan.',
   level_not_found: 'Level tidak ditemukan.',
+  section_not_found: 'Pemisah materi tidak ditemukan.',
+  section_title_invalid: 'Judul materi wajib diisi, maksimal 80 karakter.',
+  section_description_invalid: 'Deskripsi materi maksimal 280 karakter.',
+  section_range_invalid: 'Level awal minimal 1 dan tidak boleh melebihi level akhir.',
+  section_range_overlap:
+    'Rentang level bertabrakan dengan pemisah materi lain yang aktif pada mapel ini.',
   unit_not_found: 'Unit tidak ditemukan.',
   lesson_not_found: 'Lesson tidak ditemukan.',
   question_not_found: 'Soal tidak ditemukan.',
+  subject_category_invalid:
+    'Kategori mata pelajaran harus Mapel Umum, Bahasa Daerah, atau Bahasa Asing.',
   question_prompt_required: 'Pertanyaan wajib diisi.',
   question_options_required: 'Tipe soal ini membutuhkan minimal dua pilihan.',
   question_exactly_one_correct: 'Tepat satu pilihan harus menjadi kunci jawaban.',
@@ -257,6 +267,30 @@ function parseQuestionItem(value: unknown): AdminQuestionListItem {
   };
 }
 
+function parseSubjectCategory(value: unknown): AdminSubjectCategory {
+  const data = record(value);
+  return {
+    id: str(data.id),
+    slug: str(data.slug),
+    name: str(data.name),
+    status: str(data.status, 'active'),
+    learnCategory: str(data.learnCategory, 'umum'),
+  };
+}
+
+function parseSection(value: unknown): AdminLearningSection {
+  const data = record(value);
+  return {
+    id: str(data.id),
+    subjectId: str(data.subjectId),
+    title: str(data.title),
+    description: str(data.description),
+    startLevel: num(data.startLevel, 1),
+    endLevel: num(data.endLevel, 1),
+    isActive: bool(data.isActive, true),
+  };
+}
+
 function parseQuestion(value: Json): AdminQuestion {
   const data = record(value);
   return {
@@ -311,7 +345,7 @@ function parseQuestion(value: Json): AdminQuestion {
 }
 
 function parseCurriculum(value: Json): CurriculumSubject[] {
-  return array(value).map((item) => {
+  const subjects = array(value).map((item) => {
     const subject = record(item);
     return {
       id: str(subject.id),
@@ -321,6 +355,7 @@ function parseCurriculum(value: Json): CurriculumSubject[] {
       description: str(subject.description),
       category: str(subject.category),
       iconKey: str(subject.iconKey, 'book'),
+      iconUrl: typeof subject.iconUrl === 'string' ? subject.iconUrl : null,
       accentColor: str(subject.accentColor, '#58CC02'),
       status: str(subject.status, 'development'),
       isPrimary: bool(subject.isPrimary),
@@ -410,6 +445,13 @@ function parseCurriculum(value: Json): CurriculumSubject[] {
       }),
     };
   });
+
+  // admin_list_curriculum aggregates subjects with a text sortOrder, which puts
+  // "10" before "2". Sort numerically so the up/down controls and the order
+  // saved in the database always agree.
+  return subjects.sort(
+    (a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name),
+  );
 }
 
 function parseMedia(value: unknown): AdminMediaItem {
@@ -604,6 +646,12 @@ export const adminService = {
     run(() => adminRepository.setUserRole(userId, newRole, reason), (value) => record(value)),
 
   getCurriculum: () => run(() => adminRepository.getCurriculum(), parseCurriculum),
+  listSubjectCategories: () =>
+    run(() => adminRepository.listSubjectCategories(), parseOthers(parseSubjectCategory)),
+  setSubjectCategory: (subjectId: string, category: string, reason: string) =>
+    run(() => adminRepository.setSubjectCategory(subjectId, category, reason), (value) =>
+      record(value),
+    ),
   saveSubject: (payload: Json, reason: string) =>
     run(() => adminRepository.saveSubject(payload, reason), (value) => record(value)),
   saveCourse: (payload: Json, reason: string) =>
@@ -616,6 +664,12 @@ export const adminService = {
     run(() => adminRepository.saveLesson(payload, reason), (value) => record(value)),
   saveNode: (payload: Json, reason: string) =>
     run(() => adminRepository.saveNode(payload, reason), (value) => record(value)),
+  listSections: (subjectId: string | null) =>
+    run(() => adminRepository.listSections(subjectId), parseOthers(parseSection)),
+  saveSection: (payload: Json, reason: string) =>
+    run(() => adminRepository.saveSection(payload, reason), (value) => record(value)),
+  deleteSection: (sectionId: string, reason: string) =>
+    run(() => adminRepository.deleteSection(sectionId, reason), (value) => record(value)),
   reorder: (entity: string, ids: string[], reason: string) =>
     run(() => adminRepository.reorder(entity, ids, reason), (value) => record(value)),
 

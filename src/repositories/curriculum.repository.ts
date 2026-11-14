@@ -3,6 +3,7 @@ import type {
   CourseLevelRow,
   CourseRow,
   LearningNodeRow,
+  LearningSectionRow,
   LessonQuestionStatsRow,
   LessonRow,
   SubjectOverviewRow,
@@ -156,10 +157,12 @@ async function listSubjectsFromTables(): Promise<SubjectOverviewRow[]> {
         description: subject.description,
         category: subject.category,
         icon_key: subject.icon_key,
+        icon_url: subject.icon_url ?? null,
         accent_color: subject.accent_color,
         status: subject.status,
         is_primary: subject.is_primary,
         sort_order: subject.sort_order,
+        learn_category: subject.learn_category || 'umum',
         course_id: courseId,
         level_count: courseLevels.length,
         unit_count: courseUnits.length,
@@ -227,6 +230,19 @@ export const curriculumRepository = {
       .order('sort_order', { ascending: true });
     if (error) raise(error);
     return data;
+  },
+
+  /** Active map dividers for one subject, ordered by their first level. */
+  async listSections(subjectId: string): Promise<LearningSectionRow[]> {
+    if (!subjectId) return [];
+    const { data, error } = await requireSupabase()
+      .from('learning_sections')
+      .select('*')
+      .eq('subject_id', subjectId)
+      .eq('is_active', true)
+      .order('start_level', { ascending: true });
+    if (error) raise(error);
+    return data ?? [];
   },
 
   async listUnits(levelIds: string[]): Promise<UnitRow[]> {

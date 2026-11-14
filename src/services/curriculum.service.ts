@@ -61,10 +61,20 @@ export interface PathLevel {
   units: PathUnit[];
 }
 
+/** A divider label over a level range. It never creates or renumbers a level. */
+export interface PathSection {
+  id: string;
+  title: string;
+  description: string;
+  startLevel: number;
+  endLevel: number;
+}
+
 export interface SubjectPath {
   subject: SubjectRow;
   course: CourseRow | null;
   levels: PathLevel[];
+  sections: PathSection[];
   totalNodes: number;
   completedNodes: number;
   questionCount: number;
@@ -154,6 +164,20 @@ export const curriculumService = {
     const subject = await curriculumRepository.fetchSubject(slug);
     if (!subject) return null;
 
+    // Sections are an optional overlay on the map. A database that has not run
+    // the migration yet keeps rendering exactly the same journey as before.
+    const sections = await curriculumRepository.listSections(subject.id).catch((error) => {
+      console.warn('[curriculum] pemisah materi tidak tersedia:', error);
+      return [];
+    });
+    const pathSections: PathSection[] = sections.map((section) => ({
+      id: section.id,
+      title: section.title,
+      description: section.description,
+      startLevel: section.start_level,
+      endLevel: section.end_level,
+    }));
+
     const courses = await curriculumRepository.listCourses(subject.id);
     const course = courses[0] ?? null;
 
@@ -162,6 +186,7 @@ export const curriculumService = {
         subject,
         course: null,
         levels: [],
+        sections: pathSections,
         totalNodes: 0,
         completedNodes: 0,
         questionCount: 0,
@@ -346,6 +371,7 @@ export const curriculumService = {
       subject,
       course,
       levels: pathLevels,
+      sections: pathSections,
       totalNodes,
       completedNodes,
       questionCount,

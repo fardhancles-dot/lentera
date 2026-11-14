@@ -3,6 +3,7 @@ import type { PathLevel, PathNode } from '../src/services/curriculum.service';
 import {
   activeJourneyIndex,
   buildJourneyStops,
+  buildJourneyTimeline,
   cleanChapterName,
   journeyPathD,
   layoutJourney,
@@ -177,6 +178,40 @@ describe('learning journey model', () => {
 
     expect(path.startsWith('M 500 128')).toBe(true);
     expect((path.match(/C/g) ?? []).length).toBe(11);
+  });
+
+  it('places material dividers before the starting level without renumbering stops', () => {
+    const stops = buildJourneyStops(threeChapters);
+    const timeline = buildJourneyTimeline(stops, [
+      { id: 'a', title: 'Dasar', description: '', startLevel: 1, endLevel: 3 },
+      { id: 'b', title: 'Lanjutan', description: '', startLevel: 4, endLevel: 9 },
+      { id: 'c', title: 'Belum dipakai', description: '', startLevel: 99, endLevel: 120 },
+    ]);
+
+    const dividers = timeline.entries.filter((entry) => entry.kind === 'divider');
+    expect(dividers.map((entry) => entry.section.title)).toEqual(['Dasar', 'Lanjutan']);
+    expect(dividers.map((entry) => entry.y)).toEqual([132, 700]);
+
+    // The first level still starts at the default top offset; only the divider
+    // adds vertical space, so level numbers and stop order never change.
+    expect(timeline.positions[0]!.y).toBe(248);
+    expect(timeline.positions[4]!.y).toBe(816);
+    expect(stops.map((stop) => stop.levelNumber).slice(0, 5)).toEqual([1, 2, 3, 3, 4]);
+    expect(timeline.height).toBe(1750);
+
+    // The trail pauses at each divider instead of crossing its label.
+    expect(timeline.groups.map((group) => group.length)).toEqual([4, 8]);
+  });
+
+  it('renders the same map when no dividers are configured', () => {
+    const stops = buildJourneyStops(threeChapters);
+    const plain = layoutJourney(stops);
+    const timeline = buildJourneyTimeline(stops, []);
+
+    expect(timeline.positions).toEqual(plain.positions);
+    expect(timeline.height).toBe(plain.height);
+    expect(timeline.entries.every((entry) => entry.kind === 'stop')).toBe(true);
+    expect(timeline.groups).toHaveLength(1);
   });
 
   it('cleans chapter titles without depending on a subject', () => {

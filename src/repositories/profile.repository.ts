@@ -5,6 +5,7 @@ export interface ProfileUpdate {
   username?: string;
   display_name?: string;
   avatar_key?: string;
+  avatar_url?: string | null;
   bio?: string;
 }
 
@@ -18,6 +19,7 @@ export interface SettingsUpdate {
   reduced_motion?: boolean;
   email_opt_in?: boolean;
   profile_visibility?: 'public' | 'friends' | 'private';
+  following_privacy?: 'public' | 'private';
 }
 
 function raise(error: { message: string; code?: string } | null): never {
@@ -77,6 +79,26 @@ export const profileRepository = {
       .single();
     if (error) raise(error);
     return data;
+  },
+
+  /**
+   * One fixed object per player (`avatars/<uid>/avatar`) with upsert, so old
+   * photos are replaced instead of leaving orphaned files behind. The URL is
+   * cache-busted after every upload because the path never changes.
+   */
+  async uploadAvatar(userId: string, file: File): Promise<string> {
+    const supabase = requireSupabase();
+    const bucket = supabase.storage.from('avatars');
+    const path = `${userId}/avatar`;
+    const { error } = await bucket.upload(path, file, {
+      upsert: true,
+      contentType: file.type,
+      cacheControl: '3600',
+    });
+    if (error) raise(error);
+
+    const { data } = bucket.getPublicUrl(path);
+    return `${data.publicUrl}?v=${Date.now()}`;
   },
 
   async isUsernameTaken(username: string, exceptUserId: string): Promise<boolean> {

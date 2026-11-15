@@ -115,7 +115,7 @@ export function openCurriculumForm(
             })),
             normalizeSubjectCategory(options.learnCategory),
           ),
-          'Menentukan tab mapel di halaman Belajar. Pilihan: Mapel Umum, Bahasa Daerah, Bahasa Asing.',
+          'Menentukan tab mapel di halaman Belajar. Pilihan: Mapel Umum, Bahasa Daerah, Kursus Bahasa, Kejuruan.'
         ),
         field(
           'Gambar ikon',

@@ -293,9 +293,10 @@ Aturannya:
 - **Toko.** `/shop` menjual **Ramuan Hati** (80 Koin, memulihkan hingga 3 Hearts) dan
   **Perisai Streak** (120 Koin, maksimal 2). Harga dan saldo divalidasi server; pembelian
   ditulis ke `shop_purchases`, `coin_transactions`, dan `user_inventory` secara atomik.
-- **Inventory.** Tas menampilkan item yang dimiliki. Ramuan Hati dan Perisai Streak dipakai
-  dari `/shop`; Perisai Streak menambah `user_streaks.freezes`. Item habis tidak ditampilkan
-  sebagai baris aktif.
+- **Inventory.** Tas di `/inventory` menampilkan item yang dimiliki. Ramuan Hati dan
+  Perisai Streak dipakai dari halaman Tas; Perisai Streak menambah `user_streaks.freezes`.
+  Item habis tidak ditampilkan sebagai baris aktif. Toko dan Tas membaca
+  `get_my_inventory` yang sama, sehingga pembelian langsung terlihat di Tas.
 
 ## Pemetaan mini-game per mata pelajaran
 

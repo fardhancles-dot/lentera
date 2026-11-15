@@ -8,6 +8,7 @@ const ROUTES: { path: string; heading: RegExp }[] = [
   { path: '/wallet', heading: /Wallet/i },
   { path: '/quests', heading: /Misi/i },
   { path: '/shop', heading: /Toko/i },
+  { path: '/inventory', heading: /Tas/i },
   { path: '/mastery', heading: /Penguasaan/i },
   { path: '/profile', heading: /Profil/i },
   { path: '/settings', heading: /Pengaturan/i },
@@ -40,6 +41,29 @@ test('every app route renders without page errors', async ({ page }) => {
       });
     }
   }
+
+  expect(errors).toEqual([]);
+});
+
+test('Toko and Tas render separate content and link to each other', async ({ page }) => {
+  const errors = collectPageErrors(page);
+  const session = await login(page);
+  test.skip(!session.ok, session.ok ? '' : session.reason);
+
+  await page.goto('/shop');
+  await expect(page.locator('.topbar__title')).toContainText(/Toko/);
+  await expect(page.locator('.shop-card').first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('.inventory-card')).toHaveCount(0);
+  await expect(page.locator('.store-tabs__link[href="/inventory"]')).toBeVisible();
+
+  await page.locator('.store-tabs__link[href="/inventory"]').click();
+  await page.waitForURL(/\/inventory$/);
+  await expect(page.locator('.topbar__title')).toContainText(/Tas/);
+  await expect(page.locator('.inventory-card, .empty-state').first()).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(page.locator('.shop-card')).toHaveCount(0);
+  await expect(page.locator('.store-tabs__link[href="/shop"]')).toBeVisible();
 
   expect(errors).toEqual([]);
 });

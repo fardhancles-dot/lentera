@@ -136,7 +136,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
         const levels = active.reduce((sum, subject) => sum + subject.level_count, 0);
         const questions = active.reduce((sum, subject) => sum + subject.question_count, 0);
 
-        // Exactly three fixed categories. Placement is admin-defined; nothing
+        // Exactly four fixed categories. Placement is admin-defined; nothing
         // is grouped by subject name, and a missing value falls back to Umum.
         const counts = new Map<SubjectCategoryKey, number>();
         for (const subject of subjects) {

@@ -8,6 +8,7 @@ export type Json =
 
 export type AppRole = 'player' | 'admin' | 'developer';
 export type ProfileVisibility = 'public' | 'friends' | 'private';
+export type FollowingPrivacy = 'public' | 'private';
 export type FriendshipStatus = 'pending' | 'accepted' | 'declined';
 export type LeagueOutcome = 'promoted' | 'stayed' | 'demoted';
 export type SubjectStatus = 'active' | 'development' | 'inactive';
@@ -46,9 +47,12 @@ export type QuestionType =
 // these rows are declared with `type` aliases.
 export type ProfileRow = {
   id: string;
+  /** Stable nine-digit public ID. The UUID above remains the real key. */
+  account_number: number;
   username: string;
   display_name: string;
   avatar_key: string;
+  avatar_url: string | null;
   bio: string;
   onboarding_completed: boolean;
   created_at: string;
@@ -66,6 +70,7 @@ export type UserSettingsRow = {
   reduced_motion: boolean;
   email_opt_in: boolean;
   profile_visibility: ProfileVisibility;
+  following_privacy: FollowingPrivacy;
   created_at: string;
   updated_at: string;
 };
@@ -407,6 +412,9 @@ export type ShopItemRow = {
   icon: string;
   sort_order: number;
   is_active: boolean;
+  rarity: 'common' | 'rare' | 'legendary';
+  image_url: string | null;
+  image_path: string | null;
   created_at: string;
 };
 
@@ -543,6 +551,7 @@ export type Database = {
           username: string;
           display_name?: string;
           avatar_key?: string;
+          avatar_url?: string | null;
           bio?: string;
           onboarding_completed?: boolean;
         };
@@ -550,6 +559,7 @@ export type Database = {
           username?: string;
           display_name?: string;
           avatar_key?: string;
+          avatar_url?: string | null;
           bio?: string;
           onboarding_completed?: boolean;
         };
@@ -568,6 +578,7 @@ export type Database = {
           reduced_motion?: boolean;
           email_opt_in?: boolean;
           profile_visibility?: ProfileVisibility;
+          following_privacy?: FollowingPrivacy;
         };
         Update: {
           locale?: 'id' | 'en';
@@ -579,6 +590,7 @@ export type Database = {
           reduced_motion?: boolean;
           email_opt_in?: boolean;
           profile_visibility?: ProfileVisibility;
+          following_privacy?: FollowingPrivacy;
         };
         Relationships: [];
       };
@@ -998,6 +1010,30 @@ export type Database = {
         Args: { p_query: string };
         Returns: Json;
       };
+      follow_player: {
+        Args: { p_username: string };
+        Returns: Json;
+      };
+      unfollow_player: {
+        Args: { p_user_id: string };
+        Returns: Json;
+      };
+      get_follow_suggestions: {
+        Args: { p_limit?: number };
+        Returns: Json;
+      };
+      get_new_followers: {
+        Args: { p_limit?: number };
+        Returns: Json;
+      };
+      get_followers: {
+        Args: { p_username: string };
+        Returns: Json;
+      };
+      get_following: {
+        Args: { p_username: string };
+        Returns: Json;
+      };
       send_friend_request: {
         Args: { p_username: string };
         Returns: Json;
@@ -1048,6 +1084,18 @@ export type Database = {
       };
       mark_notifications_read: {
         Args: { p_id?: string | null };
+        Returns: Json;
+      };
+      get_notification_indicators: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      mark_achievements_seen: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      mark_inbox_notifications_read: {
+        Args: Record<PropertyKey, never>;
         Returns: Json;
       };
       get_developer_overview: {

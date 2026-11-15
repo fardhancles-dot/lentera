@@ -4,6 +4,7 @@ import { icon } from '../components/icons';
 import { showToast } from '../components/toast';
 import { pageHeader, renderAppLayout } from '../layouts/appLayout';
 import { socialService } from '../services/social.service';
+import { notificationIndicatorsStore } from '../stores/notificationIndicators.store';
 import type {
   ActiveEvent,
   LeaderboardPayload,
@@ -351,6 +352,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
                   : `Hadiah liga diterima: +${formatNumber(result.coinsAwarded)} Koin.`,
                 result.alreadyClaimed ? 'default' : 'success',
               );
+              void notificationIndicatorsStore.refresh();
               loadLeague();
             } catch (error) {
               showToast(error instanceof Error ? error.message : 'Klaim liga gagal.', 'error');
@@ -366,6 +368,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
                   : `Hadiah event diterima: +${formatNumber(result.coinsAwarded)} Koin.`,
                 result.alreadyClaimed ? 'default' : 'success',
               );
+              void notificationIndicatorsStore.refresh();
               loadLeague();
             } catch (error) {
               showToast(error instanceof Error ? error.message : 'Klaim event gagal.', 'error');

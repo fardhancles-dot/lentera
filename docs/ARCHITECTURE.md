@@ -160,8 +160,9 @@ Batas kepercayaan:
 - `rewards.store.ts` menyimpan cache terpisah untuk quest, achievement, toko, dan inventory;
   klaim/pembelian/pemakaian menyegarkan inventory serta `playerStore` agar HUD Koin/Hearts
   langsung konsisten.
-- `/quests` dan `/shop` adalah halaman lazy-loaded; `/wallet` membaca katalog hadiah level
-  dan milestone dari payload wallet yang sama. Semua nominal hadiah berasal dari server.
+- `/quests`, `/shop`, dan `/inventory` adalah halaman lazy-loaded; `/wallet` membaca katalog
+  hadiah level dan milestone dari payload wallet yang sama. Semua nominal hadiah berasal dari
+  server.
 
 ## Mini-game renderer
 

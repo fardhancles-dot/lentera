@@ -3,6 +3,7 @@ import { icon } from '../components/icons';
 import { showToast } from '../components/toast';
 import { pageHeader, renderAppLayout } from '../layouts/appLayout';
 import { socialService } from '../services/social.service';
+import { notificationIndicatorsStore } from '../stores/notificationIndicators.store';
 import type { NotificationItem } from '../types/social';
 import { el, formatDate } from '../utils/dom';
 
@@ -37,7 +38,14 @@ function notificationRow(item: NotificationItem, onRead: (item: NotificationItem
     { class: `notification${item.read ? '' : ' notification--unread'}` },
     [
       el('span', { class: 'notification__icon' }, [
-        icon(item.kind === 'league_result' ? 'trophy' : item.kind.startsWith('friend') ? 'users' : 'bell', 18),
+        icon(
+          item.kind === 'league_result'
+            ? 'trophy'
+            : item.kind.startsWith('friend') || item.kind.startsWith('follow')
+              ? 'users'
+              : 'bell',
+          18,
+        ),
       ]),
       content,
       mark,
@@ -91,6 +99,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
           void socialService
             .markNotificationsRead(item.id)
             .then(() => {
+              void notificationIndicatorsStore.refresh();
               if (!disposed) load();
             })
             .catch((error: unknown) => {
@@ -137,6 +146,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       .markNotificationsRead()
       .then(() => {
         showToast('Semua notifikasi ditandai dibaca.', 'success');
+        void notificationIndicatorsStore.refresh();
         load();
       })
       .catch((error: unknown) => {

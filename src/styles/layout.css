@@ -156,6 +156,46 @@
   color: currentColor;
 }
 
+.icon-btn__glyph {
+  display: grid;
+  place-items: center;
+}
+
+/* One reusable red dot; absolute positioning keeps every nav size stable. */
+.notification-dot-host {
+  position: relative;
+}
+
+.notification-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red-500);
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 1px 3px rgba(207, 69, 69, 0.28);
+  opacity: 0;
+  transform: scale(0.55);
+  pointer-events: none;
+  transition:
+    opacity 0.14s var(--ease-out),
+    transform 0.14s var(--ease-out);
+}
+
+.notification-dot[data-active='true'] {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-dot {
+    transition: none;
+  }
+}
+
 .nav-item__badge {
   margin-left: auto;
   padding: 2px 8px;

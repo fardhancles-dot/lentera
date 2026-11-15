@@ -23,6 +23,54 @@ export const socialRepository = {
     return data;
   },
 
+  async followPlayer(username: string): Promise<Json> {
+    const { data, error } = await requireSupabase().rpc('follow_player', {
+      p_username: username,
+    });
+    if (error) raise(error);
+    return data;
+  },
+
+  async unfollowPlayer(userId: string): Promise<Json> {
+    const { data, error } = await requireSupabase().rpc('unfollow_player', {
+      p_user_id: userId,
+    });
+    if (error) raise(error);
+    return data;
+  },
+
+  async getFollowSuggestions(limit = 12): Promise<Json> {
+    const { data, error } = await requireSupabase().rpc('get_follow_suggestions', {
+      p_limit: limit,
+    });
+    if (error) raise(error);
+    return data;
+  },
+
+  async getNewFollowers(limit = 30): Promise<Json> {
+    const { data, error } = await requireSupabase().rpc('get_new_followers', {
+      p_limit: limit,
+    });
+    if (error) raise(error);
+    return data;
+  },
+
+  async getFollowers(username: string): Promise<Json> {
+    const { data, error } = await requireSupabase().rpc('get_followers', {
+      p_username: username,
+    });
+    if (error) raise(error);
+    return data;
+  },
+
+  async getFollowing(username: string): Promise<Json> {
+    const { data, error } = await requireSupabase().rpc('get_following', {
+      p_username: username,
+    });
+    if (error) raise(error);
+    return data;
+  },
+
   async sendFriendRequest(username: string): Promise<Json> {
     const { data, error } = await requireSupabase().rpc('send_friend_request', {
       p_username: username,
@@ -130,6 +178,24 @@ export const socialRepository = {
     const { data, error } = await requireSupabase().rpc('mark_notifications_read', {
       ...(id ? { p_id: id } : {}),
     });
+    if (error) raise(error);
+    return data;
+  },
+
+  async getNotificationIndicators(): Promise<Json> {
+    const { data, error } = await requireSupabase().rpc('get_notification_indicators');
+    if (error) raise(error);
+    return data;
+  },
+
+  async markAchievementsSeen(): Promise<Json> {
+    const { data, error } = await requireSupabase().rpc('mark_achievements_seen');
+    if (error) raise(error);
+    return data;
+  },
+
+  async markInboxNotificationsRead(): Promise<Json> {
+    const { data, error } = await requireSupabase().rpc('mark_inbox_notifications_read');
     if (error) raise(error);
     return data;
   },

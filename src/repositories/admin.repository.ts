@@ -24,6 +24,7 @@ interface LooseClient {
         options?: { upsert?: boolean; contentType?: string },
       ): Promise<{ error: RpcError | null }>;
       getPublicUrl(path: string): { data: { publicUrl: string } };
+      remove(paths: string[]): Promise<{ error: RpcError | null }>;
     };
   };
 }
@@ -160,6 +161,32 @@ export const adminRepository = {
   getGamification: () => call('admin_get_gamification'),
   saveGameCatalog: (kind: string, payload: Json, reason: string) =>
     call('admin_save_game_catalog', { p_kind: kind, p_payload: payload, p_reason: reason }),
+  saveShopItem: (payload: Json, reason: string) =>
+    call('admin_save_shop_item', { p_payload: payload, p_reason: reason }),
+
+  async uploadProductImage(file: File): Promise<{ url: string; path: string }> {
+    const supabase = client();
+    const mime = file.type.toLowerCase();
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(mime)) {
+      throw new Error('Format foto produk harus JPG, JPEG, PNG, atau WebP.');
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('Ukuran foto produk maksimal 5 MB.');
+    }
+
+    const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]/g, '-');
+    const path = `shop/${crypto.randomUUID()}-${safeName}`;
+    const bucket = supabase.storage.from('content-media');
+    const { error } = await bucket.upload(path, file, { upsert: false, contentType: mime });
+    if (error) raise(error);
+    return { url: bucket.getPublicUrl(path).data.publicUrl, path };
+  },
+
+  async removeProductImage(path: string): Promise<void> {
+    if (!path.startsWith('shop/')) return;
+    const { error } = await client().storage.from('content-media').remove([path]);
+    if (error) raise(error);
+  },
 
   listSocial: (search: string, status: string, page: number, pageSize: number) =>
     call('admin_list_social', {

@@ -1,5 +1,6 @@
 import type { PageModule } from '../app/router';
 import { avatar } from '../components/avatar';
+import { createFollowButton, createFollowPanel, type FollowPanelHandle } from '../components/follow';
 import { icon } from '../components/icons';
 import { createLevelProgress, tierBadge } from '../components/levelProgress';
 import { showToast } from '../components/toast';
@@ -26,22 +27,19 @@ function visibilityLabel(profile: FriendProfile): string {
 function actionSlot(profile: FriendProfile, reload: () => void): HTMLElement {
   const slot = el('span', { class: 'player-actions' });
 
-  const finish = (message: string) => {
-    showToast(message, 'success');
-    reload();
-  };
-
   if (profile.isSelf) {
     slot.append(
-      el('a', { class: 'btn btn--secondary btn--sm', attrs: { href: '/profile' } }, [
-        icon('user', 16),
-        'Edit profil',
+      el('a', { class: 'btn btn--secondary btn--sm', attrs: { href: '/profile/edit' } }, [
+        icon('settings', 16),
+        'Edit Profile',
       ]),
     );
     return slot;
   }
 
   if (profile.isFriend) {
+    slot.append(el('span', { class: 'badge', text: 'Teman' }));
+
     const remove = el('button', { class: 'btn btn--ghost btn--sm', attrs: { type: 'button' } }, [
       icon('users', 16),
       'Hapus teman',
@@ -51,7 +49,10 @@ function actionSlot(profile: FriendProfile, reload: () => void): HTMLElement {
       remove.disabled = true;
       void socialService
         .removeFriend(profile.userId)
-        .then(() => finish('Teman dihapus.'))
+        .then(() => {
+          showToast('Teman dihapus.', 'success');
+          reload();
+        })
         .catch((error: unknown) => {
           remove.disabled = false;
           showToast(error instanceof Error ? error.message : 'Gagal menghapus teman.', 'error');
@@ -61,66 +62,31 @@ function actionSlot(profile: FriendProfile, reload: () => void): HTMLElement {
     return slot;
   }
 
-  if (profile.relation === 'outgoing') {
-    slot.append(el('span', { class: 'badge badge--muted', text: 'Menunggu jawaban' }));
-    return slot;
+  slot.append(
+    createFollowButton({
+      userId: profile.userId,
+      username: profile.username,
+      isFollowing: profile.isFollowing,
+      onChange: () => reload(),
+    }),
+  );
+
+  if (profile.followsYou) {
+    slot.append(el('span', { class: 'badge badge--muted', text: 'Mengikuti kamu' }));
   }
 
-  if (profile.relation === 'incoming' && profile.requestId) {
-    const accept = el('button', { class: 'btn btn--sm', attrs: { type: 'button' } }, [
-      icon('check', 16),
-      'Terima pertemanan',
-    ]);
-    const decline = el('button', { class: 'btn btn--ghost btn--sm', attrs: { type: 'button' } }, [
-      'Tolak',
-    ]);
-    accept.addEventListener('click', () => {
-      accept.disabled = true;
-      void socialService
-        .respondFriendRequest(profile.requestId!, true)
-        .then(() => finish(`Kamu dan ${profile.displayName} sekarang berteman.`))
-        .catch((error: unknown) => {
-          accept.disabled = false;
-          showToast(error instanceof Error ? error.message : 'Permintaan gagal diterima.', 'error');
-        });
-    });
-    decline.addEventListener('click', () => {
-      decline.disabled = true;
-      void socialService
-        .respondFriendRequest(profile.requestId!, false)
-        .then(() => finish('Permintaan ditolak.'))
-        .catch((error: unknown) => {
-          decline.disabled = false;
-          showToast(error instanceof Error ? error.message : 'Permintaan gagal ditolak.', 'error');
-        });
-    });
-    slot.append(accept, decline);
-    return slot;
-  }
-
-  const add = el('button', { class: 'btn btn--sm', attrs: { type: 'button' } }, [
-    icon('users', 16),
-    'Tambah teman',
-  ]);
-  add.addEventListener('click', () => {
-    add.disabled = true;
-    void socialService
-      .sendFriendRequest(profile.username)
-      .then(() => finish(`Permintaan dikirim ke ${profile.displayName}.`))
-      .catch((error: unknown) => {
-        add.disabled = false;
-        showToast(error instanceof Error ? error.message : 'Permintaan gagal dikirim.', 'error');
-      });
-  });
-  slot.append(add);
   return slot;
 }
 
 function render(ctx: Parameters<PageModule['render']>[0]): void {
   const username = ctx.params.username ?? '';
   let disposed = false;
+  let followPanel: FollowPanelHandle | null = null;
+
   ctx.onCleanup(() => {
     disposed = true;
+    followPanel?.destroy();
+    followPanel = null;
   });
 
   const slot = el('div', { class: 'loading-screen' }, [
@@ -129,6 +95,8 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
   ]);
 
   const load = () => {
+    followPanel?.destroy();
+    followPanel = null;
     slot.className = 'loading-screen';
     slot.replaceChildren(el('span', { class: 'spinner' }), el('p', { text: 'Memuat profil…' }));
     void socialService
@@ -137,7 +105,8 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
         if (disposed || !slot.isConnected) return;
         slot.className = '';
         document.title = `${profile.displayName} · Lentera`;
-        slot.replaceChildren(profileCard(profile, load));
+        followPanel = createFollowPanel({ username: profile.username });
+        slot.replaceChildren(profileCard(profile, load, followPanel.element));
       })
       .catch((error: unknown) => {
         if (disposed || !slot.isConnected) return;
@@ -179,13 +148,17 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
   load();
 }
 
-function profileCard(profile: FriendProfile, reload: () => void): HTMLElement {
+function profileCard(
+  profile: FriendProfile,
+  reload: () => void,
+  followPanel: HTMLElement,
+): HTMLElement {
   const canSeeLevel = profile.statsVisible && profile.level !== null;
 
   return el('div', { class: 'player-layout' }, [
     el('section', { class: 'card player-card' }, [
       el('div', { class: 'player-card__top' }, [
-        avatar(profile.avatarKey, 'xl'),
+        avatar(profile.avatarKey, 'xl', profile.avatarUrl),
         el('div', { class: 'player-card__identity' }, [
           el('div', { class: 'player-card__name-row' }, [
             el('h2', { class: 'player-card__name', text: profile.displayName }),
@@ -205,7 +178,14 @@ function profileCard(profile: FriendProfile, reload: () => void): HTMLElement {
         icon('shield', 14),
         visibilityLabel(profile),
       ]),
+      profile.followingPrivate && !profile.isSelf
+        ? el('p', { class: 'player-card__privacy' }, [
+            icon('lock', 14),
+            'Daftar Following pemain ini privat.',
+          ])
+        : null,
     ]),
+    followPanel,
     profile.statsVisible
       ? el('section', { class: 'card player-stats' }, [
           el('h2', { class: 'card__title', text: 'Statistik belajar' }),
@@ -227,7 +207,7 @@ function profileCard(profile: FriendProfile, reload: () => void): HTMLElement {
               text:
                 profile.visibility === 'private'
                   ? 'Pemain ini memilih profil privat.'
-                  : 'Tambahkan sebagai teman untuk melihat statistik belajar.',
+                  : 'Ikuti dan saling follow untuk membuka statistik belajar.',
             }),
           ]),
         ]),

@@ -124,6 +124,11 @@ const routes: RouteDefinition[] = [
     load: () => import('../pages/shop.page'),
   },
   {
+    pattern: '/inventory',
+    access: 'onboarded',
+    load: () => import('../pages/inventory.page'),
+  },
+  {
     pattern: '/friends-quest',
     access: 'onboarded',
     load: () => import('../pages/friends-quest.page'),
@@ -167,6 +172,26 @@ const routes: RouteDefinition[] = [
     pattern: '/profile',
     access: 'onboarded',
     load: () => import('../pages/profile.page'),
+  },
+  {
+    pattern: '/profile/edit',
+    access: 'onboarded',
+    load: () => import('../pages/profile-edit.page'),
+  },
+  {
+    pattern: '/profile/followers',
+    access: 'onboarded',
+    load: () => import('../pages/profile-network.page'),
+  },
+  {
+    pattern: '/profile/following',
+    access: 'onboarded',
+    load: () => import('../pages/profile-network.page'),
+  },
+  {
+    pattern: '/inbox',
+    access: 'onboarded',
+    load: () => import('../pages/inbox.page'),
   },
   {
     pattern: '/settings',

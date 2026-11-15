@@ -65,9 +65,30 @@ export function avatarMarkup(key: string, size = 120): string {
   </svg>`;
 }
 
-export function avatar(key: string, size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' = 'md'): HTMLSpanElement {
+export function avatar(
+  key: string,
+  size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' = 'md',
+  photoUrl?: string | null,
+): HTMLSpanElement {
   const span = document.createElement('span');
   span.className = `avatar avatar--${size}`;
+
+  if (photoUrl) {
+    span.classList.add('avatar--photo');
+    const image = document.createElement('img');
+    image.src = photoUrl;
+    image.alt = '';
+    image.loading = 'lazy';
+    image.decoding = 'async';
+    image.addEventListener('error', () => {
+      // A deleted upload must not leave a broken circle behind.
+      span.classList.remove('avatar--photo');
+      span.innerHTML = avatarMarkup(key, 120);
+    });
+    span.append(image);
+    return span;
+  }
+
   span.innerHTML = avatarMarkup(key, 120);
   return span;
 }

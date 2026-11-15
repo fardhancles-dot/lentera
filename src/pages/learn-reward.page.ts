@@ -5,6 +5,7 @@ import { audioEngine } from '../game/audio/audioEngine';
 import { renderAppLayout } from '../layouts/appLayout';
 import { curriculumService, type RewardDetail } from '../services/curriculum.service';
 import { rewardsService } from '../services/rewards.service';
+import { notificationIndicatorsStore } from '../stores/notificationIndicators.store';
 import { playerStore } from '../stores/player.store';
 import { sessionStore } from '../stores/session.store';
 import { el } from '../utils/dom';
@@ -243,6 +244,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
               );
             }
             void playerStore.load(true);
+            void notificationIndicatorsStore.refresh();
             load();
           } catch (error) {
             showToast(error instanceof Error ? error.message : 'Hadiah gagal diklaim.', 'error');

@@ -3,11 +3,17 @@ import { avatar } from '../components/avatar';
 import { kikoMarkup } from '../components/brandArt';
 import { brandMark } from '../components/brandMark';
 import { icon, type IconName } from '../components/icons';
+import { createNotificationDot } from '../components/notificationDot';
 import { showToast } from '../components/toast';
 import { contentService } from '../services/content.service';
+import {
+  notificationIndicatorsStore,
+  type NotificationIndicatorsState,
+} from '../stores/notificationIndicators.store';
 import { playerStore, type PlayerStoreState } from '../stores/player.store';
 import { sessionStore } from '../stores/session.store';
 import { el, formatNumber, trapFocus } from '../utils/dom';
+import { drawerIndicatorActive, indicatorActive } from '../utils/notificationIndicators';
 
 export type NavKey =
   | 'home'
@@ -17,8 +23,10 @@ export type NavKey =
   | 'quests'
   | 'friends'
   | 'leaderboard'
+  | 'inbox'
   | 'notifications'
   | 'shop'
+  | 'inventory'
   | 'profile'
   | 'developer'
   | 'settings';
@@ -39,8 +47,10 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'quests', href: '/quests', label: 'Misi', shortLabel: 'Misi', icon: 'flag' },
   { key: 'friends', href: '/friends', label: 'Teman', shortLabel: 'Teman', icon: 'users' },
   { key: 'leaderboard', href: '/leaderboard', label: 'Liga', shortLabel: 'Liga', icon: 'trophy' },
+  { key: 'inbox', href: '/inbox', label: 'Kotak Masuk', shortLabel: 'Kotak', icon: 'inbox' },
   { key: 'notifications', href: '/notifications', label: 'Notifikasi', shortLabel: 'Kabar', icon: 'bell' },
   { key: 'shop', href: '/shop', label: 'Toko', shortLabel: 'Toko', icon: 'gift' },
+  { key: 'inventory', href: '/inventory', label: 'Tas', shortLabel: 'Tas', icon: 'bag' },
   { key: 'profile', href: '/profile', label: 'Profil', shortLabel: 'Profil', icon: 'user' },
   { key: 'developer', href: '/admin', label: 'Admin', shortLabel: 'Admin', icon: 'shield' },
   { key: 'settings', href: '/settings', label: 'Pengaturan', shortLabel: 'Atur', icon: 'settings' },
@@ -48,8 +58,8 @@ const NAV_ITEMS: NavItem[] = [
 
 /**
  * Five primary destinations fit comfortably across a phone without shrinking
- * labels. Toko lives in the topbar, Wallet stays reachable from the resource
- * chips, and the remaining community pages live in the hamburger drawer.
+ * labels. Toko stays in the topbar, Tas and the community pages live in the
+ * hamburger drawer, and Wallet stays reachable from the resource chips.
  */
 const MOBILE_NAV_KEYS: readonly NavKey[] = [
   'home',
@@ -60,7 +70,10 @@ const MOBILE_NAV_KEYS: readonly NavKey[] = [
 ];
 
 const DRAWER_NAV_KEYS: readonly NavKey[] = [
+  'shop',
+  'inventory',
   'friends',
+  'inbox',
   'leaderboard',
   'notifications',
   'settings',
@@ -80,14 +93,16 @@ function navLink(item: NavItem, active: NavKey, compact: boolean): HTMLAnchorEle
       'aria-current': item.key === active ? 'page' : null,
     },
   });
+  link.dataset.navKey = item.key;
+
+  const iconWrap = el('span', {
+    class: `${compact ? 'bottom-nav__icon' : 'nav-item__icon'} notification-dot-host`,
+  });
+  iconWrap.append(icon(item.icon, compact ? 22 : 20), createNotificationDot().root);
 
   if (compact) {
-    const iconWrap = el('span', { class: 'bottom-nav__icon' });
-    iconWrap.append(icon(item.icon, 22));
     link.append(iconWrap, el('span', { text: item.shortLabel }));
   } else {
-    const iconWrap = el('span', { class: 'nav-item__icon' });
-    iconWrap.append(icon(item.icon, 20));
     link.append(iconWrap, el('span', { text: item.label }));
   }
 
@@ -99,7 +114,7 @@ function drawerNavLink(
   active: NavKey,
   label = item.label,
 ): HTMLAnchorElement {
-  return el(
+  const link = el(
     'a',
     {
       class: 'drawer-nav__item',
@@ -109,11 +124,16 @@ function drawerNavLink(
       },
     },
     [
-      el('span', { class: 'drawer-nav__icon' }, [icon(item.icon, 20)]),
+      el('span', { class: 'drawer-nav__icon notification-dot-host' }, [
+        icon(item.icon, 20),
+        createNotificationDot().root,
+      ]),
       el('span', { class: 'drawer-nav__label', text: label }),
       el('span', { class: 'drawer-nav__chevron' }, [icon('chevron-right', 18)]),
     ],
   );
+  link.dataset.navKey = item.key;
+  return link;
 }
 
 interface ResourceView {
@@ -233,6 +253,7 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
         click: () => {
           void (async () => {
             logoutButton.disabled = true;
+            notificationIndicatorsStore.clear();
             await sessionStore.signOut();
             showToast('Kamu sudah keluar. Sampai jumpa!', 'success');
             ctx.navigate('/login', { replace: true });
@@ -244,7 +265,7 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
   );
 
   const userChip = el('a', { class: 'user-chip', attrs: { href: '/profile' } }, [
-    avatar(user.profile.avatar_key, 'sm'),
+    avatar(user.profile.avatar_key, 'sm', user.profile.avatar_url),
     el('span', { class: 'user-chip__meta' }, [
       el('span', { class: 'user-chip__name', text: displayName }),
       el('span', { class: 'user-chip__handle', text: `@${user.profile.username}` }),
@@ -287,7 +308,7 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
       class: 'header-avatar',
       attrs: { href: '/profile', 'aria-label': 'Buka profil' },
     },
-    [avatar(user.profile.avatar_key, 'xs')],
+    [avatar(user.profile.avatar_key, 'xs', user.profile.avatar_url)],
   );
 
   const shopButton = el(
@@ -296,7 +317,7 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
       class: 'icon-btn header-shop',
       attrs: { href: '/shop', 'aria-label': 'Toko', title: 'Toko' },
     },
-    [icon('bag', 20)],
+    [icon('gift', 20)],
   );
 
   const drawerPanel = el('aside', {
@@ -342,6 +363,7 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
     ),
   );
 
+  const hamburgerDot = createNotificationDot();
   const hamburgerButton = el(
     'button',
     {
@@ -353,7 +375,12 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
         'aria-controls': 'app-drawer',
       },
     },
-    [icon('menu', 22)],
+    [
+      el('span', { class: 'icon-btn__glyph notification-dot-host' }, [
+        icon('menu', 22),
+        hamburgerDot.root,
+      ]),
+    ],
   );
 
   const drawerBackdrop = el('div', { class: 'drawer__backdrop' });
@@ -427,7 +454,7 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
       class: 'topbar__avatar',
       attrs: { href: '/profile', 'aria-label': 'Buka profil' },
     },
-    [avatar(user.profile.avatar_key, 'xs')],
+    [avatar(user.profile.avatar_key, 'xs', user.profile.avatar_url)],
   );
 
   const desktopActions = el('div', { class: 'topbar__actions' }, [
@@ -534,6 +561,46 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
       drawerLayer,
     ]),
   );
+
+  const navIndicatorLinks = Array.from(
+    ctx.outlet.querySelectorAll<HTMLAnchorElement>('a[data-nav-key]'),
+  ).map((link) => ({
+    key: link.dataset.navKey ?? '',
+    link,
+    dot: link.querySelector<HTMLElement>('.notification-dot'),
+    label: NAV_ITEMS.find((item) => item.key === link.dataset.navKey)?.label ?? '',
+  }));
+
+  const paintIndicators = (indicatorState: NotificationIndicatorsState) => {
+    for (const control of navIndicatorLinks) {
+      const active = indicatorActive(control.key, indicatorState.counts);
+      control.dot?.setAttribute('data-active', String(active));
+      if (active) {
+        control.link.setAttribute('aria-label', `${control.label}, ada aktivitas baru`);
+      } else {
+        control.link.removeAttribute('aria-label');
+      }
+    }
+
+    const drawerActive = drawerIndicatorActive(indicatorState.counts);
+    hamburgerDot.setActive(drawerActive);
+    hamburgerButton.setAttribute(
+      'aria-label',
+      drawerActive ? 'Buka menu, ada aktivitas baru' : 'Buka menu',
+    );
+  };
+
+  paintIndicators(notificationIndicatorsStore.getState());
+  ctx.onCleanup(notificationIndicatorsStore.subscribe(paintIndicators));
+
+  const onVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      void notificationIndicatorsStore.load();
+    }
+  };
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  ctx.onCleanup(() => document.removeEventListener('visibilitychange', onVisibilityChange));
+  void notificationIndicatorsStore.load();
 }
 
 export function pageHeader(options: {

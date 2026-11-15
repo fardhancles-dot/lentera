@@ -24,8 +24,12 @@ export interface ProfileInput {
   username: string;
   displayName: string;
   avatarKey: string;
+  avatarUrl?: string | null;
   bio: string;
 }
+
+const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
+const AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
 
 export interface ProfileSettingsInput {
   locale: 'id' | 'en';
@@ -76,6 +80,11 @@ export const profileService = {
       return { ok: false, message: 'Avatar yang dipilih tidak dikenali.' };
     }
 
+    const avatarUrl = input.avatarUrl ?? null;
+    if (avatarUrl && (!/^https:\/\//i.test(avatarUrl) || avatarUrl.length > 2048)) {
+      return { ok: false, message: 'Foto profil tidak valid. Unggah ulang fotomu.' };
+    }
+
     try {
       if (await profileRepository.isUsernameTaken(username.value, user.id)) {
         return {
@@ -89,6 +98,7 @@ export const profileService = {
         username: username.value,
         display_name: displayName.value,
         avatar_key: input.avatarKey,
+        avatar_url: avatarUrl,
         bio: bio.value,
       });
 
@@ -148,6 +158,44 @@ export const profileService = {
     } catch (error) {
       console.error('[settings] save failed', error);
       return { ok: false, message: 'Pengaturan tidak dapat disimpan. Coba lagi.' };
+    }
+  },
+
+  async uploadAvatar(userId: string, file: File): Promise<ServiceResult<string>> {
+    if (!(AVATAR_TYPES as readonly string[]).includes(file.type)) {
+      return { ok: false, message: 'Gunakan foto JPG, PNG, atau WebP.' };
+    }
+    if (file.size <= 0 || file.size > AVATAR_MAX_BYTES) {
+      return { ok: false, message: 'Ukuran foto maksimal 5 MB.' };
+    }
+
+    try {
+      return { ok: true, data: await profileRepository.uploadAvatar(userId, file) };
+    } catch (error) {
+      console.error('[profile] avatar upload failed', error);
+      return {
+        ok: false,
+        message: 'Foto profil gagal diunggah. Pastikan penyimpanan avatar sudah aktif.',
+      };
+    }
+  },
+
+  async saveFollowingPrivacy(
+    userId: string,
+    privacy: 'public' | 'private',
+  ): Promise<ServiceResult<UserSettingsRow>> {
+    if (privacy !== 'public' && privacy !== 'private') {
+      return { ok: false, message: 'Pengaturan privasi Following tidak dikenali.' };
+    }
+
+    try {
+      const updated = await profileRepository.updateSettings(userId, {
+        following_privacy: privacy,
+      });
+      return { ok: true, data: updated };
+    } catch (error) {
+      console.error('[profile] following privacy failed', error);
+      return { ok: false, message: 'Privasi Following tidak dapat disimpan. Coba lagi.' };
     }
   },
 

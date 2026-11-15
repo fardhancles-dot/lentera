@@ -947,6 +947,168 @@
   font-weight: 700;
 }
 
+.admin-rarity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.admin-rarity-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.2rem 0.4rem;
+  padding: 0.55rem 0.6rem;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-rarity-card:hover {
+  transform: translateY(-1px);
+}
+
+.admin-rarity-card:has(.admin-rarity-card__radio:checked) {
+  border-color: #58cc02;
+  box-shadow: 0 0 0 2px rgba(88, 204, 2, 0.2);
+}
+
+.admin-rarity-card__radio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.admin-rarity-card__swatch {
+  grid-row: span 2;
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 50%;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.admin-rarity-card__label {
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+}
+
+.admin-rarity-card__note {
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.1;
+  opacity: 0.75;
+}
+
+.admin-rarity-card--common {
+  color: #2c3641;
+  background: linear-gradient(145deg, #ffffff, #d8dee6 55%, #aeb8c3);
+}
+
+.admin-rarity-card--common .admin-rarity-card__swatch {
+  background: linear-gradient(145deg, #f8fafc, #98a3af);
+}
+
+.admin-rarity-card--rare {
+  color: #fff;
+  background: linear-gradient(145deg, #9b6cf5, #5b21b6 55%, #35105f);
+}
+
+.admin-rarity-card--rare .admin-rarity-card__swatch {
+  background: linear-gradient(145deg, #d8b4fe, #6d28d9);
+}
+
+.admin-rarity-card--legendary {
+  color: #3b2700;
+  background: linear-gradient(145deg, #fff5c2, #f3c33c 55%, #bd7f08);
+}
+
+.admin-rarity-card--legendary .admin-rarity-card__swatch {
+  background: linear-gradient(145deg, #fff7cf, #d49713);
+}
+
+.admin-product-photo {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem;
+  border: 1px dashed #b8d2a8;
+  border-radius: 12px;
+  background: #f9fdf5;
+}
+
+.admin-product-photo__preview {
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.admin-product-photo__preview img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 5px;
+  object-fit: contain;
+  background: #fff;
+}
+
+.admin-product-photo__fallback {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--green-100);
+  color: var(--green-700);
+  transition: opacity 0.15s ease;
+}
+
+.admin-product-photo__preview.has-image .admin-product-photo__fallback {
+  opacity: 0;
+}
+
+.admin-product-photo__body {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.admin-product-photo__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+@media (max-width: 520px) {
+  .admin-rarity-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-product-photo {
+    align-items: flex-start;
+  }
+
+  .admin-product-photo__preview {
+    width: 72px;
+    height: 72px;
+  }
+}
+
 .admin-repeater {
   display: flex;
   flex-direction: column;

@@ -5,6 +5,7 @@ export interface FriendSummary {
   username: string;
   displayName: string;
   avatarKey: string;
+  avatarUrl: string | null;
   bio: string;
   weeklyXp: number;
   totalXp: number;
@@ -33,9 +34,49 @@ export interface PlayerSearchResult {
   username: string;
   displayName: string;
   avatarKey: string;
+  avatarUrl: string | null;
   bio: string;
   relation: FriendRelation;
+  isFollowing: boolean;
+  isFriend: boolean;
   requestId: string | null;
+}
+
+export interface FollowUserSummary {
+  userId: string;
+  username: string;
+  displayName: string;
+  avatarKey: string;
+  avatarUrl: string | null;
+  bio?: string;
+  followedAt: string;
+  isFollowing: boolean;
+  isFriend: boolean;
+}
+
+export interface FollowSuggestion {
+  userId: string;
+  username: string;
+  displayName: string;
+  avatarKey: string;
+  avatarUrl: string | null;
+  bio: string;
+}
+
+export interface FollowListPayload {
+  private: boolean;
+  items: FollowUserSummary[];
+  followersCount: number;
+  followingCount: number;
+}
+
+export interface FollowActionResult {
+  userId: string;
+  username: string;
+  isFollowing: boolean;
+  isFriend: boolean;
+  followersCount: number;
+  followingCount: number;
 }
 
 export interface FriendProfile {
@@ -43,9 +84,15 @@ export interface FriendProfile {
   username: string;
   displayName: string;
   avatarKey: string;
+  avatarUrl: string | null;
   bio: string;
   isSelf: boolean;
   isFriend: boolean;
+  isFollowing: boolean;
+  followsYou: boolean;
+  followersCount: number;
+  followingCount: number;
+  followingPrivate: boolean;
   statsVisible: boolean;
   relation: FriendRelation;
   requestId: string | null;
@@ -164,5 +211,15 @@ export interface NotificationItem {
 export interface NotificationsPayload {
   unreadCount: number;
   items: NotificationItem[];
+}
+
+export interface NotificationIndicators {
+  notifications: number;
+  inbox: number;
+  quests: number;
+  achievements: number;
+  learnRewards: number;
+  league: number;
+  friends: number;
 }
 

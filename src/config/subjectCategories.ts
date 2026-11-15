@@ -1,4 +1,4 @@
-export type SubjectCategoryKey = 'umum' | 'bahasa-daerah' | 'bahasa-asing';
+export type SubjectCategoryKey = 'umum' | 'bahasa-daerah' | 'bahasa-asing' | 'kejuruan';
 
 export interface SubjectCategory {
   key: SubjectCategoryKey;
@@ -7,8 +7,10 @@ export interface SubjectCategory {
 }
 
 /**
- * The only three categories the Learn page exposes. Subjects are placed by an
- * admin, never inferred from their name, so the order here is the UI order.
+ * The four categories the Learn page exposes. Subjects are placed by an admin,
+ * never inferred from their name, so the order here is the UI order. The
+ * `bahasa-asing` key is kept so existing subjects need no data migration when
+ * its label changes to Kursus Bahasa.
  */
 export const SUBJECT_CATEGORIES: readonly SubjectCategory[] = [
   {
@@ -23,8 +25,13 @@ export const SUBJECT_CATEGORIES: readonly SubjectCategory[] = [
   },
   {
     key: 'bahasa-asing',
-    label: 'Bahasa Asing',
-    description: 'Bahasa asing yang tersedia di Lentera.',
+    label: 'Kursus Bahasa',
+    description: 'Kursus bahasa yang tersedia di Lentera.',
+  },
+  {
+    key: 'kejuruan',
+    label: 'Kejuruan',
+    description: 'Mata pelajaran kejuruan yang tersedia di Lentera.',
   },
 ] as const;
 

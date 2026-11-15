@@ -3,6 +3,10 @@ import type { Json } from '../types/database';
 import type {
   ActiveEvent,
   ActivityItem,
+  FollowActionResult,
+  FollowListPayload,
+  FollowSuggestion,
+  FollowUserSummary,
   FriendProfile,
   FriendRequestSummary,
   FriendSummary,
@@ -12,6 +16,7 @@ import type {
   LeagueMemberSummary,
   LeaguePayload,
   LeagueResultSummary,
+  NotificationIndicators,
   NotificationItem,
   NotificationsPayload,
   PlayerSearchResult,
@@ -28,6 +33,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   friend_request_not_found: 'Permintaan pertemanan tidak ditemukan.',
   friend_request_forbidden: 'Permintaan ini bukan untukmu.',
   friend_request_closed: 'Permintaan ini sudah dijawab.',
+  follow_self: 'Kamu tidak dapat mengikuti akun sendiri.',
   league_result_not_found: 'Hasil liga untuk minggu itu tidak ditemukan.',
   event_not_complete: 'Target event belum tercapai.',
   leaderboard_scope_invalid: 'Jenis leaderboard tidak dikenali.',
@@ -51,6 +57,10 @@ function asArray(value: unknown): unknown[] {
 
 function asString(value: unknown, fallback = ''): string {
   return typeof value === 'string' ? value : fallback;
+}
+
+function asAvatarUrl(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() !== '' ? value : null;
 }
 
 function asNumber(value: unknown, fallback = 0): number {
@@ -80,6 +90,7 @@ function parseFriend(value: unknown): FriendSummary {
     username: asString(record.username, 'pemain'),
     displayName: asString(record.displayName, 'Pemain'),
     avatarKey: asString(record.avatarKey, 'sprout'),
+    avatarUrl: asAvatarUrl(record.avatarUrl),
     bio: asString(record.bio),
     weeklyXp: Math.max(0, asNumber(record.weeklyXp)),
     totalXp: Math.max(0, asNumber(record.totalXp)),
@@ -118,9 +129,63 @@ function parseSearch(value: Json): PlayerSearchResult[] {
       username: asString(record.username, 'pemain'),
       displayName: asString(record.displayName, 'Pemain'),
       avatarKey: asString(record.avatarKey, 'sprout'),
+      avatarUrl: asAvatarUrl(record.avatarUrl),
       bio: asString(record.bio),
       relation: asRelation(record.relation),
+      isFollowing: asBoolean(record.isFollowing, record.relation === 'outgoing' || record.relation === 'friend'),
+      isFriend: asBoolean(record.isFriend, record.relation === 'friend'),
       requestId: typeof record.requestId === 'string' ? record.requestId : null,
+    };
+  });
+}
+
+function parseFollowUser(value: unknown): FollowUserSummary {
+  const record = asRecord(value);
+  return {
+    userId: asString(record.userId),
+    username: asString(record.username, 'pemain'),
+    displayName: asString(record.displayName, 'Pemain'),
+    avatarKey: asString(record.avatarKey, 'sprout'),
+    avatarUrl: asAvatarUrl(record.avatarUrl),
+    bio: asString(record.bio),
+    followedAt: asString(record.followedAt),
+    isFollowing: asBoolean(record.isFollowing),
+    isFriend: asBoolean(record.isFriend),
+  };
+}
+
+function parseFollowList(value: Json): FollowListPayload {
+  const record = asRecord(value);
+  return {
+    private: asBoolean(record.private),
+    items: asArray(record.items).map(parseFollowUser),
+    followersCount: Math.max(0, asNumber(record.followersCount)),
+    followingCount: Math.max(0, asNumber(record.followingCount)),
+  };
+}
+
+function parseFollowAction(value: Json): FollowActionResult {
+  const record = asRecord(value);
+  return {
+    userId: asString(record.userId),
+    username: asString(record.username, 'pemain'),
+    isFollowing: asBoolean(record.isFollowing),
+    isFriend: asBoolean(record.isFriend),
+    followersCount: Math.max(0, asNumber(record.followersCount)),
+    followingCount: Math.max(0, asNumber(record.followingCount)),
+  };
+}
+
+function parseSuggestions(value: Json): FollowSuggestion[] {
+  return asArray(value).map((item) => {
+    const record = asRecord(item);
+    return {
+      userId: asString(record.userId),
+      username: asString(record.username, 'pemain'),
+      displayName: asString(record.displayName, 'Pemain'),
+      avatarKey: asString(record.avatarKey, 'sprout'),
+      avatarUrl: asAvatarUrl(record.avatarUrl),
+      bio: asString(record.bio),
     };
   });
 }
@@ -140,9 +205,15 @@ function parseProfile(value: Json): FriendProfile {
     username: asString(record.username, 'pemain'),
     displayName: asString(record.displayName, 'Pemain'),
     avatarKey: asString(record.avatarKey, 'sprout'),
+    avatarUrl: asAvatarUrl(record.avatarUrl),
     bio: asString(record.bio),
     isSelf: asBoolean(record.isSelf),
     isFriend: asBoolean(record.isFriend),
+    isFollowing: asBoolean(record.isFollowing),
+    followsYou: asBoolean(record.followsYou),
+    followersCount: Math.max(0, asNumber(record.followersCount)),
+    followingCount: Math.max(0, asNumber(record.followingCount)),
+    followingPrivate: asBoolean(record.followingPrivate),
     statsVisible: asBoolean(record.statsVisible),
     relation: asRelation(record.relation),
     requestId: typeof record.requestId === 'string' ? record.requestId : null,
@@ -274,6 +345,20 @@ function parseEvent(value: Json): ActiveEvent {
   };
 }
 
+function parseNotificationIndicators(value: Json): NotificationIndicators {
+  const record = asRecord(value);
+  const count = (key: string): number => Math.max(0, Math.floor(asNumber(record[key])));
+  return {
+    notifications: count('notifications'),
+    inbox: count('inbox'),
+    quests: count('quests'),
+    achievements: count('achievements'),
+    learnRewards: count('learnRewards'),
+    league: count('league'),
+    friends: count('friends'),
+  };
+}
+
 function parseNotifications(value: Json): NotificationsPayload {
   const record = asRecord(value);
   const items = asArray(record.items).map((item) => {
@@ -337,6 +422,40 @@ function progressPercentForXp(
 export const socialService = {
   searchPlayers(query: string): Promise<PlayerSearchResult[]> {
     return run(() => socialRepository.searchPlayers(query.trim()), parseSearch);
+  },
+
+  async followPlayer(username: string): Promise<FollowActionResult> {
+    try {
+      return parseFollowAction(await socialRepository.followPlayer(username));
+    } catch (error) {
+      throw messageFor(error);
+    }
+  },
+
+  async unfollowPlayer(userId: string): Promise<FollowActionResult> {
+    try {
+      return parseFollowAction(await socialRepository.unfollowPlayer(userId));
+    } catch (error) {
+      throw messageFor(error);
+    }
+  },
+
+  getFollowSuggestions(limit = 12): Promise<FollowSuggestion[]> {
+    return run(() => socialRepository.getFollowSuggestions(limit), parseSuggestions);
+  },
+
+  getNewFollowers(limit = 30): Promise<FollowUserSummary[]> {
+    return run(() => socialRepository.getNewFollowers(limit), (value) =>
+      asArray(value).map(parseFollowUser),
+    );
+  },
+
+  getFollowers(username: string): Promise<FollowListPayload> {
+    return run(() => socialRepository.getFollowers(username), parseFollowList);
+  },
+
+  getFollowing(username: string): Promise<FollowListPayload> {
+    return run(() => socialRepository.getFollowing(username), parseFollowList);
   },
 
   async sendFriendRequest(username: string): Promise<{ status: string; requestId: string }> {
@@ -440,6 +559,28 @@ export const socialService = {
   async markNotificationsRead(id?: string): Promise<number> {
     try {
       const record = asRecord(await socialRepository.markNotificationsRead(id));
+      return Math.max(0, asNumber(record.updated));
+    } catch (error) {
+      throw messageFor(error);
+    }
+  },
+
+  getNotificationIndicators(): Promise<NotificationIndicators> {
+    return run(() => socialRepository.getNotificationIndicators(), parseNotificationIndicators);
+  },
+
+  async markAchievementsSeen(): Promise<number> {
+    try {
+      const record = asRecord(await socialRepository.markAchievementsSeen());
+      return Math.max(0, asNumber(record.updated));
+    } catch (error) {
+      throw messageFor(error);
+    }
+  },
+
+  async markInboxNotificationsRead(): Promise<number> {
+    try {
+      const record = asRecord(await socialRepository.markInboxNotificationsRead());
       return Math.max(0, asNumber(record.updated));
     } catch (error) {
       throw messageFor(error);

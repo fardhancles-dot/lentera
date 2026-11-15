@@ -1,3 +1,5 @@
+import type { PathLevel, PathNode } from './curriculum.service';
+
 export type LearningNodeStatus =
   | 'completed'
   | 'in_progress'
@@ -47,4 +49,37 @@ export function resolveNodeStatuses(
 
     return 'locked';
   });
+}
+
+export interface LevelNavigation {
+  /** Next playable level in map order, across the whole subject. */
+  nextLevel: PathNode | null;
+  /** True when every other level is already complete, so passing this one finishes the subject. */
+  allLevelsCompletedAfterPass: boolean;
+}
+
+/**
+ * Reuses the journey order (level → unit → node) that the map renders. Reward
+ * checkpoints and nodes without a question bank are not levels, so they are
+ * skipped and "Lanjut" always opens something that can actually be played.
+ */
+export function resolveLevelNavigation(
+  levels: readonly PathLevel[],
+  currentNodeId: string,
+): LevelNavigation {
+  const playable = levels
+    .flatMap((level) => level.units.flatMap((unit) => unit.nodes))
+    .filter((node) => node.playable && node.questionCount > 0);
+  const index = playable.findIndex((node) => node.id === currentNodeId);
+
+  if (index < 0) {
+    return { nextLevel: null, allLevelsCompletedAfterPass: false };
+  }
+
+  return {
+    nextLevel: playable[index + 1] ?? null,
+    allLevelsCompletedAfterPass: playable.every(
+      (node) => node.id === currentNodeId || node.status === 'completed',
+    ),
+  };
 }

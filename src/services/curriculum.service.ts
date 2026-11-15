@@ -8,7 +8,11 @@ import type {
   SubjectOverviewRow,
   SubjectRow,
 } from '../types/database';
-import { resolveNodeStatuses, type LearningNodeStatus } from './learningPath';
+import {
+  resolveLevelNavigation,
+  resolveNodeStatuses,
+  type LearningNodeStatus,
+} from './learningPath';
 
 export type { LearningNodeStatus } from './learningPath';
 
@@ -81,7 +85,7 @@ export interface SubjectPath {
   developerPreview: boolean;
 }
 
-export interface LessonDetail {
+interface CurriculumDetailBase {
   subject: SubjectRow;
   course: CourseRow | null;
   level: {
@@ -93,7 +97,14 @@ export interface LessonDetail {
   node: PathNode;
 }
 
-export interface RewardDetail extends LessonDetail {
+export interface LessonDetail extends CurriculumDetailBase {
+  /** Next playable level in map order; null when this is the final level. */
+  nextLevel: PathNode | null;
+  /** Every other level is complete, so passing this level finishes the subject. */
+  allLevelsCompletedAfterPass: boolean;
+}
+
+export interface RewardDetail extends CurriculumDetailBase {
   level: {
     slug: string;
     title: string;
@@ -403,6 +414,7 @@ export const curriculumService = {
           },
           unit,
           node,
+          ...resolveLevelNavigation(path.levels, node.id),
         };
       }
     }

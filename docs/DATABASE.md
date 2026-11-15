@@ -46,11 +46,13 @@ sehingga seed aman dijalankan ulang (`on conflict do update`).
 ### Akun
 
 - `profiles` — satu baris per `auth.users`, dibuat trigger; username unik (citext),
-  display name, avatar, bio, `onboarding_completed`.
+  display name, avatar, bio, `onboarding_completed`, dan `account_number` sembilan digit
+  unik untuk tampilan. `id` tetap UUID primary key yang dipakai seluruh relasi.
 - `user_roles` — `player`, `admin`, `developer`; hanya SQL Editor/service role yang menulis.
 - `user_settings` — locale, timezone, target harian, volume, reduced motion, opt-in email.
 
 Email tidak disimpan di `profiles`; email hidup di `auth.users` dan hanya dibaca pemilik.
+Halaman Profil tidak menampilkan email; `account_number` bukan identifier internal.
 
 ### Kurikulum
 

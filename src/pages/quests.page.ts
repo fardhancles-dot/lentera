@@ -2,6 +2,7 @@ import type { PageModule } from '../app/router';
 import { icon, iconName } from '../components/icons';
 import { showToast } from '../components/toast';
 import { pageHeader, renderAppLayout } from '../layouts/appLayout';
+import { notificationIndicatorsStore } from '../stores/notificationIndicators.store';
 import { rewardsStore } from '../stores/rewards.store';
 import { sessionStore } from '../stores/session.store';
 import type { Achievement, Quest } from '../types/rewards';
@@ -300,6 +301,9 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
       rewardsStore.loadAchievements(true),
     ]);
     if (disposed) return;
+    if (rewardsStore.getState().achievementsStatus === 'ready') {
+      void notificationIndicatorsStore.markAchievementsSeen();
+    }
     paintQuests();
     paintAchievements();
   };

@@ -757,3 +757,262 @@
     padding: 0.5rem 0.6rem;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Follow panel (profile + player page)
+--------------------------------------------------------------------------- */
+.follow-panel {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.2rem;
+}
+
+.follow-panel__head .card__subtitle {
+  margin-bottom: 0;
+}
+
+.follow-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 13px;
+  background: #f6faf2;
+  border: 1px solid var(--line, #dbe7d3);
+}
+
+.follow-tabs__tab {
+  flex: 1;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--ink-muted, #5b6b56);
+  font: inherit;
+  font-weight: 800;
+  font-size: 0.86rem;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.follow-tabs__tab[aria-pressed='true'] {
+  background: #fff;
+  color: var(--green-700, #2f8f24);
+  box-shadow: 0 2px 8px rgba(48, 58, 50, 0.09);
+}
+
+.follow-panel__body {
+  min-height: 86px;
+}
+
+.follow-list {
+  display: grid;
+  gap: 2px;
+  max-height: 380px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.follow-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem;
+  border-radius: 11px;
+}
+
+.follow-row:hover {
+  background: var(--green-50, #f2fbe8);
+}
+
+.follow-row__avatar {
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.follow-row__meta {
+  display: grid;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.follow-row__name {
+  overflow: hidden;
+  color: inherit;
+  font-weight: 800;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.follow-row__handle {
+  overflow: hidden;
+  color: var(--ink-muted, #5b6b56);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.follow-row__badges {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.35rem;
+}
+
+.follow-panel__locked {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1.1rem;
+  border-radius: 12px;
+  background: #f6faf2;
+  color: var(--ink-muted, #5b6b56);
+  font-weight: 700;
+  text-align: center;
+}
+
+.follow-panel__locked p {
+  margin: 0;
+}
+
+.follow-panel__empty {
+  margin: 0;
+  padding: 1.1rem;
+  color: var(--ink-muted, #5b6b56);
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ---------------------------------------------------------------------------
+   Inbox (Aktivitas + Pengikut Baru)
+--------------------------------------------------------------------------- */
+.inbox-card {
+  overflow: hidden;
+  padding: 0;
+}
+
+.inbox-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--line, #dbe7d3);
+}
+
+.inbox-tabs__tab {
+  flex: 1;
+  padding: 0.9rem 0.75rem;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: #fff;
+  color: var(--ink-muted, #5b6b56);
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.inbox-tabs__tab:hover {
+  background: var(--green-50, #f2fbe8);
+}
+
+.inbox-tabs__tab[aria-pressed='true'] {
+  border-bottom-color: var(--green-500, #58cc02);
+  background: linear-gradient(180deg, #fff, var(--green-50, #f2fbe8));
+  color: var(--green-700, #2f8f24);
+}
+
+.inbox-body {
+  min-height: 240px;
+  padding: 0.65rem 1rem 1rem;
+}
+
+.inbox-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.2rem;
+  border-bottom: 1px solid var(--line, #dbe7d3);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.inbox-row:last-child {
+  border-bottom: 0;
+}
+
+.inbox-row--leaving {
+  opacity: 0;
+  transform: translateX(8px);
+}
+
+.inbox-row__meta {
+  display: grid;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.inbox-row__name {
+  overflow: hidden;
+  color: inherit;
+  font-weight: 800;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inbox-row__handle,
+.inbox-row__note {
+  overflow: hidden;
+  color: var(--ink-muted, #5b6b56);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inbox-row__actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 0.35rem;
+}
+
+.inbox-row__dismiss {
+  width: 34px;
+  height: 34px;
+  color: var(--ink-muted, #5b6b56);
+}
+
+@media (max-width: 480px) {
+  .inbox-row {
+    flex-wrap: wrap;
+  }
+
+  .inbox-row__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .follow-row__badges .badge {
+    font-size: 0.64rem;
+  }
+}
+

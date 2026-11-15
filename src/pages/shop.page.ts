@@ -1,28 +1,54 @@
 import type { PageModule } from '../app/router';
 import { icon, iconName } from '../components/icons';
+import { storeNav } from '../components/storeNav';
 import { showToast } from '../components/toast';
 import { pageHeader, renderAppLayout } from '../layouts/appLayout';
 import { rewardsStore } from '../stores/rewards.store';
 import { sessionStore } from '../stores/session.store';
-import type { InventoryItem, ShopItem } from '../types/rewards';
+import type { ShopItem } from '../types/rewards';
 import { el, formatNumber } from '../utils/dom';
 
-const meta = { title: 'Toko & Tas' };
+const meta = { title: 'Toko' };
 
-function effectLabel(kind: ShopItem['kind']): string {
-  return kind === 'heart_potion' ? 'Memulihkan hingga 3 Hearts' : 'Melindungi Streak 1 hari';
+function productArt(item: ShopItem): HTMLElement {
+  const art = el('div', { class: 'shop-card__art' });
+  const fallback = el('span', { class: 'shop-card__fallback' }, [
+    icon(iconName(item.icon, 'bag'), 48),
+  ]);
+  art.append(fallback);
+
+  if (item.imageUrl) {
+    const image = el('img', {
+      class: 'shop-card__image',
+      attrs: { alt: item.name, loading: 'lazy', decoding: 'async' },
+    });
+    image.addEventListener('load', () => {
+      art.classList.add('has-image');
+    });
+    image.addEventListener('error', () => {
+      art.classList.remove('has-image');
+      image.remove();
+    });
+    image.src = item.imageUrl;
+    art.append(image);
+  }
+
+  return art;
 }
+
+const RARITY_LABEL = {
+  common: 'COMMON',
+  rare: 'RARE',
+  legendary: 'LEGENDARY',
+} as const;
 
 function shopCard(item: ShopItem, onBuy: (item: ShopItem) => Promise<void>): HTMLElement {
   const full = item.owned >= item.maxStack;
-  const buy = el('button', { class: 'btn btn--block', attrs: { type: 'button' } }, [
-    icon('coin', 18),
-    full
-      ? 'Stok penuh'
-      : item.canBuy
-        ? `Beli · ${formatNumber(item.priceCoins)} Koin`
-        : 'Koin belum cukup',
-  ]);
+  const buyLabel = full ? 'Stok penuh' : item.canBuy ? 'Beli' : 'Koin kurang';
+  const buy = el('button', {
+    class: 'btn btn--sm shop-card__buy',
+    attrs: { type: 'button' },
+  }, [buyLabel]);
   buy.disabled = full || !item.canBuy;
 
   buy.addEventListener('click', () => {
@@ -31,61 +57,49 @@ function shopCard(item: ShopItem, onBuy: (item: ShopItem) => Promise<void>): HTM
     buy.replaceChildren(el('span', { class: 'btn__spinner' }), 'Membeli…');
     void onBuy(item).catch(() => {
       buy.disabled = false;
-      buy.replaceChildren(icon('coin', 18), `Beli · ${formatNumber(item.priceCoins)} Koin`);
+      buy.replaceChildren(buyLabel);
     });
   });
 
-  return el('article', { class: 'card shop-card' }, [
-    el('div', { class: 'shop-card__top' }, [
-      el('span', { class: 'shop-card__icon' }, [icon(iconName(item.icon, 'bag'), 24)]),
-      el('span', { class: 'badge badge--muted', text: `${item.owned}/${item.maxStack} dimiliki` }),
-    ]),
-    el('h3', { class: 'shop-card__title', text: item.name }),
-    el('p', { class: 'shop-card__body', text: item.description }),
-    el('p', { class: 'shop-card__effect', text: effectLabel(item.kind) }),
-    buy,
-  ]);
+  return el(
+    'article',
+    {
+      class: `shop-card shop-card--${item.rarity}`,
+      attrs: {
+        'data-rarity': item.rarity,
+        'aria-label': `${item.name}. ${item.description} Harga ${formatNumber(item.priceCoins)} Koin.`,
+        title: item.description,
+      },
+    },
+    [
+      el('header', { class: 'shop-card__head' }, [
+        el('h3', { class: 'shop-card__title', text: item.name }),
+        el('span', { class: 'shop-card__rarity', text: RARITY_LABEL[item.rarity] }),
+      ]),
+      el('div', { class: 'shop-card__art-wrap' }, [
+        productArt(item),
+        el('span', { class: 'shop-card__limit', text: `Maks. ${item.maxStack}` }),
+      ]),
+      el('footer', { class: 'shop-card__footer' }, [
+        el('p', { class: 'shop-card__price' }, [
+          icon('coin', 15),
+          el('strong', { text: formatNumber(item.priceCoins) }),
+          el('span', { text: 'Koin' }),
+        ]),
+        buy,
+      ]),
+    ],
+  );
 }
 
-function inventoryCard(
-  item: InventoryItem,
-  onUse: (item: InventoryItem) => Promise<void>,
-): HTMLElement {
-  const use = el('button', { class: 'btn btn--secondary btn--block', attrs: { type: 'button' } }, [
-    icon(item.kind === 'heart_potion' ? 'heart' : 'shield', 18),
-    item.kind === 'heart_potion' ? 'Gunakan ramuan' : 'Aktifkan perisai',
-  ]);
-  use.disabled = item.quantity <= 0;
-
-  use.addEventListener('click', () => {
-    if (use.disabled) return;
-    use.disabled = true;
-    use.replaceChildren(el('span', { class: 'btn__spinner' }), 'Menggunakan…');
-    void onUse(item).catch(() => {
-      use.disabled = false;
-      use.replaceChildren(
-        icon(item.kind === 'heart_potion' ? 'heart' : 'shield', 18),
-        item.kind === 'heart_potion' ? 'Gunakan ramuan' : 'Aktifkan perisai',
-      );
-    });
-  });
-
-  return el('article', { class: 'card inventory-card' }, [
-    el('div', { class: 'inventory-card__top' }, [
-      el('span', { class: 'inventory-card__icon' }, [icon(iconName(item.icon, 'bag'), 22)]),
-      el('span', { class: 'badge', text: `${item.quantity}×` }),
-    ]),
-    el('h3', { class: 'inventory-card__title', text: item.name }),
-    el('p', { class: 'inventory-card__body', text: item.description }),
-    use,
-  ]);
-}
-
-function emptyState(title: string, body: string, iconNameFallback: 'bag' | 'gift'): HTMLElement {
+function emptyState(): HTMLElement {
   return el('div', { class: 'card empty-state' }, [
-    el('span', { class: 'empty-state__art' }, [icon(iconNameFallback, 34)]),
-    el('h2', { class: 'empty-state__title', text: title }),
-    el('p', { class: 'empty-state__body', text: body }),
+    el('span', { class: 'empty-state__art' }, [icon('gift', 34)]),
+    el('h2', { class: 'empty-state__title', text: 'Belum ada produk' }),
+    el('p', {
+      class: 'empty-state__body',
+      text: 'Toko sedang kosong. Kembali lagi nanti untuk melihat item baru.',
+    }),
   ]);
 }
 
@@ -121,16 +135,16 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
   });
 
   const shopSlot = el('div', {});
-  const inventorySlot = el('div', {});
   const coinValue = el('strong', { text: '—' });
 
   const content = el('div', {}, [
     pageHeader({
       eyebrow: 'Toko Lentera',
-      title: 'Toko & Tas',
+      title: 'Toko',
       subtitle:
-        'Harga, saldo, dan isi tas dihitung server. Item yang kamu beli bisa langsung dipakai dari tas.',
+        'Pilih produk, periksa harga dan batas pembelian, lalu beli dengan Koin. Item yang berhasil dibeli otomatis masuk ke Tas.',
     }),
+    storeNav('shop'),
     el('div', { class: 'shop-hero' }, [
       el('div', {}, [
         el('span', { class: 'shop-hero__eyebrow' }, [icon('coin', 16), 'Koin kamu']),
@@ -141,8 +155,12 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
         }),
       ]),
       el('div', { class: 'shop-hero__actions' }, [
-        el('a', { class: 'btn btn--secondary', attrs: { href: '/wallet' } }, [
+        el('a', { class: 'btn btn--secondary', attrs: { href: '/inventory' } }, [
           icon('bag', 16),
+          'Buka Tas',
+        ]),
+        el('a', { class: 'btn btn--ghost', attrs: { href: '/wallet' } }, [
+          icon('coin', 16),
           'Wallet',
         ]),
         el('a', { class: 'btn btn--ghost', attrs: { href: '/quests' } }, [
@@ -153,17 +171,10 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
     ]),
     el('section', { class: 'rewards-section' }, [
       el('div', { class: 'rewards-section__head' }, [
-        el('h2', { class: 'rewards-section__title', text: 'Toko' }),
+        el('h2', { class: 'rewards-section__title', text: 'Produk tersedia' }),
         el('span', { class: 'rewards-section__hint', text: 'Harga dari server' }),
       ]),
       shopSlot,
-    ]),
-    el('section', { class: 'rewards-section' }, [
-      el('div', { class: 'rewards-section__head' }, [
-        el('h2', { class: 'rewards-section__title', text: 'Tas' }),
-        el('span', { class: 'rewards-section__hint', text: 'Gunakan item kapan saja' }),
-      ]),
-      inventorySlot,
     ]),
   ]);
 
@@ -174,31 +185,13 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
       const result = await rewardsStore.purchase(item.id);
       if (disposed) return;
       showToast(
-        `${item.name} dibeli. Sisa ${formatNumber(result.coinBalance)} Koin.`,
+        `${item.name} dibeli dan masuk ke Tas. Sisa ${formatNumber(result.coinBalance)} Koin.`,
         'success',
       );
-      await load();
+      paintShop();
     } catch (error) {
       if (!disposed) {
         showToast(error instanceof Error ? error.message : 'Pembelian gagal.', 'error');
-      }
-      throw error;
-    }
-  };
-
-  const use = async (item: InventoryItem) => {
-    try {
-      const result = await rewardsStore.useItem(item.id);
-      if (disposed) return;
-      if (result.effect === 'hearts') {
-        showToast(`${formatNumber(result.restored)} Hearts dipulihkan.`, 'success');
-      } else {
-        showToast(`Perisai Streak aktif. Total perisai: ${result.freezes}.`, 'success');
-      }
-      await load();
-    } catch (error) {
-      if (!disposed) {
-        showToast(error instanceof Error ? error.message : 'Item gagal digunakan.', 'error');
       }
       throw error;
     }
@@ -219,66 +212,28 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
     }
 
     coinValue.textContent = formatNumber(state.shop.coins);
+    if (state.shop.items.length === 0) {
+      shopSlot.append(emptyState());
+      return;
+    }
+
     shopSlot.append(
       el(
         'div',
-        { class: 'shop-grid' },
+        { class: 'shop-product-grid' },
         state.shop.items.map((item) => shopCard(item, buy)),
-      ),
-    );
-  };
-
-  const paintInventory = () => {
-    const state = rewardsStore.getState();
-    inventorySlot.replaceChildren();
-
-    if (state.inventoryStatus === 'error') {
-      inventorySlot.append(
-        errorCard(state.inventoryError ?? 'Tas gagal dimuat.', load),
-      );
-      return;
-    }
-
-    if (!state.inventory) {
-      inventorySlot.append(loading('Memuat tas…'));
-      return;
-    }
-
-    if (state.inventory.items.length === 0) {
-      inventorySlot.append(
-        emptyState(
-          'Tasmu masih kosong',
-          'Beli Ramuan Hati atau Perisai Streak dari toko. Item yang dibeli muncul di sini.',
-          'bag',
-        ),
-      );
-      return;
-    }
-
-    inventorySlot.append(
-      el('p', { class: 'inventory-summary' }, [
-        icon('shield', 16),
-        `${state.inventory.streakFreezes}/2 perisai Streak siap dipakai`,
-      ]),
-      el(
-        'div',
-        { class: 'shop-grid' },
-        state.inventory.items.map((item) => inventoryCard(item, use)),
       ),
     );
   };
 
   const load = async () => {
     shopSlot.replaceChildren(loading('Memuat toko…'));
-    inventorySlot.replaceChildren(loading('Memuat tas…'));
-    await Promise.all([rewardsStore.loadShop(true), rewardsStore.loadInventory(true)]);
+    await rewardsStore.loadShop(true);
     if (disposed) return;
     paintShop();
-    paintInventory();
   };
 
   paintShop();
-  paintInventory();
   void load();
 }
 

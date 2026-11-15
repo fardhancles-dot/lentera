@@ -80,6 +80,123 @@ try {
   await run('supabase/migrations/20261115102000_subject_category_in_form.sql');
   await run('supabase/migrations/20261115110000_subject_icon_url.sql');
 
+  // Legacy social data existed before the follow migration. Create it first so
+  // the backfill and compatibility cache are tested against real rows.
+  const legacySocialUsers = await db.query(
+    `insert into auth.users (email) values
+       ('legacy-friend-a@example.com'),
+       ('legacy-friend-b@example.com'),
+       ('legacy-pending-c@example.com')
+     returning id, email`,
+  );
+  const legacyA = legacySocialUsers.rows.find((row) => row.email.startsWith('legacy-friend-a')).id;
+  const legacyB = legacySocialUsers.rows.find((row) => row.email.startsWith('legacy-friend-b')).id;
+  const legacyC = legacySocialUsers.rows.find((row) => row.email.startsWith('legacy-pending-c')).id;
+  await db.query(
+    `insert into public.friendships
+       (requester_id, addressee_id, status, created_at, responded_at)
+     values
+       ($1, $2, 'accepted', now() - interval '10 days', now() - interval '9 days'),
+       ($3, $1, 'pending', now() - interval '2 days', null)`,
+    [legacyA, legacyB, legacyC],
+  );
+
+  await run('supabase/migrations/20261116100000_social_follows_inbox.sql');
+  await run('supabase/migrations/20261116120000_shop_rarity_product_images.sql');
+  await run('supabase/migrations/20261116130000_subject_kejuruan_category.sql');
+  await run('supabase/migrations/20261116140000_notification_indicators.sql');
+  await run('supabase/migrations/20261116150000_profile_account_number.sql');
+
+  const legacyAccounts = await db.query(
+    `select id, account_number::text as account_number
+     from public.profiles where id = any($1::uuid[])`,
+    [[legacyA, legacyB, legacyC]],
+  );
+  const legacyAccountValues = legacyAccounts.rows.map((row) => row.account_number);
+  check(
+    legacyAccountValues.length === 3 &&
+      legacyAccountValues.every((value) => /^\d{9}$/.test(value)) &&
+      new Set(legacyAccountValues).size === 3,
+    'legacy profiles receive unique nine-digit account numbers',
+    JSON.stringify(legacyAccountValues),
+  );
+
+  const stableAccountBefore = legacyAccounts.rows[0].account_number;
+  await db.query("update public.profiles set display_name = 'Nama Diperbarui' where id = $1", [
+    legacyA,
+  ]);
+  const stableAccountAfter = await db.query(
+    'select account_number::text as account_number from public.profiles where id = $1',
+    [legacyA],
+  );
+  check(
+    stableAccountAfter.rows[0].account_number === stableAccountBefore,
+    'a profile update does not regenerate the account number',
+    `${stableAccountBefore} -> ${stableAccountAfter.rows[0].account_number}`,
+  );
+
+  await expectError(
+    'account numbers remain unique',
+    'update public.profiles set account_number = $2::bigint where id = $1',
+    [legacyA, legacyAccounts.rows[1].account_number],
+    'profiles_account_number_key',
+  );
+
+  const generatedAccountUser = await db.query(
+    "insert into auth.users (email) values ('numeric-id-check@example.com') returning id",
+  );
+  const generatedAccount = await db.query(
+    'select account_number::text as account_number from public.profiles where id = $1',
+    [generatedAccountUser.rows[0].id],
+  );
+  check(
+    /^\d{9}$/.test(generatedAccount.rows[0].account_number) &&
+      !legacyAccountValues.includes(generatedAccount.rows[0].account_number),
+    'new profiles receive a unique numeric account number',
+    generatedAccount.rows[0].account_number,
+  );
+  await db.query('delete from auth.users where id = $1', [generatedAccountUser.rows[0].id]);
+
+  await db.exec('set role authenticated');
+  try {
+    await asUser(legacyA);
+    await expectError(
+      'players cannot change their account number',
+      'update public.profiles set account_number = 123456789 where id = $1',
+      [legacyA],
+      'permission denied',
+    );
+  } finally {
+    await db.exec('reset role');
+  }
+
+  const legacyFollows = await db.query(
+    `select follower_id, following_id from public.follows
+     where follower_id = any($1::uuid[]) or following_id = any($1::uuid[])`,
+    [[legacyA, legacyB, legacyC]],
+  );
+  check(
+    legacyFollows.rows.length === 3 &&
+      legacyFollows.rows.some((row) => row.follower_id === legacyA && row.following_id === legacyB) &&
+      legacyFollows.rows.some((row) => row.follower_id === legacyB && row.following_id === legacyA) &&
+      legacyFollows.rows.some((row) => row.follower_id === legacyC && row.following_id === legacyA),
+    'legacy accepted friends become mutual follows and pending requests become a follow',
+    JSON.stringify(legacyFollows.rows),
+  );
+  const legacyFriendStatus = await db.query(
+    `select
+       public.are_friends($1, $2) as friends,
+       exists (select 1 from public.friendships where id is not null
+         and requester_id = $1 and addressee_id = $2 and status = 'accepted') as friendship_kept`,
+    [legacyA, legacyB],
+  );
+  check(
+    legacyFriendStatus.rows[0].friends === true &&
+      legacyFriendStatus.rows[0].friendship_kept === true,
+    'legacy friendship rows and friend status survive the migration',
+    JSON.stringify(legacyFriendStatus.rows[0]),
+  );
+
   const saveSubjectDef = await db.query(
     `select pg_get_functiondef('public.admin_save_subject(jsonb,text)'::regprocedure) as def`,
   );
@@ -87,8 +204,12 @@ try {
     saveSubjectDef.rows[0].def.includes('learn_category'),
     'admin_save_subject saves the subject category from the form payload',
   );
+  check(
+    saveSubjectDef.rows[0].def.includes("'kejuruan'"),
+    'admin_save_subject accepts Kejuruan from the admin form',
+  );
 
-  // Learn categories are fixed to three values and every existing subject must
+  // Learn categories are fixed to four values and every existing subject must
   // land in Mapel Umum without touching its identity or content.
   const categoryTotals = await db.query(
     `select
@@ -112,6 +233,26 @@ try {
     newSubjectRow.rows[0].learn_category === 'umum',
     'a new subject defaults to Mapel Umum',
     String(newSubjectRow.rows[0].learn_category),
+  );
+  const kejuruanRow = await db.query(
+    `update public.subjects set learn_category = 'kejuruan'
+     where id = $1 returning learn_category`,
+    [newSubjectRow.rows[0].id],
+  );
+  check(
+    kejuruanRow.rows[0].learn_category === 'kejuruan',
+    'Kejuruan is accepted as a learn category',
+    String(kejuruanRow.rows[0].learn_category),
+  );
+  const bahasaAsingRow = await db.query(
+    `update public.subjects set learn_category = 'bahasa-asing'
+     where id = $1 returning learn_category`,
+    [newSubjectRow.rows[0].id],
+  );
+  check(
+    bahasaAsingRow.rows[0].learn_category === 'bahasa-asing',
+    'Kursus Bahasa keeps the existing bahasa-asing data key',
+    String(bahasaAsingRow.rows[0].learn_category),
   );
   await expectError(
     'an unknown learn category is rejected',
@@ -1368,6 +1509,14 @@ try {
   check(questCompleted.status === 'completed', 'quest completes when combined XP reaches the target');
   check(questCompleted.totalXp === 30, 'quest total combines both members', String(questCompleted.totalXp));
   check(questCompleted.canClaim === true, 'completed quest exposes the claim action');
+  const friendQuestIndicators = await db.query(
+    'select public.get_notification_indicators() as payload',
+  );
+  check(
+    friendQuestIndicators.rows[0].payload.friends >= 1,
+    'a completed unclaimed Friends Quest lights the Teman badge',
+    JSON.stringify(friendQuestIndicators.rows[0].payload),
+  );
 
   await asUser(user1);
   const claim = await db.query('select public.claim_friend_quest_reward($1) as payload', [quest.id]);
@@ -1379,6 +1528,14 @@ try {
   const claimRepeat = await db.query('select public.claim_friend_quest_reward($1) as payload', [quest.id]);
   check(claimRepeat.rows[0].payload.alreadyClaimed === true, 'second claim is rejected as already claimed');
   check(claimRepeat.rows[0].payload.xpAwarded === 0, 'second claim grants no XP');
+  const friendQuestIndicatorsAfter = await db.query(
+    'select public.get_notification_indicators() as payload',
+  );
+  check(
+    friendQuestIndicatorsAfter.rows[0].payload.friends === 0,
+    'the Teman badge clears after the viewer claims the Friends Quest reward',
+    JSON.stringify(friendQuestIndicatorsAfter.rows[0].payload),
+  );
 
   const questLedger = await db.query(
     `select count(*)::int as count
@@ -1506,6 +1663,15 @@ try {
   const dailyXpQuest = questState.quests.find((quest) => quest.code === 'daily-xp-50');
   check(dailyXpQuest?.progress === 110, 'daily XP quest reads server-written XP only', String(dailyXpQuest?.progress));
   check(dailyXpQuest?.canClaim === true, 'completed daily quest can be claimed');
+  const questIndicatorsBefore = await db.query(
+    'select public.get_notification_indicators() as payload',
+  );
+  const questBadgeBefore = questIndicatorsBefore.rows[0].payload.quests;
+  check(
+    questBadgeBefore >= 1,
+    'a completed unclaimed quest lights the Misi badge',
+    String(questBadgeBefore),
+  );
 
   const questClaim = await db.query('select public.claim_quest_reward($1) as payload', [dailyXpQuest.id]);
   check(
@@ -1521,6 +1687,14 @@ try {
     questClaimRepeat.rows[0].payload.alreadyClaimed === true &&
       questClaimRepeat.rows[0].payload.coinsAwarded === 0,
     'quest claim is idempotent for the same period',
+  );
+  const questIndicatorsAfter = await db.query(
+    'select public.get_notification_indicators() as payload',
+  );
+  check(
+    questIndicatorsAfter.rows[0].payload.quests === questBadgeBefore - 1,
+    'claiming one quest removes exactly one Misi badge source',
+    `${questBadgeBefore} -> ${questIndicatorsAfter.rows[0].payload.quests}`,
   );
   const questRewardTx = await db.query(
     `select count(*)::int as count from public.coin_transactions
@@ -1589,6 +1763,11 @@ try {
   check(
     potion?.priceCoins === 80 && freeze?.priceCoins === 120,
     'shop prices come from the catalog',
+  );
+  check(
+    shopState.items.every((item) => item.rarity === 'common' && item.imageUrl === null),
+    'shop defaults old products to COMMON with the built-in icon fallback',
+    JSON.stringify(shopState.items.map((item) => ({ rarity: item.rarity, imageUrl: item.imageUrl }))),
   );
 
   const potionPurchase = await db.query('select public.purchase_shop_item($1) as payload', [potion.id]);
@@ -1835,6 +2014,16 @@ try {
 
   await db.exec('set role authenticated');
   await asUser(user4);
+  const indicatorsBeforeRewardClaim = await db.query(
+    'select public.get_notification_indicators() as payload',
+  );
+  const learnRewardsBeforeClaim =
+    indicatorsBeforeRewardClaim.rows[0].payload.learnRewards;
+  check(
+    learnRewardsBeforeClaim >= 1,
+    'a completed level lights the Learn badge until its reward is claimed',
+    String(learnRewardsBeforeClaim),
+  );
   const rewardClaim = await db.query('select public.claim_reward_node($1) as payload', [
     rewardNode.id,
   ]);
@@ -1856,6 +2045,63 @@ try {
       rewardRepeat.rows[0].payload.xpAwarded === 0,
     'reward node claim is idempotent',
     JSON.stringify(rewardRepeat.rows[0].payload),
+  );
+
+  // Global indicators derive everything from those same server rows. Seed one
+  // real unseen achievement for this isolated player so the check does not
+  // depend on whether another test fixture happened to complete a lesson.
+  await db.exec('reset role');
+  await db.query(
+    `insert into public.user_achievements (user_id, achievement_id, awarded_at, seen_at)
+     select $1, id, now(), null
+     from public.achievement_definitions
+     where is_active
+     order by sort_order
+     limit 1
+     on conflict (user_id, achievement_id) do update
+       set awarded_at = now(), seen_at = null`,
+    [user4],
+  );
+  await db.exec('set role authenticated');
+  await asUser(user4);
+
+  const indicatorsAfterReward = await db.query(
+    'select public.get_notification_indicators() as payload',
+  );
+  const rewardIndicators = indicatorsAfterReward.rows[0].payload;
+  check(
+    Object.keys(rewardIndicators).sort().join(',') ===
+      ['achievements', 'friends', 'inbox', 'learnRewards', 'league', 'notifications', 'quests']
+        .sort()
+        .join(','),
+    'the indicator RPC returns every supported destination',
+    JSON.stringify(rewardIndicators),
+  );
+  check(
+    rewardIndicators.learnRewards === learnRewardsBeforeClaim - 1,
+    'claiming one reward node removes exactly one Learn badge source',
+    `${learnRewardsBeforeClaim} -> ${rewardIndicators.learnRewards}`,
+  );
+  check(
+    rewardIndicators.achievements >= 1,
+    'a newly unlocked achievement is unseen before the Misi page is opened',
+    String(rewardIndicators.achievements),
+  );
+  const achievementsSeen = await db.query(
+    'select public.mark_achievements_seen() as payload',
+  );
+  check(
+    achievementsSeen.rows[0].payload.updated >= 1,
+    'marking achievements seen updates the server state',
+    JSON.stringify(achievementsSeen.rows[0].payload),
+  );
+  const indicatorsAfterSeen = await db.query(
+    'select public.get_notification_indicators() as payload',
+  );
+  check(
+    indicatorsAfterSeen.rows[0].payload.achievements === 0,
+    'the achievement badge clears after it is seen',
+    String(indicatorsAfterSeen.rows[0].payload.achievements),
   );
 
   await db.exec('reset role');
@@ -1920,14 +2166,18 @@ try {
   );
   const usernameOf = (id) =>
     stage7Profiles.rows.find((row) => row.id === id)?.username;
+  const user1Name = usernameOf(user1);
   const user2Name = usernameOf(user2);
+  const user3Name = usernameOf(user3);
   const user4Name = usernameOf(user4);
 
   await db.exec('set role authenticated');
   await asUser(user1);
   const search = await db.query('select public.search_players($1) as payload', [user2Name]);
   check(
-    search.rows[0].payload.length === 1 && search.rows[0].payload[0].relation === 'none',
+    search.rows[0].payload.length === 1 &&
+      search.rows[0].payload[0].relation === 'none' &&
+      search.rows[0].payload[0].isFollowing === false,
     'player search finds another player with no relation',
     JSON.stringify(search.rows[0].payload),
   );
@@ -1938,44 +2188,69 @@ try {
     'search_query_too_short',
   );
 
-  const sentRequest = await db.query(
-    'select public.send_friend_request($1) as payload',
+  // A follows B: one direction only, so they are not friends yet.
+  const followB = await db.query('select public.follow_player($1) as payload', [user2Name]);
+  check(
+    followB.rows[0].payload.isFollowing === true &&
+      followB.rows[0].payload.isFriend === false &&
+      followB.rows[0].payload.followersCount === 1 &&
+      followB.rows[0].payload.followingCount === 0,
+    'A follows B without forming a friendship',
+    JSON.stringify(followB.rows[0].payload),
+  );
+  await expectError(
+    'a player cannot follow their own account',
+    'select public.follow_player($1)',
+    [user1Name],
+    'follow_self',
+  );
+  const duplicateFollow = await db.query(
+    'select public.follow_player($1) as payload',
     [user2Name],
   );
   check(
-    sentRequest.rows[0].payload.status === 'pending' &&
-      Boolean(sentRequest.rows[0].payload.requestId),
-    'friend request is stored as pending',
-    JSON.stringify(sentRequest.rows[0].payload),
+    duplicateFollow.rows[0].payload.followersCount === 1,
+    'following the same account twice does not duplicate the relation',
+    JSON.stringify(duplicateFollow.rows[0].payload),
   );
-  const requestId = sentRequest.rows[0].payload.requestId;
 
   await db.exec('reset role');
-  const requestNotification = await db.query(
+  const followerNotification = await db.query(
     `select count(*)::int as count from public.notifications
-     where user_id = $1 and kind = 'friend_request' and read_at is null`,
+     where user_id = $1 and kind = 'new_follower' and read_at is null`,
     [user2],
   );
   check(
-    requestNotification.rows[0].count === 1,
-    'friend request creates one unread notification for the recipient',
-    String(requestNotification.rows[0].count),
+    followerNotification.rows[0].count === 1,
+    'following creates one unread notification for the recipient',
+    String(followerNotification.rows[0].count),
   );
 
   await db.exec('set role authenticated');
   await asUser(user2);
-  const incoming = await db.query('select public.get_my_friends() as payload');
+  const newFollowers = await db.query('select public.get_new_followers(30) as payload');
   check(
-    incoming.rows[0].payload.incoming.length === 1 &&
-      incoming.rows[0].payload.incoming[0].requestId === requestId,
-    'recipient sees the incoming friend request',
-    JSON.stringify(incoming.rows[0].payload.incoming),
+    newFollowers.rows[0].payload.length === 1 &&
+      newFollowers.rows[0].payload[0].userId === user1 &&
+      newFollowers.rows[0].payload[0].isFollowing === false,
+    'new followers list contains A and no follow-back yet',
+    JSON.stringify(newFollowers.rows[0].payload),
   );
-  const accepted = await db.query(
-    'select public.respond_friend_request($1, true) as payload',
-    [requestId],
+  const beforeFollowBack = await db.query('select public.get_my_friends() as payload');
+  check(
+    beforeFollowBack.rows[0].payload.friends.length === 0,
+    'a one-way follow is not shown as a friend',
+    JSON.stringify(beforeFollowBack.rows[0].payload),
   );
-  check(accepted.rows[0].payload.status === 'accepted', 'recipient can accept the request');
+
+  // B follows back A: the mutual follow becomes a friendship automatically.
+  const followBack = await db.query('select public.follow_player($1) as payload', [user1Name]);
+  check(
+    followBack.rows[0].payload.isFollowing === true &&
+      followBack.rows[0].payload.isFriend === true,
+    'B follow back automatically creates a friendship',
+    JSON.stringify(followBack.rows[0].payload),
+  );
 
   await asUser(user1);
   const friends = await db.query('select public.get_my_friends() as payload');
@@ -1983,8 +2258,9 @@ try {
   check(
     friendPayload.friends.length === 1 &&
       friendPayload.friends[0].userId === user2 &&
-      friendPayload.incoming.length === 0,
-    'accepted request appears in both friends lists',
+      friendPayload.incoming.length === 0 &&
+      friendPayload.outgoing.length === 0,
+    'mutual follow appears in both friends lists without friend requests',
     JSON.stringify(friendPayload),
   );
   check(
@@ -1992,11 +2268,204 @@ try {
     'friends who both earned XP today share a one-day friend streak',
     String(friendPayload.friends[0].friendStreak),
   );
-  await expectError(
-    'a duplicate friend request is rejected',
-    'select public.send_friend_request($1)',
+  const searchFriend = await db.query(
+    'select public.search_players($1) as payload',
     [user2Name],
-    'already_friends',
+  );
+  check(
+    searchFriend.rows[0].payload[0].relation === 'friend' &&
+      searchFriend.rows[0].payload[0].isFriend === true,
+    'search reflects the mutual follow as Teman',
+    JSON.stringify(searchFriend.rows[0].payload),
+  );
+
+  // A follows C, but C never follows back: C must stay out of A's friends.
+  const followC = await db.query('select public.follow_player($1) as payload', [user3Name]);
+  check(
+    followC.rows[0].payload.isFollowing === true &&
+      followC.rows[0].payload.isFriend === false,
+    'A follows C without becoming friends',
+  );
+  const friendsAfterC = await db.query('select public.get_my_friends() as payload');
+  check(
+    friendsAfterC.rows[0].payload.friends.every((friend) => friend.userId !== user3),
+    'an account that does not follow back is excluded from the friend list',
+    JSON.stringify(friendsAfterC.rows[0].payload.friends),
+  );
+
+  // C follows B later than A did; B's newest follower must be C first.
+  await asUser(user3);
+  await db.query('select public.follow_player($1) as payload', [user2Name]);
+  await db.exec('reset role');
+  await db.query(
+    `update public.follows set created_at = now() - interval '2 hours'
+     where follower_id = $1 and following_id = $2`,
+    [user1, user2],
+  );
+  await db.query(
+    `update public.follows set created_at = now() - interval '5 minutes'
+     where follower_id = $1 and following_id = $2`,
+    [user3, user2],
+  );
+  await db.exec('set role authenticated');
+  await asUser(user2);
+  const orderedFollowers = await db.query('select public.get_new_followers(30) as payload');
+  check(
+    orderedFollowers.rows[0].payload.length === 2 &&
+      orderedFollowers.rows[0].payload[0].userId === user3 &&
+      orderedFollowers.rows[0].payload[1].userId === user1,
+    'new followers are ordered by the database follow time, newest first',
+    JSON.stringify(orderedFollowers.rows[0].payload.map((row) => row.userId)),
+  );
+
+  // B unfollows A: friendship breaks, but A's follow of B remains.
+  const unfollow = await db.query('select public.unfollow_player($1) as payload', [user1]);
+  check(
+    unfollow.rows[0].payload.isFollowing === false &&
+      unfollow.rows[0].payload.isFriend === false,
+    'unfollowing breaks the mutual friendship',
+    JSON.stringify(unfollow.rows[0].payload),
+  );
+  const afterUnfollow = await db.query('select public.get_my_friends() as payload');
+  check(
+    afterUnfollow.rows[0].payload.friends.every((friend) => friend.userId !== user1),
+    'a broken mutual follow immediately disappears from the friend list',
+  );
+  await asUser(user1);
+  const aStillFollows = await db.query(
+    'select public.search_players($1) as payload',
+    [user2Name],
+  );
+  check(
+    aStillFollows.rows[0].payload[0].relation === 'outgoing' &&
+      aStillFollows.rows[0].payload[0].isFollowing === true,
+    'the remaining follow direction is preserved after an unfollow',
+    JSON.stringify(aStillFollows.rows[0].payload),
+  );
+
+  // Restore the friendship for the league and final removal tests.
+  await asUser(user2);
+  await db.query('select public.follow_player($1) as payload', [user1Name]);
+  await asUser(user1);
+
+  // Following privacy hides only the following list, never the follower list.
+  await db.exec('reset role');
+  await db.query(
+    "update public.user_settings set following_privacy = 'private' where user_id = $1",
+    [user2],
+  );
+  await db.exec('set role authenticated');
+  await asUser(user1);
+  const privateFollowing = await db.query(
+    'select public.get_following($1) as payload',
+    [user2Name],
+  );
+  check(
+    privateFollowing.rows[0].payload.private === true &&
+      privateFollowing.rows[0].payload.items.length === 0 &&
+      privateFollowing.rows[0].payload.followingCount > 0,
+    'a private following list is hidden while its count stays visible',
+    JSON.stringify(privateFollowing.rows[0].payload),
+  );
+  const visibleFollowers = await db.query(
+    'select public.get_followers($1) as payload',
+    [user2Name],
+  );
+  check(
+    visibleFollowers.rows[0].payload.private === false &&
+      visibleFollowers.rows[0].payload.items.length >= 2,
+    'followers stay visible even when the following list is private',
+    JSON.stringify(visibleFollowers.rows[0].payload),
+  );
+  await expectError(
+    'players cannot insert follow rows directly',
+    'insert into public.follows (follower_id, following_id) values ($1, $2)',
+    [user1, user3],
+    'permission denied',
+  );
+  await asUser(user4);
+  const directPrivateFollowing = await db.query(
+    'select count(*)::int as count from public.follows where follower_id = $1',
+    [user2],
+  );
+  check(
+    directPrivateFollowing.rows[0].count === 0,
+    'RLS blocks reading another player private following rows through the API',
+    String(directPrivateFollowing.rows[0].count),
+  );
+  await asUser(user1);
+
+  await db.exec('reset role');
+  await db.query(
+    "update public.user_settings set following_privacy = 'public' where user_id = $1",
+    [user2],
+  );
+  await db.exec('set role authenticated');
+  await asUser(user1);
+  const publicFollowing = await db.query(
+    'select public.get_following($1) as payload',
+    [user2Name],
+  );
+  check(
+    publicFollowing.rows[0].payload.private === false &&
+      publicFollowing.rows[0].payload.items.length > 0,
+    'a public following list is readable by other players',
+    JSON.stringify(publicFollowing.rows[0].payload),
+  );
+
+  // Search by display name and suggestions must never include followed accounts.
+  await db.exec('reset role');
+  await db.query("update public.profiles set display_name = 'Budi Belajar' where id = $1", [user2]);
+  await db.exec('set role authenticated');
+  await asUser(user1);
+  const displaySearch = await db.query("select public.search_players('Budi') as payload");
+  check(
+    displaySearch.rows[0].payload.some((row) => row.userId === user2),
+    'player search finds an account by display name',
+    JSON.stringify(displaySearch.rows[0].payload),
+  );
+  const suggestions = await db.query('select public.get_follow_suggestions(20) as payload');
+  const suggestionIds = suggestions.rows[0].payload.map((row) => row.userId);
+  check(
+    suggestionIds.includes(user4) &&
+      !suggestionIds.includes(user1) &&
+      !suggestionIds.includes(user2) &&
+      !suggestionIds.includes(user3) &&
+      new Set(suggestionIds).size === suggestionIds.length,
+    'suggestions exclude self and followed accounts without duplicates',
+    JSON.stringify(suggestionIds),
+  );
+  const foreignProfileUpdate = await db.query(
+    "update public.profiles set bio = 'hacked' where id = $1 returning id",
+    [user2],
+  );
+  check(
+    foreignProfileUpdate.rows.length === 0,
+    'RLS prevents a player from editing another profile',
+    `updated ${foreignProfileUpdate.rows.length} rows`,
+  );
+  await db.exec('reset role');
+  const untouchedBio = await db.query('select bio from public.profiles where id = $1', [user2]);
+  check(
+    untouchedBio.rows[0].bio !== 'hacked',
+    'another player bio remains untouched after a blocked update',
+    String(untouchedBio.rows[0].bio),
+  );
+  await db.exec('set role authenticated');
+  await asUser(user1);
+  const ownAvatar = await db.query(
+    "update public.profiles set avatar_url = 'https://example.test/avatar.webp' where id = $1 returning avatar_url",
+    [user1],
+  );
+  check(
+    ownAvatar.rows[0]?.avatar_url === 'https://example.test/avatar.webp',
+    'a player can set an HTTPS avatar on their own profile',
+  );
+  await expectError(
+    'avatar URLs must use HTTPS',
+    "update public.profiles set avatar_url = 'javascript:alert(1)' where id = $1",
+    [user1],
+    'profiles_avatar_url_check',
   );
 
   const friendProfile = await db.query(
@@ -2005,8 +2474,12 @@ try {
   );
   check(
     friendProfile.rows[0].payload.statsVisible === true &&
-      friendProfile.rows[0].payload.isFriend === true,
-    'a friend can see profile stats under the default friends-only visibility',
+      friendProfile.rows[0].payload.isFriend === true &&
+      friendProfile.rows[0].payload.isFollowing === true &&
+      friendProfile.rows[0].payload.followersCount >= 2 &&
+      friendProfile.rows[0].payload.followingCount >= 1 &&
+      friendProfile.rows[0].payload.followingPrivate === false,
+    'a friend can see stats and real follower/following counts',
     JSON.stringify(friendProfile.rows[0].payload),
   );
 
@@ -2203,6 +2676,14 @@ try {
     'a finalized league result becomes claimable',
     JSON.stringify({ canClaim: afterPayload.canClaimReward }),
   );
+  const leagueIndicators = await db.query(
+    'select public.get_notification_indicators() as payload',
+  );
+  check(
+    leagueIndicators.rows[0].payload.league >= 1,
+    'an unclaimed league result lights the Liga badge',
+    JSON.stringify(leagueIndicators.rows[0].payload),
+  );
 
   const walletBeforeLeague = await db.query(
     'select coins from public.user_wallets where user_id = $1',
@@ -2226,6 +2707,14 @@ try {
     leagueClaimRepeat.rows[0].payload.alreadyClaimed === true &&
       leagueClaimRepeat.rows[0].payload.coinsAwarded === 0,
     'league reward cannot be claimed twice',
+  );
+  const leagueIndicatorsAfter = await db.query(
+    'select public.get_notification_indicators() as payload',
+  );
+  check(
+    leagueIndicatorsAfter.rows[0].payload.league === 0,
+    'claiming the league reward clears the Liga badge',
+    JSON.stringify(leagueIndicatorsAfter.rows[0].payload),
   );
   await db.exec('reset role');
   const walletAfterLeague = await db.query(
@@ -2253,6 +2742,14 @@ try {
     'weekly event reports capped progress and a claimable reward',
     JSON.stringify(eventPayload),
   );
+  const eventIndicatorsBefore = await db.query(
+    'select public.get_notification_indicators() as payload',
+  );
+  check(
+    eventIndicatorsBefore.rows[0].payload.league >= 1,
+    'a completed unclaimed event lights the Liga badge',
+    JSON.stringify(eventIndicatorsBefore.rows[0].payload),
+  );
   const eventClaim = await db.query('select public.claim_event_reward() as payload');
   check(
     eventClaim.rows[0].payload.alreadyClaimed === false &&
@@ -2265,6 +2762,23 @@ try {
     eventRepeat.rows[0].payload.alreadyClaimed === true &&
       eventRepeat.rows[0].payload.coinsAwarded === 0,
     'weekly event reward is idempotent',
+  );
+  const eventIndicatorsAfter = await db.query(
+    'select public.get_notification_indicators() as payload',
+  );
+  check(
+    eventIndicatorsAfter.rows[0].payload.league === 0,
+    'claiming the event reward clears the Liga badge',
+    JSON.stringify(eventIndicatorsAfter.rows[0].payload),
+  );
+
+  const indicatorsBeforeRead = await db.query(
+    'select public.get_notification_indicators() as payload',
+  );
+  check(
+    indicatorsBeforeRead.rows[0].payload.notifications >= 1,
+    'unread notifications light the notification badge',
+    JSON.stringify(indicatorsBeforeRead.rows[0].payload),
   );
 
   const notifications = await db.query('select public.get_my_notifications() as payload');
@@ -2281,26 +2795,71 @@ try {
     afterMarked.rows[0].payload.unreadCount === 0,
     'notification list has no unread items after marking all',
   );
+  const indicatorsAfterRead = await db.query(
+    'select public.get_notification_indicators() as payload',
+  );
+  check(
+    indicatorsAfterRead.rows[0].payload.notifications === 0 &&
+      indicatorsAfterRead.rows[0].payload.inbox === 0,
+    'reading all notifications clears the notification and inbox badges',
+    JSON.stringify(indicatorsAfterRead.rows[0].payload),
+  );
 
-  // Permintaan dari user1 ke user4 hanya boleh dijawab user4.
-  const fourth = await db.query(
-    'select public.send_friend_request($1) as payload',
-    [user4Name],
+  // A new follower notification is read through the Inbox action, using the
+  // same notification read_at state rather than a second unread store.
+  await db.exec('reset role');
+  await db.query(
+    `insert into public.notifications (user_id, kind, title, body, link)
+     values ($1, 'new_follower', 'Pengikut baru', 'Uji kotak masuk', '/inbox')`,
+    [user2],
   );
-  const fourthRequest = fourth.rows[0].payload.requestId;
+  await db.exec('set role authenticated');
+  await asUser(user2);
+  const indicatorsInbox = await db.query(
+    'select public.get_notification_indicators() as payload',
+  );
+  const inboxBeforeRead = indicatorsInbox.rows[0].payload.inbox;
+  const notificationsBeforeRead = indicatorsInbox.rows[0].payload.notifications;
+  check(
+    inboxBeforeRead >= 1 && notificationsBeforeRead >= inboxBeforeRead,
+    'a new follower lights Inbox and Notifikasi from the same unread rows',
+    JSON.stringify(indicatorsInbox.rows[0].payload),
+  );
+  const inboxRead = await db.query(
+    'select public.mark_inbox_notifications_read() as payload',
+  );
+  check(
+    inboxRead.rows[0].payload.updated === inboxBeforeRead,
+    'opening Inbox marks every follower notification read once',
+    `${inboxRead.rows[0].payload.updated} / ${inboxBeforeRead}`,
+  );
+  const indicatorsAfterInbox = await db.query(
+    'select public.get_notification_indicators() as payload',
+  );
+  check(
+    indicatorsAfterInbox.rows[0].payload.inbox === 0 &&
+      indicatorsAfterInbox.rows[0].payload.notifications ===
+        Math.max(0, notificationsBeforeRead - inboxBeforeRead),
+    'the Inbox and Notifikasi badges update from the same read state',
+    JSON.stringify(indicatorsAfterInbox.rows[0].payload),
+  );
+  await asUser(user1);
+
+  // C can unfollow B without touching the A–B friendship. The RPC always acts
+  // as auth.uid(), never as an id supplied by the caller.
   await asUser(user3);
-  await expectError(
-    'a third player cannot answer someone else friend request',
-    'select public.respond_friend_request($1, true)',
-    [fourthRequest],
-    'friend_request_forbidden',
+  const ownUnfollow = await db.query('select public.unfollow_player($1) as payload', [user2]);
+  check(
+    ownUnfollow.rows[0].payload.isFollowing === false,
+    'an unfollow only removes the caller own direction',
+    JSON.stringify(ownUnfollow.rows[0].payload),
   );
-  await asUser(user4);
-  const fourthAccepted = await db.query(
-    'select public.respond_friend_request($1, true) as payload',
-    [fourthRequest],
+  await asUser(user1);
+  const friendshipIntact = await db.query('select public.get_my_friends() as payload');
+  check(
+    friendshipIntact.rows[0].payload.friends.some((friend) => friend.userId === user2),
+    'another player unfollowing does not affect a different friendship',
   );
-  check(fourthAccepted.rows[0].payload.status === 'accepted', 'addressee can answer their own request');
 
   await db.exec('reset role');
   const hiddenLeague = await db.query(
@@ -2697,9 +3256,36 @@ try {
   const gamificationPayload = gamification.rows[0].payload;
   check(
     gamificationPayload.quests.length >= 6 && gamificationPayload.shopItems.length === 2 &&
-      gamificationPayload.heartSettings.editable === false,
-    'gamification catalog reads quests, shop, and read-only Heart constants',
+      gamificationPayload.heartSettings.editable === false &&
+      gamificationPayload.shopItems.every((item) => item.rarity === 'common'),
+    'gamification catalog reads quests, shop rarity, and read-only Heart constants',
     JSON.stringify(gamificationPayload.heartSettings),
+  );
+
+  const savedShopVisual = await db.query(
+    `select public.admin_save_shop_item($1::jsonb, 'Uji rarity dan foto produk') as payload`,
+    [JSON.stringify({
+      slug: 'admin-uji-rare', name: 'Item Rare Uji', kind: 'heart_potion',
+      priceCoins: 15, maxStack: 2, icon: 'heart', sortOrder: 100, isActive: false,
+      description: 'Item uji rarity.', rarity: 'legendary',
+      imageUrl: 'https://example.test/shop/rare.webp', imagePath: 'shop/rare.webp',
+    })],
+  );
+  check(
+    savedShopVisual.rows[0].payload.rarity === 'legendary' &&
+      savedShopVisual.rows[0].payload.image_url === 'https://example.test/shop/rare.webp' &&
+      savedShopVisual.rows[0].payload.image_path === 'shop/rare.webp',
+    'admin saves product rarity and permanent image fields',
+    JSON.stringify(savedShopVisual.rows[0].payload),
+  );
+  await expectError(
+    'shop save rejects an unknown rarity',
+    "select public.admin_save_shop_item($1::jsonb, 'Uji rarity salah')",
+    [JSON.stringify({
+      slug: 'admin-uji-bad-rarity', name: 'Item Salah', kind: 'heart_potion',
+      priceCoins: 10, maxStack: 1, icon: 'heart', rarity: 'mythic',
+    })],
+    'rarity_invalid',
   );
 
   const savedAchievement = await db.query(

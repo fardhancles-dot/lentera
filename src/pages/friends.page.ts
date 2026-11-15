@@ -1,12 +1,12 @@
 import type { PageModule } from '../app/router';
 import { avatar } from '../components/avatar';
+import { createFollowButton } from '../components/follow';
 import { icon } from '../components/icons';
 import { showToast } from '../components/toast';
 import { pageHeader, renderAppLayout } from '../layouts/appLayout';
 import { socialService } from '../services/social.service';
 import type {
   ActivityItem,
-  FriendRequestSummary,
   FriendsPayload,
   FriendSummary,
   PlayerSearchResult,
@@ -20,24 +20,6 @@ function emptyState(title: string, body: string, iconName: Parameters<typeof ico
     el('span', { class: 'empty-state__art' }, [icon(iconName, 34)]),
     el('h2', { class: 'empty-state__title', text: title }),
     el('p', { class: 'empty-state__body', text: body }),
-  ]);
-}
-
-function requestRow(
-  request: FriendRequestSummary,
-  actions: HTMLElement[],
-): HTMLElement {
-  return el('li', { class: 'friend-row' }, [
-    avatar(request.avatarKey, 'sm'),
-    el('span', { class: 'friend-row__meta' }, [
-      el('a', {
-        class: 'friend-row__name',
-        attrs: { href: `/players/${encodeURIComponent(request.username)}` },
-        text: request.displayName,
-      }),
-      el('span', { class: 'friend-row__handle', text: `@${request.username}` }),
-    ]),
-    el('span', { class: 'friend-row__actions' }, actions),
   ]);
 }
 
@@ -59,7 +41,7 @@ function friendRow(
   });
 
   return el('li', { class: 'friend-row' }, [
-    avatar(friend.avatarKey, 'md'),
+    avatar(friend.avatarKey, 'md', friend.avatarUrl),
     el('span', { class: 'friend-row__meta' }, [
       el('a', {
         class: 'friend-row__name',
@@ -71,7 +53,10 @@ function friendRow(
         text: `@${friend.username} · Level ${friend.level}`,
       }),
       el('span', { class: 'friend-row__stats' }, [
-        el('span', { class: 'badge badge--blue', text: `${formatNumber(friend.weeklyXp)} XP minggu ini` }),
+        el('span', {
+          class: 'badge badge--blue',
+          text: `${formatNumber(friend.weeklyXp)} XP minggu ini`,
+        }),
         friend.friendStreak > 0
           ? el('span', { class: 'badge badge--warm' }, [
               icon('flame', 13),
@@ -132,10 +117,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     icon('users', 16),
     'Cari',
   ]);
-  const searchForm = el('form', { class: 'friend-search' }, [
-    searchInput,
-    searchButton,
-  ]);
+  const searchForm = el('form', { class: 'friend-search' }, [searchInput, searchButton]);
   const searchSlot = el('div');
   const friendsSlot = el('div', { class: 'loading-screen' }, [
     el('span', { class: 'spinner' }),
@@ -185,7 +167,6 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       );
       return;
     }
-
     searchButton.disabled = true;
     searchSlot.replaceChildren(
       el('div', { class: 'inline-loading' }, [el('span', { class: 'spinner' }), 'Mencari…']),
@@ -197,7 +178,11 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
         if (disposed || !searchSlot.isConnected) return;
         if (results.length === 0) {
           searchSlot.replaceChildren(
-            emptyState('Pemain tidak ditemukan', 'Periksa ejaan username atau nama tampilan.', 'users'),
+            emptyState(
+              'Pemain tidak ditemukan',
+              'Periksa ejaan username atau nama tampilan.',
+              'users',
+            ),
           );
           return;
         }
@@ -212,7 +197,10 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       .catch((error: unknown) => {
         if (disposed || !searchSlot.isConnected) return;
         searchSlot.replaceChildren(
-          el('p', { class: 'form-error', text: error instanceof Error ? error.message : 'Pencarian gagal.' }),
+          el('p', {
+            class: 'form-error',
+            text: error instanceof Error ? error.message : 'Pencarian gagal.',
+          }),
         );
       })
       .finally(() => {
@@ -230,7 +218,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       eyebrow: 'Tahap 7 · sosial',
       title: 'Teman',
       subtitle:
-        'Cari pemain, kirim permintaan, dan lihat XP serta streak bersama. Profilmu hanya membagikan statistik sesuai pengaturan privasi.',
+        'Teman terbentuk otomatis saat kalian saling Follow. Cari pemain, ikuti, dan lihat XP serta streak bersama.',
       actions: [
         el('a', { class: 'btn btn--secondary btn--sm', attrs: { href: '/leaderboard' } }, [
           icon('trophy', 16),
@@ -246,7 +234,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       el('h2', { class: 'card__title', text: 'Cari pemain' }),
       el('p', {
         class: 'card__subtitle',
-        text: 'Gunakan username atau nama tampilan. Permintaan harus diterima sebelum statistik teman terbuka.',
+        text: 'Gunakan username atau nama tampilan. Follow balik untuk menjadi teman.',
       }),
       searchForm,
       searchSlot,
@@ -265,46 +253,26 @@ function searchResultRow(
 ): HTMLElement {
   const actionSlot = el('span', { class: 'friend-row__actions' });
 
-  const finish = (message: string) => {
-    showToast(message, 'success');
+  const onChange = () => {
     reload();
     refreshSearch();
   };
 
-  if (result.relation === 'friend') {
+  if (result.isFriend) {
     actionSlot.append(el('span', { class: 'badge', text: 'Teman' }));
-  } else if (result.relation === 'outgoing') {
-    actionSlot.append(el('span', { class: 'badge badge--muted', text: 'Menunggu' }));
-  } else if (result.relation === 'incoming' && result.requestId) {
-    const accept = el('button', { class: 'btn btn--sm', attrs: { type: 'button' }, text: 'Terima' });
-    accept.addEventListener('click', () => {
-      accept.disabled = true;
-      void socialService
-        .respondFriendRequest(result.requestId!, true)
-        .then(() => finish(`Kamu dan ${result.displayName} sekarang berteman.`))
-        .catch((error: unknown) => {
-          accept.disabled = false;
-          showToast(error instanceof Error ? error.message : 'Permintaan gagal diterima.', 'error');
-        });
-    });
-    actionSlot.append(accept);
   } else {
-    const add = el('button', { class: 'btn btn--sm', attrs: { type: 'button' }, text: 'Tambah' });
-    add.addEventListener('click', () => {
-      add.disabled = true;
-      void socialService
-        .sendFriendRequest(result.username)
-        .then(() => finish(`Permintaan dikirim ke ${result.displayName}.`))
-        .catch((error: unknown) => {
-          add.disabled = false;
-          showToast(error instanceof Error ? error.message : 'Permintaan gagal dikirim.', 'error');
-        });
-    });
-    actionSlot.append(add);
+    actionSlot.append(
+      createFollowButton({
+        userId: result.userId,
+        username: result.username,
+        isFollowing: result.isFollowing,
+        onChange,
+      }),
+    );
   }
 
   return el('li', { class: 'friend-row' }, [
-    avatar(result.avatarKey, 'sm'),
+    avatar(result.avatarKey, 'sm', result.avatarUrl),
     el('span', { class: 'friend-row__meta' }, [
       el('a', {
         class: 'friend-row__name',
@@ -334,73 +302,17 @@ function friendsContent(
     }
   };
 
-  const respond = (request: FriendRequestSummary, accept: boolean) => {
-    void socialService
-      .respondFriendRequest(request.requestId, accept)
-      .then(() => {
-        showToast(
-          accept
-            ? `Kamu dan ${request.displayName} sekarang berteman.`
-            : 'Permintaan ditolak.',
-          accept ? 'success' : 'default',
-        );
-        reload();
-      })
-      .catch((error: unknown) => {
-        showToast(error instanceof Error ? error.message : 'Permintaan gagal diproses.', 'error');
-      });
-  };
-
-  const incoming = payload.incoming.map((request) => {
-    const accept = el('button', { class: 'btn btn--sm', attrs: { type: 'button' }, text: 'Terima' });
-    const decline = el('button', {
-      class: 'btn btn--ghost btn--sm',
-      attrs: { type: 'button' },
-      text: 'Tolak',
-    });
-    accept.addEventListener('click', () => respond(request, true));
-    decline.addEventListener('click', () => respond(request, false));
-    return requestRow(request, [accept, decline]);
-  });
-
-  const outgoing = payload.outgoing.map((request) => {
-    const cancel = el('button', {
-      class: 'btn btn--ghost btn--sm',
-      attrs: { type: 'button' },
-      text: 'Batalkan',
-    });
-    cancel.addEventListener('click', () => {
-      cancel.disabled = true;
-      void socialService
-        .removeFriend(request.userId)
-        .then(() => {
-          showToast('Permintaan dibatalkan.', 'default');
-          reload();
-        })
-        .catch((error: unknown) => {
-          cancel.disabled = false;
-          showToast(error instanceof Error ? error.message : 'Permintaan gagal dibatalkan.', 'error');
-        });
-    });
-    return requestRow(request, [cancel]);
-  });
-
   return el('div', { class: 'friends-layout' }, [
     el('div', { class: 'friends-main' }, [
-      incoming.length > 0
-        ? el('section', { class: 'card friend-section' }, [
-            el('div', { class: 'friend-section__head' }, [
-              el('h2', { class: 'card__title', text: 'Permintaan masuk' }),
-              el('span', { class: 'badge badge--blue', text: String(incoming.length) }),
-            ]),
-            el('ul', { class: 'friend-list' }, incoming),
-          ])
-        : null,
       el('section', { class: 'card friend-section' }, [
         el('div', { class: 'friend-section__head' }, [
-          el('h2', { class: 'card__title', text: 'Temanmu' }),
+          el('h2', { class: 'card__title', text: 'Daftar Temanmu' }),
           el('span', { class: 'badge', text: String(payload.friends.length) }),
         ]),
+        el('p', {
+          class: 'card__subtitle',
+          text: 'Hanya pemain yang saling Follow yang tampil di sini.',
+        }),
         payload.friends.length > 0
           ? el(
               'ul',
@@ -409,15 +321,9 @@ function friendsContent(
             )
           : emptyState(
               'Belum punya teman',
-              'Cari pemain di atas, lalu kirim permintaan pertemanan.',
+              'Cari pemain di atas, Follow mereka, dan tunggu Follow balik.',
             ),
       ]),
-      outgoing.length > 0
-        ? el('section', { class: 'card friend-section' }, [
-            el('h2', { class: 'card__title', text: 'Menunggu jawaban' }),
-            el('ul', { class: 'friend-list' }, outgoing),
-          ])
-        : null,
     ]),
     el('aside', { class: 'friends-aside' }, [
       el('section', { class: 'card friend-section' }, [

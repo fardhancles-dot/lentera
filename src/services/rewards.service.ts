@@ -15,6 +15,7 @@ import type {
   ShopCatalog,
   ShopItem,
   ShopItemKind,
+  ShopRarity,
   UseItemOutcome,
 } from '../types/rewards';
 
@@ -82,6 +83,10 @@ function asAchievementMetric(value: unknown): AchievementMetric {
 
 function asItemKind(value: unknown): ShopItemKind {
   return value === 'streak_freeze' ? 'streak_freeze' : 'heart_potion';
+}
+
+function asShopRarity(value: unknown): ShopRarity {
+  return value === 'rare' || value === 'legendary' ? value : 'common';
 }
 
 function parseQuest(value: unknown): Quest {
@@ -163,6 +168,8 @@ function parseShopItem(value: unknown): ShopItem {
     owned: clamp(asNumber(record.owned), 0, maxStack),
     canBuy: asBoolean(record.canBuy),
     icon: asString(record.icon, 'bag'),
+    rarity: asShopRarity(record.rarity),
+    imageUrl: asNullableString(record.imageUrl),
   };
 }
 

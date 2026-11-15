@@ -81,6 +81,8 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
   let answeredCount = 0;
   let busy = false;
   let summary: LessonSummary | null = null;
+  let nextLevelSlug: string | null = null;
+  let allLevelsCompletedAfterPass = false;
   let heartsSlot: HTMLElement | null = null;
   let resultStage: { destroy: () => void } | null = null;
   let heartbeatTimer: number | null = null;
@@ -171,6 +173,8 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
   };
 
   const load = () => {
+    nextLevelSlug = null;
+    allLevelsCompletedAfterPass = false;
     host.className = 'play-loading';
     host.replaceChildren(el('span', { class: 'spinner' }), el('p', { text: 'Menyiapkan lesson…' }));
 
@@ -202,6 +206,8 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
         start = await lessonService.start(detail.node.id);
         if (disposed) return;
 
+        nextLevelSlug = detail.nextLevel?.lessonSlug ?? null;
+        allLevelsCompletedAfterPass = detail.allLevelsCompletedAfterPass;
         index = 0;
         answeredCount = 0;
         summary = null;
@@ -566,9 +572,48 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
 
     const retry = el('button', { class: 'btn btn--secondary', attrs: { type: 'button' } }, [
       icon('refresh', 18),
-      passed ? 'Main lagi' : 'Coba lagi',
+      'Ulang Lagi',
     ]);
     retry.addEventListener('click', () => window.location.reload());
+
+    const canContinue = passed && Boolean(nextLevelSlug);
+    const completionNote =
+      passed && !canContinue && allLevelsCompletedAfterPass
+        ? el('p', {
+            class: 'play-result__note',
+            text: 'Seluruh level di mata pelajaran ini sudah kamu selesaikan.',
+          })
+        : null;
+    const actions = el(
+      'div',
+      {
+        class: `play-result__actions${canContinue ? ' play-result__actions--three' : ''}`,
+      },
+      [
+        el(
+          'a',
+          {
+            class: passed ? 'btn btn--secondary' : 'btn btn--block',
+            attrs: { href: pathHref },
+          },
+          [
+            icon('map', 18),
+            passed ? 'Buka Peta Pelajaran' : 'Kembali ke Peta',
+          ],
+        ),
+        retry,
+        canContinue
+          ? el(
+              'a',
+              {
+                class: 'btn btn--lg btn--block play-result__continue',
+                attrs: { href: `/learn/${subjectSlug}/lesson/${nextLevelSlug}/play` },
+              },
+              [icon('arrow-right', 18), 'Lanjut'],
+            )
+          : null,
+      ],
+    );
 
     const art = el('div', { class: 'play-result__art' }, [
       el('div', { class: 'play-result__art-fallback', html: kikoMarkup(150) }),
@@ -601,13 +646,8 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
           ? el('p', { class: 'play-result__progress', text: progressNote })
           : null,
         note ? el('p', { class: 'play-result__note', text: note }) : null,
-        el('div', { class: 'play-result__actions' }, [
-          el('a', { class: 'btn btn--block', attrs: { href: pathHref } }, [
-            icon('map', 18),
-            'Kembali ke peta belajar',
-          ]),
-          retry,
-        ]),
+        completionNote,
+        actions,
       ]),
     ]);
 

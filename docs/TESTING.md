@@ -76,7 +76,8 @@ skip dengan alasan jelas, bukan gagal.
 
 | Test | Cakupan |
 | --- | --- |
-| `every app route renders without page errors` | Login, lalu 9 rute (`/app`, `/learn`, `/practice`, `/wallet`, `/quests`, `/shop`, `/mastery`, `/profile`, `/settings`): `main#main`, heading, judul topbar, dan nol error konsol. |
+| `every app route renders without page errors` | Login, lalu 10 rute (`/app`, `/learn`, `/practice`, `/wallet`, `/quests`, `/shop`, `/inventory`, `/mastery`, `/profile`, `/settings`): `main#main`, heading, judul topbar, dan nol error konsol. |
+| `Toko and Tas render separate content and link to each other` | `/shop` hanya menampilkan kartu produk dan tidak menampilkan `.inventory-card`; tab Tas membuka `/inventory`, yang hanya menampilkan kartu inventaris atau empty state, lalu tab Toko kembali tersedia. |
 | `lesson starts, answers, shows feedback, and advances` | Klik node lesson di peta → kartu “Riwayat percobaan” tampil → `Mulai lesson` → jawab soal → feedback benar/salah → tombol lanjut. |
 | `mobile layout has no horizontal overflow` | Viewport 390×844 pada 5 rute + frame peta; `scrollWidth - clientWidth ≤ 2px`. |
 | `reduced motion keeps the map usable` | `prefers-reduced-motion: reduce`: kanvas peta, tombol level, dan judul tetap tampil. |
@@ -85,7 +86,7 @@ skip dengan alasan jelas, bukan gagal.
 | `recovery link lets a player set a new password` | Akun sementara + tautan recovery resmi dibuat lewat Admin API, halaman `/reset-password` menyimpan password baru, kartu sukses tidak tertimpa form, lalu login API dengan password itu diverifikasi. Akun dihapus setelah test. Butuh `SUPABASE_ACCESS_TOKEN`. |
 | `signup confirmation link activates a new account` | Akun dibuat belum terkonfirmasi, tautan `signup` resmi dibuka, halaman berakhir di `/app` atau `/onboarding`, `email_confirmed_at` terisi, dan login API berhasil. Akun dihapus setelah test. Butuh `SUPABASE_ACCESS_TOKEN`. |
 | `two accounts contribute, sync, and claim one Friends Quest reward each` | Dua akun sementara: membuat quest, bergabung lewat kode, dua sesi Match Madness per akun, progres 24/20 XP, klaim bersamaan hanya satu hadiah, klaim ulang idempoten, persistensi refresh/login, non-anggota ditolak, manipulasi `contribution_xp` ditolak, dan XSS judul quest tidak dieksekusi. |
-| `league, friends, notifications, and profile privacy work across two accounts` | Dua akun sementara: bottom nav 5 item, hamburger berisi 4 navigasi, liga/event tampil, tab Global, cari + kirim permintaan, notifikasi masuk, terima teman, notifikasi penerimaan + tandai semua dibaca, statistik teman, privat menyembunyikan statistik, `friends` membukanya, hapus teman menutupnya lagi, dan `public` membuka untuk non-teman. |
+| `league, friends, notifications, and profile privacy work across two accounts` | Dua akun sementara: bottom nav 5 item, hamburger berisi 7 navigasi, liga/event tampil, tab Global, cari + kirim permintaan, notifikasi masuk, terima teman, notifikasi penerimaan + tandai semua dibaca, statistik teman, profil sendiri menampilkan ID angka di bawah username sebelum level tanpa email/ID di kartu akun, ID tetap setelah reload, privat menyembunyikan statistik, `friends` membukanya, hapus teman menutupnya lagi, dan `public` membuka untuk non-teman. |
 | `developer dashboard grants a reward and keeps audit staff-only` | Akun staff QA + akun pemain sementara: enam metrik tampil, pencarian lewat email, pilih pemain, kirim 3 Koin + 5 XP, toast sukses, audit `Hadiah dikirim` tercatat, wallet pemain berisi saldo dan transaksi `Hadiah developer`, pemain biasa dialihkan dari `/developer` ke `/app`, dan tidak ada tautan developer. Baris audit uji dibersihkan lewat service role; akun sementara dihapus. |
 | `landing mascot canvas mounts and reacts to a click` | Maskot landing (kanvas/SVG fallback) dan reaksi klik. |
 | `audio engine starts and schedules sound after a user gesture` | Bungkus `AudioContext` sebelum halaman dimuat; setelah login, konteks dibuat, berstatus `running`, dan minimal 4 osilator dijadwalkan (musik + SFX). Bukan pengujian pendengaran. |
@@ -350,8 +351,9 @@ lolos hanya karena shell halaman berhasil dimuat.
 - [ ] `/quests` menampilkan 3 misi harian + 3 mingguan dan progres dari server.
 - [ ] Klaim misi menambah Koin sekali; refresh tidak menggandakan hadiah.
 - [ ] Achievement terbuka otomatis dan tidak memberi Koin.
-- [ ] `/shop` menampilkan dua item, saldo Koin, dan quantity tas.
-- [ ] Membeli Ramuan Hati memotong 80 Koin; memakainya memulihkan Hearts.
+- [ ] `/shop` hanya menampilkan dua produk, harga, batas pembelian, dan saldo Koin.
+- [ ] `/inventory` menampilkan item yang dimiliki, quantity, status, dan tombol pakai.
+- [ ] Membeli Ramuan Hati memotong 80 Koin; item muncul di Tas dan memakainya memulihkan Hearts.
 - [ ] Membeli Perisai Streak memotong 120 Koin; penggunaan dibatasi maksimal 2.
 - [ ] Tombol beli/pakai nonaktif saat Koin, stok, atau item tidak mencukupi.
 

@@ -8,6 +8,7 @@ import type {
   ShopCatalog,
   UseItemOutcome,
 } from '../types/rewards';
+import { notificationIndicatorsStore } from './notificationIndicators.store';
 import { playerStore } from './player.store';
 import { sessionStore } from './session.store';
 
@@ -214,7 +215,11 @@ class RewardsStore {
 
   async claimQuest(questId: string): Promise<QuestClaim> {
     const result = await rewardsService.claimQuest(questId);
-    await Promise.all([this.loadQuests(true), playerStore.load(true)]);
+    await Promise.all([
+      this.loadQuests(true),
+      playerStore.load(true),
+      notificationIndicatorsStore.refresh(),
+    ]);
     return result;
   }
 

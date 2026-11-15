@@ -41,7 +41,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   lesson_not_found: 'Lesson tidak ditemukan.',
   question_not_found: 'Soal tidak ditemukan.',
   subject_category_invalid:
-    'Kategori mata pelajaran harus Mapel Umum, Bahasa Daerah, atau Bahasa Asing.',
+    'Kategori mata pelajaran harus Mapel Umum, Bahasa Daerah, Kursus Bahasa, atau Kejuruan.',
   question_prompt_required: 'Pertanyaan wajib diisi.',
   question_options_required: 'Tipe soal ini membutuhkan minimal dua pilihan.',
   question_exactly_one_correct: 'Tepat satu pilihan harus menjadi kunci jawaban.',
@@ -744,6 +744,24 @@ export const adminService = {
   getGamification: () => run(() => adminRepository.getGamification(), parseGamification),
   saveGameCatalog: (kind: string, payload: Json, reason: string) =>
     run(() => adminRepository.saveGameCatalog(kind, payload, reason), (value) => record(value)),
+  saveShopItem: (payload: Json, reason: string) =>
+    run(() => adminRepository.saveShopItem(payload, reason), (value) => record(value)),
+  uploadProductImage: (file: File) =>
+    run(
+      async () => (await adminRepository.uploadProductImage(file)) as unknown as Json,
+      (value) => {
+        const data = record(value);
+        return { url: str(data.url), path: str(data.path) };
+      },
+    ),
+  removeProductImage: (path: string) =>
+    run(
+      async () => {
+        await adminRepository.removeProductImage(path);
+        return {} as Json;
+      },
+      (value) => record(value),
+    ),
 
   listSocial: (search: string, status: string, page: number, pageSize: number) =>
     run(

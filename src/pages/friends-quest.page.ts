@@ -8,6 +8,7 @@ import {
   friendsQuestService,
   type FriendQuest,
 } from '../services/friendsQuest.service';
+import { notificationIndicatorsStore } from '../stores/notificationIndicators.store';
 import { sessionStore } from '../stores/session.store';
 import { el, formatNumber } from '../utils/dom';
 
@@ -390,6 +391,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
                 'success',
               );
             }
+            void notificationIndicatorsStore.refresh();
             load();
           } catch (error) {
             showToast(error instanceof Error ? error.message : 'Klaim gagal.', 'error');

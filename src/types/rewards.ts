@@ -2,6 +2,7 @@ export type QuestCadence = 'daily' | 'weekly';
 export type QuestMetric = 'xp' | 'lesson' | 'practice';
 export type AchievementMetric = 'xp' | 'lesson' | 'practice' | 'streak' | 'level';
 export type ShopItemKind = 'heart_potion' | 'streak_freeze';
+export type ShopRarity = 'common' | 'rare' | 'legendary';
 
 export interface Quest {
   id: string;
@@ -55,6 +56,8 @@ export interface ShopItem {
   owned: number;
   canBuy: boolean;
   icon: string;
+  rarity: ShopRarity;
+  imageUrl: string | null;
 }
 
 export interface ShopCatalog {

@@ -63,11 +63,36 @@ test('league, friends, notifications, and profile privacy work across two accoun
     expect(guestLogin.ok, guestLogin.ok ? '' : guestLogin.reason).toBeTruthy();
 
     await hostPage.goto('/profile');
-    const hostUsername = await hostPage.locator('input[name="username"]').inputValue();
+    await expect(hostPage.locator('.profile-hero__handle')).toHaveText(/^@/);
+    const hostUsername =
+      (await hostPage.locator('.profile-hero__handle').textContent())?.replace('@', '').trim() ?? '';
     expect(hostUsername).toBeTruthy();
     await expect(hostPage.locator('.profile-hero .profile-tier')).toBeVisible({ timeout: 30_000 });
     await expect(hostPage.locator('.profile-hero .profile-level')).toBeVisible();
     await expect(hostPage.locator('.profile-hero .profile-level__label')).toContainText(/LV \d+/);
+    await expect(hostPage.locator('.profile-hero__id')).toHaveText(/^ID \d+$/);
+    const accountIdText = (await hostPage.locator('.profile-hero__id').textContent())?.trim() ?? '';
+    const identityOrder = await hostPage
+      .locator('.profile-hero__identity > *')
+      .evaluateAll((nodes) => nodes.map((node) => node.className));
+    expect(identityOrder).toEqual([
+      'profile-hero__name',
+      'profile-hero__handle',
+      'profile-hero__id',
+    ]);
+    const idBeforeLevel = await hostPage.evaluate(() => {
+      const id = document.querySelector('.profile-hero__id');
+      const level = document.querySelector('.profile-hero__level');
+      return Boolean(
+        id && level && (id.compareDocumentPosition(level) & Node.DOCUMENT_POSITION_FOLLOWING),
+      );
+    });
+    expect(idBeforeLevel).toBe(true);
+    await expect(hostPage.locator('.profile-account')).not.toContainText('Email');
+    await expect(hostPage.locator('.profile-account')).not.toContainText('ID akun');
+    await expect(hostPage.locator('main#main')).not.toContainText('Email');
+    await hostPage.reload();
+    await expect(hostPage.locator('.profile-hero__id')).toHaveText(accountIdText);
 
     // 0. Navigasi komunitas pindah ke hamburger menu di header mobile.
     await hostPage.setViewportSize({ width: 390, height: 844 });
@@ -103,7 +128,9 @@ test('league, friends, notifications, and profile privacy work across two accoun
     );
     expect(overflow, 'horizontal overflow in px').toBeLessThanOrEqual(2);
     await hostPage.getByRole('button', { name: 'Buka menu' }).click();
-    await expect(hostPage.locator('.drawer-nav__item')).toHaveCount(4);
+    await expect(hostPage.locator('.drawer-nav__item')).toHaveCount(7);
+    await expect(hostPage.locator('.drawer-nav__item[href="/shop"]')).toBeVisible();
+    await expect(hostPage.locator('.drawer-nav__item[href="/inventory"]')).toBeVisible();
     await expect(hostPage.locator('.drawer-nav__item[href="/settings"]')).toBeVisible();
     await expect(hostPage.locator('.drawer-nav__item[href="/leaderboard"]')).toBeVisible();
     await expect(hostPage.locator('.drawer-nav__item[href="/notifications"]')).toBeVisible();
@@ -126,7 +153,9 @@ test('league, friends, notifications, and profile privacy work across two accoun
 
     // 3. Nama akun tamu dibaca dari profilnya.
     await guestPage.goto('/profile');
-    const guestUsername = await guestPage.locator('input[name="username"]').inputValue();
+    await expect(guestPage.locator('.profile-hero__handle')).toHaveText(/^@/);
+    const guestUsername =
+      (await guestPage.locator('.profile-hero__handle').textContent())?.replace('@', '').trim() ?? '';
     expect(guestUsername).toBeTruthy();
 
     // 4. Host mencari tamu dan mengirim permintaan pertemanan lewat UI.

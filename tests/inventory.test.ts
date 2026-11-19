@@ -12,6 +12,8 @@ function item(patch: Partial<InventoryItem>): InventoryItem {
     quantity: 1,
     maxStack: 3,
     icon: 'heart',
+    rarity: 'common',
+    imageUrl: null,
     ...patch,
   };
 }

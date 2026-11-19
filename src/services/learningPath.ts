@@ -1,4 +1,4 @@
-import type { PathLevel, PathNode } from './curriculum.service';
+import type { PathLevel, PathNode, PathSection } from './curriculum.service';
 
 export type LearningNodeStatus =
   | 'completed'
@@ -54,6 +54,11 @@ export function resolveNodeStatuses(
 export interface LevelNavigation {
   /** Next playable level in map order, across the whole subject. */
   nextLevel: PathNode | null;
+  /**
+   * Section divider that starts between this level and the next one. When set,
+   * "Lanjut" is withheld so the player returns to the map and sees the notice.
+   */
+  blockedBySection: PathSection | null;
   /** True when every other level is already complete, so passing this one finishes the subject. */
   allLevelsCompletedAfterPass: boolean;
 }
@@ -66,6 +71,7 @@ export interface LevelNavigation {
 export function resolveLevelNavigation(
   levels: readonly PathLevel[],
   currentNodeId: string,
+  sections: readonly PathSection[] = [],
 ): LevelNavigation {
   const playable = levels
     .flatMap((level) => level.units.flatMap((unit) => unit.nodes))
@@ -73,11 +79,28 @@ export function resolveLevelNavigation(
   const index = playable.findIndex((node) => node.id === currentNodeId);
 
   if (index < 0) {
-    return { nextLevel: null, allLevelsCompletedAfterPass: false };
+    return { nextLevel: null, blockedBySection: null, allLevelsCompletedAfterPass: false };
   }
 
+  const current = playable[index]!;
+  const nextLevel = playable[index + 1] ?? null;
+  const currentLevel = current.levelNumber;
+  const nextLevelNumber = nextLevel?.levelNumber ?? null;
+
+  // A section divider is inserted before the level its range starts at. If the
+  // next playable level is at or past that boundary, continuing directly would
+  // skip the notice, so navigation pauses until the player opens it from the map.
+  const blockedBySection =
+    nextLevel && currentLevel !== null && nextLevelNumber !== null && nextLevelNumber > currentLevel
+      ? (sections.find(
+          (section) =>
+            section.startLevel > currentLevel && section.startLevel <= nextLevelNumber,
+        ) ?? null)
+      : null;
+
   return {
-    nextLevel: playable[index + 1] ?? null,
+    nextLevel: blockedBySection ? null : nextLevel,
+    blockedBySection,
     allLevelsCompletedAfterPass: playable.every(
       (node) => node.id === currentNodeId || node.status === 'completed',
     ),

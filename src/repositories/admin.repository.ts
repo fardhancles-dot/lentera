@@ -158,9 +158,77 @@ export const adminRepository = {
   archiveMedia: (mediaId: string, reason: string) =>
     call('admin_archive_media', { p_media_id: mediaId, p_reason: reason }),
 
+  listBackgroundMusic: () => call('admin_list_background_music'),
+  setBackgroundMusicActive: (id: string, active: boolean, reason: string) =>
+    call('admin_set_background_music_active', {
+      p_id: id,
+      p_active: active,
+      p_reason: reason,
+    }),
+  setPrimaryBackgroundMusic: (id: string, reason: string) =>
+    call('admin_set_primary_background_music', { p_id: id, p_reason: reason }),
+  deleteBackgroundMusic: (id: string, reason: string) =>
+    call('admin_delete_background_music', { p_id: id, p_reason: reason }),
+
+  /** Music files use the existing public content-media bucket under music/. */
+  async uploadBackgroundMusic(file: File, title: string): Promise<Json> {
+    const supabase = client();
+    const rawMime = file.type.toLowerCase();
+    const extension = file.name.toLowerCase().split('.').pop() ?? '';
+    const mime =
+      rawMime === 'audio/mpeg' || rawMime === 'audio/ogg' || rawMime === 'audio/wav' || rawMime === 'audio/x-wav'
+        ? rawMime
+        : extension === 'mp3'
+          ? 'audio/mpeg'
+          : extension === 'ogg'
+            ? 'audio/ogg'
+            : extension === 'wav'
+              ? 'audio/wav'
+              : '';
+    if (!mime) throw new Error('Format musik harus MP3, OGG, atau WAV.');
+    if (!Number.isFinite(file.size) || file.size <= 0) {
+      throw new Error('File musik tidak valid.');
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      throw new Error('Ukuran musik maksimal 20 MB.');
+    }
+    const cleanTitle = title.trim();
+    if (cleanTitle.length < 1 || cleanTitle.length > 120) {
+      throw new Error('Judul musik harus 1–120 karakter.');
+    }
+
+    const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]/g, '-');
+    const path = `music/${crypto.randomUUID()}-${safeName}`;
+    const bucket = supabase.storage.from('content-media');
+    const { error } = await bucket.upload(path, file, { upsert: false, contentType: mime });
+    if (error) raise(error);
+
+    try {
+      return await call('admin_register_background_music', {
+        p_title: cleanTitle,
+        p_storage_path: path,
+        p_url: bucket.getPublicUrl(path).data.publicUrl,
+        p_mime_type: mime,
+        p_size_bytes: file.size,
+      });
+    } catch (uploadError) {
+      // Never leave an orphaned file when metadata validation fails.
+      await bucket.remove([path]).catch(() => undefined);
+      throw uploadError;
+    }
+  },
+
+  async removeBackgroundMusicFile(path: string): Promise<void> {
+    if (!path.startsWith('music/')) return;
+    const { error } = await client().storage.from('content-media').remove([path]);
+    if (error) raise(error);
+  },
+
   getGamification: () => call('admin_get_gamification'),
   saveGameCatalog: (kind: string, payload: Json, reason: string) =>
     call('admin_save_game_catalog', { p_kind: kind, p_payload: payload, p_reason: reason }),
+  saveHeartSettings: (regenMinutes: number) =>
+    call('admin_save_heart_settings', { p_regen_minutes: regenMinutes }),
   saveShopItem: (payload: Json, reason: string) =>
     call('admin_save_shop_item', { p_payload: payload, p_reason: reason }),
 
@@ -186,6 +254,31 @@ export const adminRepository = {
     if (!path.startsWith('shop/')) return;
     const { error } = await client().storage.from('content-media').remove([path]);
     if (error) raise(error);
+  },
+
+  /**
+   * Journey backgrounds live in the existing content-media bucket under
+   * background/ so the public map can load them without extra plumbing.
+   */
+  async uploadBackgroundImage(
+    file: File,
+    slot: 'desktop' | 'mobile',
+  ): Promise<{ url: string; path: string }> {
+    const supabase = client();
+    const mime = file.type.toLowerCase();
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(mime)) {
+      throw new Error('Format background harus JPG, PNG, atau WebP.');
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      throw new Error('Ukuran gambar background maksimal 10 MB.');
+    }
+
+    const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]/g, '-');
+    const path = `background/${slot}/${crypto.randomUUID()}-${safeName}`;
+    const bucket = supabase.storage.from('content-media');
+    const { error } = await bucket.upload(path, file, { upsert: false, contentType: mime });
+    if (error) raise(error);
+    return { url: bucket.getPublicUrl(path).data.publicUrl, path };
   },
 
   listSocial: (search: string, status: string, page: number, pageSize: number) =>

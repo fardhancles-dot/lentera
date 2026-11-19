@@ -1,7 +1,7 @@
 import { icon, iconName } from '../../components/icons';
 import { showToast } from '../../components/toast';
 import { adminService } from '../../services/admin.service';
-import type { AdminGamification } from '../../types/admin';
+import type { AdminGamification, AdminHeartSettings } from '../../types/admin';
 import type { Json } from '../../types/database';
 import { el, formatNumber } from '../../utils/dom';
 import type { AdminSectionContext } from './ui';
@@ -456,6 +456,103 @@ function openCatalogEditor(
   });
 }
 
+const HEART_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90, 120];
+
+function heartSettingsPanel(
+  settings: AdminHeartSettings,
+  onSaved: (settings: AdminHeartSettings) => void,
+): HTMLElement {
+  const minutes = input('regenerationMinutes', settings.regenerationMinutes, 'number', {
+    min: '1',
+    max: '1440',
+    step: '1',
+    required: true,
+  });
+  const preset = select(
+    'heartPreset',
+    [
+      { value: '', label: 'Pilih durasi cepat' },
+      ...HEART_PRESETS.map((value) => ({ value: String(value), label: `${value} menit` })),
+    ],
+    HEART_PRESETS.includes(settings.regenerationMinutes)
+      ? String(settings.regenerationMinutes)
+      : '',
+  );
+  preset.addEventListener('change', () => {
+    if (preset.value) minutes.value = preset.value;
+  });
+
+  const feedback = el('p', {
+    class: 'form-hint',
+    attrs: { role: 'status', 'aria-live': 'polite' },
+  });
+  const save = el('button', { class: 'btn', attrs: { type: 'button' } }, [
+    icon('check', 18),
+    'Simpan Pengaturan',
+  ]);
+
+  const submit = async (): Promise<void> => {
+    const value = Number(minutes.value);
+    if (!Number.isInteger(value) || value < 1 || value > 1440) {
+      feedback.textContent = 'Waktu pemulihan harus angka bulat antara 1 dan 1440 menit.';
+      minutes.focus();
+      return;
+    }
+
+    save.disabled = true;
+    save.replaceChildren(el('span', { class: 'btn__spinner' }), 'Menyimpan…');
+    feedback.textContent = '';
+    try {
+      const updated = await adminService.saveHeartSettings(value);
+      showToast(`Waktu pemulihan Hearts disimpan: ${updated.regenerationMinutes} menit.`, 'success');
+      onSaved(updated);
+    } catch (error) {
+      feedback.textContent = error instanceof Error ? error.message : 'Pengaturan Hearts gagal disimpan.';
+      save.disabled = false;
+      save.replaceChildren(icon('check', 18), 'Simpan Pengaturan');
+      minutes.focus();
+    }
+  };
+
+  save.addEventListener('click', () => void submit());
+
+  return panel('Pengaturan Hearts', 'Atur durasi pemulihan otomatis satu Heart.', [
+    el('div', { class: 'admin-metrics admin-metrics--compact' }, [
+      el('div', { class: 'admin-mini' }, [
+        el('span', { text: 'Maksimal Hearts' }),
+        el('strong', { text: String(settings.maxHearts) }),
+      ]),
+      el('div', { class: 'admin-mini' }, [
+        el('span', { text: 'Waktu pemulihan aktif' }),
+        el('strong', { text: `${settings.regenerationMinutes} menit / Heart` }),
+      ]),
+      el('div', { class: 'admin-mini' }, [
+        el('span', { text: 'Status sistem' }),
+        el('strong', { text: settings.status === 'active' ? 'Aktif' : settings.status }),
+      ]),
+    ]),
+    formGrid([
+      field(
+        'Pilihan durasi',
+        preset,
+        'Mengisi kolom manual. Kamu tetap bisa mengetik angka lain.',
+      ),
+      field(
+        'Waktu pemulihan 1 Heart',
+        minutes,
+        'Satuan menit, 1–1440. Contoh: 15 berarti satu Heart pulih setiap 15 menit.',
+      ),
+    ]),
+    el('p', {
+      class: 'form-hint',
+      text:
+        'Perubahan hanya mengatur durasi. Pemulihan yang sedang berjalan melanjutkan sisa waktu dari timestamp terakhir, tanpa reset dan tanpa Heart tambahan.',
+    }),
+    feedback,
+    el('div', { class: 'admin-panel__actions' }, [save]),
+  ]);
+}
+
 function catalogTable(config: CatalogConfig, items: Record<string, unknown>[], onDone: () => void): HTMLElement {
   if (items.length === 0) return el('p', { class: 'form-hint', text: 'Belum ada data pada katalog ini.' });
   return table(
@@ -490,11 +587,20 @@ export async function renderGamification(ctx: AdminSectionContext): Promise<void
     let active = CONFIGS.find((candidate) => candidate.kind === lastCatalogKind)?.kind ?? CONFIGS[0]!.kind;
 
     const paint = () => {
-      const config = CONFIGS.find((candidate) => candidate.kind === active) ?? CONFIGS[0]!;
-      lastCatalogKind = config.kind;
       for (const buttonElement of tabs.querySelectorAll('button')) {
         buttonElement.classList.toggle('is-active', buttonElement.dataset.kind === active);
       }
+      if (active === 'hearts') {
+        slot.replaceChildren(
+          heartSettingsPanel(data.heartSettings, (updated) => {
+            data.heartSettings = updated;
+            paint();
+          }),
+        );
+        return;
+      }
+      const config = CONFIGS.find((candidate) => candidate.kind === active) ?? CONFIGS[0]!;
+      lastCatalogKind = config.kind;
       const items = (data[`${config.kind === 'shop_item' ? 'shopItems' : config.kind === 'player_level' ? 'playerLevels' : config.kind === 'streak_milestone' ? 'streakMilestones' : config.kind === 'league_tier' ? 'leagueTiers' : `${config.kind}s`}` as keyof AdminGamification] ?? []) as unknown;
       const rows = Array.isArray(items) ? (items as Record<string, unknown>[]) : [];
       slot.replaceChildren(
@@ -526,20 +632,22 @@ export async function renderGamification(ctx: AdminSectionContext): Promise<void
         }),
       );
     }
-
-    ctx.root.replaceChildren(
-      tabs,
-      slot,
-      panel('Heart / Nyawa', 'Nilai aktual server. Belum dapat diubah dari dashboard.', [
-        el('div', { class: 'admin-metrics admin-metrics--compact' }, [
-          el('div', { class: 'admin-mini' }, [el('span', { text: 'Heart maksimal' }), el('strong', { text: String(data.heartSettings.maxHearts ?? '—') })]),
-          el('div', { class: 'admin-mini' }, [el('span', { text: 'Regenerasi' }), el('strong', { text: `${String(data.heartSettings.regenerationMinutes ?? '—')} menit` })]),
-          el('div', { class: 'admin-mini' }, [el('span', { text: 'Biaya isi ulang' }), el('strong', { text: `${String(data.heartSettings.refillCostCoins ?? '—')} Koin/Heart` })]),
-          el('div', { class: 'admin-mini' }, [el('span', { text: 'Jawaban salah' }), el('strong', { text: `${String(data.heartSettings.wrongAnswerCost ?? '—')} Heart` })]),
-        ]),
-        el('p', { class: 'form-hint', text: String(data.heartSettings.note ?? '') }),
-      ]),
+    tabs.append(
+      el('button', {
+        class: 'admin-tab',
+        attrs: { type: 'button' },
+        dataset: { kind: 'hearts' },
+        text: 'Pengaturan Hearts',
+        events: {
+          click: () => {
+            active = 'hearts';
+            paint();
+          },
+        },
+      }),
     );
+
+    ctx.root.replaceChildren(tabs, slot);
     paint();
   } catch (error) {
     ctx.root.replaceChildren(errorState(error instanceof Error ? error.message : 'Gamifikasi gagal dimuat.', () => void renderGamification(ctx)));

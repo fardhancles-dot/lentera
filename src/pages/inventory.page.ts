@@ -1,5 +1,6 @@
 import type { PageModule } from '../app/router';
-import { icon, iconName } from '../components/icons';
+import { icon } from '../components/icons';
+import { RARITY_LABEL, productArt } from '../components/productArt';
 import { storeNav } from '../components/storeNav';
 import { showToast } from '../components/toast';
 import { pageHeader, renderAppLayout } from '../layouts/appLayout';
@@ -50,13 +51,14 @@ function inventoryCard(
   return el(
     'article',
     {
-      class: 'card inventory-card',
+      class: `card inventory-card shop-card--${item.rarity}`,
       dataset: { kind: item.kind },
-      attrs: { 'aria-label': `${item.name}, jumlah ${item.quantity}` },
+      attrs: { 'aria-label': `${item.name}, ${RARITY_LABEL[item.rarity]}, jumlah ${item.quantity}` },
     },
     [
+      el('div', { class: 'inventory-card__art' }, [productArt(item)]),
       el('div', { class: 'inventory-card__top' }, [
-        el('span', { class: 'inventory-card__icon' }, [icon(iconName(item.icon, 'bag'), 22)]),
+        el('span', { class: 'badge inventory-card__rarity', text: RARITY_LABEL[item.rarity] }),
         el('span', { class: 'badge inventory-card__qty', text: `${item.quantity}×` }),
       ]),
       el('span', { class: `inventory-card__status${freezeFull ? ' inventory-card__status--muted' : ''}` }, [

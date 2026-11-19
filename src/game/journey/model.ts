@@ -7,7 +7,10 @@ export interface JourneyStop {
   kind: JourneyStopKind;
   /** 1-based position among playable learning nodes, across the whole subject. */
   levelNumber: number;
-  /** 1-based position among reward nodes, across the whole subject. */
+  /**
+   * Always 0: reward nodes are no longer map stops. The field stays for
+   * compatibility with the reward claim route and older stored fixtures.
+   */
   rewardNumber: number;
   chapterIndex: number;
   chapterTitle: string;
@@ -59,33 +62,21 @@ export interface JourneyTimelineOptions extends JourneyLayoutOptions {
 
 /**
  * Flatten the curriculum the same way the lesson engine walks it: level → unit →
- * node. Playable nodes become journey levels and reward nodes become the chest
- * stops between them. Nothing is generated here, so every stop keeps its real
- * node id, status, URL, and reward claim state.
+ * node. Only playable nodes become journey levels; reward nodes stay in the
+ * curriculum data for their claim route but are not map stops anymore. Nothing
+ * is generated here, so every stop keeps its real node id, status, and URL.
  */
 export function buildJourneyStops(levels: readonly PathLevel[]): JourneyStop[] {
   const stops: JourneyStop[] = [];
   let levelNumber = 0;
-  let rewardNumber = 0;
 
   levels.forEach((level, chapterIndex) => {
     const nodes = level.units.flatMap((unit) => unit.nodes);
 
     for (const node of nodes) {
-      if (node.nodeType === 'reward') {
-        rewardNumber += 1;
-        stops.push({
-          node,
-          kind: 'reward',
-          levelNumber,
-          rewardNumber,
-          chapterIndex,
-          chapterTitle: level.title,
-          chapterName: cleanChapterName(level.title),
-        });
-        continue;
-      }
-
+      // The reward system is retired from the map. Its nodes, including any
+      // unclaimed claim state, are left untouched for the legacy route.
+      if (node.nodeType === 'reward') continue;
       if (!node.playable) continue;
 
       // Level numbers come from the database so archiving a level never
@@ -95,7 +86,7 @@ export function buildJourneyStops(levels: readonly PathLevel[]): JourneyStop[] {
         node,
         kind: 'level',
         levelNumber,
-        rewardNumber,
+        rewardNumber: 0,
         chapterIndex,
         chapterTitle: level.title,
         chapterName: cleanChapterName(level.title),
@@ -112,8 +103,7 @@ export function cleanChapterName(title: string): string {
 
 /**
  * The active stop is the first thing the player can actually do, in path order.
- * A reward waiting after three completed levels comes before the next chapter,
- * and a finished course lands on its final reward.
+ * A finished course lands on its final level.
  */
 export function activeJourneyIndex(stops: readonly JourneyStop[]): number {
   if (stops.length === 0) return -1;
@@ -128,9 +118,9 @@ export function activeJourneyIndex(stops: readonly JourneyStop[]): number {
 }
 
 /**
- * Nodes wind down the map in chapters. The direction flips after every reward
- * so consecutive chapters feel like a continuous journey rather than a column
- * of cards. Reward chests always sit on the centre line.
+ * Nodes wind down the map in chapters. The direction keeps alternating so
+ * consecutive chapters feel like a continuous journey rather than a column of
+ * cards. Reward stops are not part of this layout anymore.
  */
 export function layoutJourney(
   stops: readonly JourneyStop[],

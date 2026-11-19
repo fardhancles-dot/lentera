@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PathLevel, PathNode } from '../src/services/curriculum.service';
+import type { PathLevel, PathNode, PathSection } from '../src/services/curriculum.service';
 import { resolveLevelNavigation } from '../src/services/learningPath';
 
 function makeNode(
@@ -105,6 +105,35 @@ describe('level navigation', () => {
     expect(navigation.nextLevel?.id).toBe('lv2');
   });
 
+  it('pauses Lanjut at a section divider and resumes within the same section', () => {
+    const levels = [
+      makeLevel('one', [
+        makeNode('lv24', { levelNumber: 24, status: 'completed' }),
+        makeNode('lv25', { levelNumber: 25, status: 'available' }),
+        makeNode('lv26', { levelNumber: 26, status: 'locked' }),
+      ]),
+    ];
+    const sections: PathSection[] = [
+      { id: 'new-material', title: 'Pembahasan Baru', description: '', startLevel: 26, endLevel: 30 },
+    ];
+
+    // 24 -> 25 is still one material block, so Lanjut stays available.
+    expect(resolveLevelNavigation(levels, 'lv24', sections).nextLevel?.id).toBe('lv25');
+
+    // 25 -> 26 crosses the divider: the player must open 26 from the map.
+    const blocked = resolveLevelNavigation(levels, 'lv25', sections);
+    expect(blocked.nextLevel).toBeNull();
+    expect(blocked.blockedBySection?.title).toBe('Pembahasan Baru');
+    expect(blocked.allLevelsCompletedAfterPass).toBe(false);
+
+    // The boundary is read from data, not a fixed level number.
+    expect(
+      resolveLevelNavigation(levels, 'lv25', [
+        { ...sections[0]!, id: 'later', startLevel: 27, endLevel: 30 },
+      ]).nextLevel?.id,
+    ).toBe('lv26');
+  });
+
   it('keeps replaying a finished course on the final level', () => {
     const levels = [
       makeLevel('one', [
@@ -136,6 +165,7 @@ describe('level navigation', () => {
   it('returns no navigation for an unknown node', () => {
     expect(resolveLevelNavigation([], 'missing')).toEqual({
       nextLevel: null,
+      blockedBySection: null,
       allLevelsCompletedAfterPass: false,
     });
   });

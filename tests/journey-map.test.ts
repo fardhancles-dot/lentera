@@ -81,46 +81,33 @@ const threeChapters = [
 ];
 
 describe('learning journey model', () => {
-  it('flattens every playable level and reward without inventing stops', () => {
+  it('flattens every playable level without making rewards map stops', () => {
     const stops = buildJourneyStops(threeChapters);
 
-    expect(stops).toHaveLength(12);
-    expect(stops.filter((stop) => stop.kind === 'level')).toHaveLength(9);
-    expect(stops.filter((stop) => stop.kind === 'reward')).toHaveLength(3);
-    expect(
-      stops.filter((stop) => stop.kind === 'level').map((stop) => stop.levelNumber),
-    ).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    expect(stops.filter((stop) => stop.kind === 'reward').map((stop) => stop.rewardNumber)).toEqual([
-      1, 2, 3,
-    ]);
+    expect(stops).toHaveLength(9);
+    expect(stops.every((stop) => stop.kind === 'level')).toBe(true);
+    expect(stops.map((stop) => stop.levelNumber)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
     expect(stops.map((stop) => stop.node.id)).toEqual([
       'one-lesson',
       'one-review',
       'one-challenge',
-      'one-reward',
       'two-lesson',
       'two-review',
       'two-challenge',
-      'two-reward',
       'three-lesson',
       'three-review',
       'three-challenge',
-      'three-reward',
     ]);
     expect(stops[0]!.chapterName).toBe('Dasar HTML');
     expect(stops[0]!.node.status).toBe('completed');
     expect(stops[8]!.node.status).toBe('locked');
   });
 
-  it('adds rewards only from database nodes, in their real order', () => {
+  it('leaves reward nodes and their claim state out of the map', () => {
     const stops = buildJourneyStops(threeChapters);
-    const rewardIndexes = stops
-      .map((stop, index) => (stop.kind === 'reward' ? index : -1))
-      .filter((index) => index >= 0);
 
-    expect(rewardIndexes).toEqual([3, 7, 11]);
-    expect(stops[3]!.node.rewardCoins).toBe(20);
-    expect(stops[3]!.node.rewardClaimed).toBe(false);
+    expect(stops.some((stop) => stop.node.nodeType === 'reward')).toBe(false);
+    expect(stops.every((stop) => stop.rewardNumber === 0)).toBe(true);
   });
 
   it('keeps growing for added levels instead of capping the map', () => {
@@ -134,50 +121,40 @@ describe('learning journey model', () => {
     );
     const stops = buildJourneyStops(chapters);
 
-    expect(stops).toHaveLength(24);
-    expect(stops.filter((stop) => stop.kind === 'reward')).toHaveLength(6);
+    expect(stops).toHaveLength(18);
     expect(stops.at(-1)?.levelNumber).toBe(18);
-    expect(stops.at(-1)?.rewardNumber).toBe(6);
+    expect(stops.at(-1)?.rewardNumber).toBe(0);
   });
 
-  it('winds nodes continuously down the map and keeps reward chests centred', () => {
+  it('winds levels continuously down the map', () => {
     const stops = buildJourneyStops(threeChapters);
     const layout = layoutJourney(stops);
 
-    expect(layout.positions).toHaveLength(12);
-    expect(layout.height).toBe(128 + 11 * 112 + 150);
+    expect(layout.positions).toHaveLength(9);
+    expect(layout.height).toBe(128 + 8 * 112 + 150);
     expect(layout.positions.map((position) => position.x)).toEqual([
-      50, 30, 70, 50, 60, 50, 30, 50, 40, 60, 50, 50,
+      50, 30, 70, 40, 60, 50, 30, 70, 40,
     ]);
     expect(layout.positions.map((position) => position.y)).toEqual(
-      Array.from({ length: 12 }, (_, index) => 128 + index * 112),
+      Array.from({ length: 9 }, (_, index) => 128 + index * 112),
     );
-
-    for (const index of [3, 7, 11]) {
-      expect(layout.positions[index]!.x).toBe(50);
-    }
   });
 
-  it('picks the next playable node, then a waiting reward, then the final stop', () => {
+  it('picks the next playable node, then the final level', () => {
     expect(activeJourneyIndex(buildJourneyStops(threeChapters))).toBe(3);
 
-    const waitingReward = buildJourneyStops([
+    const completedChapter = buildJourneyStops([
       chapter('done', 'Level 1 · Selesai', ['completed', 'completed', 'completed', 'available']),
     ]);
-    expect(activeJourneyIndex(waitingReward)).toBe(3);
-
-    const finished = buildJourneyStops([
-      chapter('done', 'Level 1 · Selesai', ['completed', 'completed', 'completed', 'completed']),
-    ]);
-    expect(activeJourneyIndex(finished)).toBe(3);
+    expect(activeJourneyIndex(completedChapter)).toBe(2);
   });
 
-  it('builds a smooth path through every stop', () => {
+  it('builds a smooth path through every level stop', () => {
     const layout = layoutJourney(buildJourneyStops(threeChapters));
     const path = journeyPathD(layout.positions);
 
     expect(path.startsWith('M 500 128')).toBe(true);
-    expect((path.match(/C/g) ?? []).length).toBe(11);
+    expect((path.match(/C/g) ?? []).length).toBe(8);
   });
 
   it('places material dividers before the starting level without renumbering stops', () => {
@@ -190,17 +167,17 @@ describe('learning journey model', () => {
 
     const dividers = timeline.entries.filter((entry) => entry.kind === 'divider');
     expect(dividers.map((entry) => entry.section.title)).toEqual(['Dasar', 'Lanjutan']);
-    expect(dividers.map((entry) => entry.y)).toEqual([132, 700]);
+    expect(dividers.map((entry) => entry.y)).toEqual([132, 588]);
 
     // The first level still starts at the default top offset; only the divider
     // adds vertical space, so level numbers and stop order never change.
     expect(timeline.positions[0]!.y).toBe(248);
     expect(timeline.positions[4]!.y).toBe(816);
-    expect(stops.map((stop) => stop.levelNumber).slice(0, 5)).toEqual([1, 2, 3, 3, 4]);
-    expect(timeline.height).toBe(1750);
+    expect(stops.slice(0, 5).map((stop) => stop.levelNumber)).toEqual([1, 2, 3, 4, 5]);
+    expect(timeline.height).toBe(1414);
 
     // The trail pauses at each divider instead of crossing its label.
-    expect(timeline.groups.map((group) => group.length)).toEqual([4, 8]);
+    expect(timeline.groups.map((group) => group.length)).toEqual([3, 6]);
   });
 
   it('renders the same map when no dividers are configured', () => {

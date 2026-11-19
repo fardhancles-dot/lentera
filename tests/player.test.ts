@@ -51,6 +51,21 @@ describe('player payload parsing', () => {
     expect(state.level.progressPercent).toBe(100);
   });
 
+  it('uses the configured Heart regeneration duration', () => {
+    const state = parsePlayerState({
+      hearts: {
+        current: 3,
+        max: 5,
+        nextRefillSeconds: 300,
+        regenMinutes: 15,
+        refillCostCoins: 20,
+      },
+    });
+
+    expect(state.hearts.regenMinutes).toBe(15);
+    expect(state.hearts.nextRefillSeconds).toBe(300);
+  });
+
   it('falls back safely when the payload is empty', () => {
     const state = parsePlayerState(null);
 

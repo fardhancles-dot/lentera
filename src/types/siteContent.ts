@@ -14,6 +14,8 @@ export interface PublicSiteSettings {
   footerText: string;
   maintenanceMode: boolean;
   registrationEnabled: boolean;
+  backgroundDesktopUrl: string;
+  backgroundMobileUrl: string;
 }
 
 export interface PublicPageSummary {

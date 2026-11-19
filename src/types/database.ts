@@ -1086,6 +1086,44 @@ export type Database = {
         Args: { p_id?: string | null };
         Returns: Json;
       };
+      delete_my_notification: {
+        Args: { p_id: string };
+        Returns: Json;
+      };
+      delete_my_read_notifications: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      get_background_music: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      admin_list_background_music: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      admin_register_background_music: {
+        Args: {
+          p_title: string;
+          p_storage_path: string;
+          p_url: string;
+          p_mime_type: string;
+          p_size_bytes: number;
+        };
+        Returns: Json;
+      };
+      admin_set_background_music_active: {
+        Args: { p_id: string; p_active: boolean; p_reason?: string };
+        Returns: Json;
+      };
+      admin_set_primary_background_music: {
+        Args: { p_id: string; p_reason?: string };
+        Returns: Json;
+      };
+      admin_delete_background_music: {
+        Args: { p_id: string; p_reason?: string };
+        Returns: Json;
+      };
       get_notification_indicators: {
         Args: Record<PropertyKey, never>;
         Returns: Json;

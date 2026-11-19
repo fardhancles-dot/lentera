@@ -74,6 +74,8 @@ export interface InventoryItem {
   quantity: number;
   maxStack: number;
   icon: string;
+  rarity: ShopRarity;
+  imageUrl: string | null;
 }
 
 export interface Inventory {

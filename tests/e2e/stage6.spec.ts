@@ -1,19 +1,23 @@
 import { expect, test } from '@playwright/test';
 import { collectPageErrors as collectErrors, login } from './helpers';
 
-test('landing mascot canvas mounts and reacts to a click', async ({ page }) => {
+test('root entry redirects guests to login and signed-in users to Beranda', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto('/');
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.locator('.auth-card')).toBeVisible();
 
-  const canvas = page.locator('.mascot-stage canvas');
-  await expect(canvas).toBeVisible();
-  await canvas.click({ position: { x: 40, y: 40 } });
-  await page.waitForTimeout(400);
+  const session = await login(page);
+  test.skip(!session.ok, session.ok ? '' : session.reason);
+
+  await page.goto('/');
+  await expect(page).toHaveURL(/\/app$/);
+  await expect(page.locator('.greeting-card')).toBeVisible();
 
   expect(errors.filter((error) => /phaser|audio/i.test(error))).toEqual([]);
 });
 
-test('audio engine starts and schedules sound after a user gesture', async ({ page }) => {
+test('audio engine unlocks and plays UI sound after a user gesture', async ({ page }) => {
   await page.addInitScript(() => {
     const Original = window.AudioContext;
     if (!Original) return;
@@ -43,16 +47,19 @@ test('audio engine starts and schedules sound after a user gesture', async ({ pa
   const session = await login(page);
   test.skip(!session.ok, session.ok ? '' : session.reason);
 
-  // Music reschedules once per bar; the first bar plus click SFX is enough to
-  // prove the engine is running instead of silently failing autoplay.
-  await page.waitForTimeout(4500);
+  // The background track is an HTMLAudioElement now, so the AudioContext is
+  // only responsible for UI sound. One real click must unlock it and schedule
+  // at least one oscillator instead of silently staying suspended.
+  await page.locator('.nav-item[href="/learn"]').first().click();
+  await expect(page).toHaveURL(/\/learn$/);
+  await page.waitForTimeout(400);
 
   const probe = await page.evaluate(
     () => (window as unknown as { __audioProbe?: { contexts: number; oscillators: number; running: number } }).__audioProbe,
   );
   expect(probe?.contexts ?? 0).toBeGreaterThanOrEqual(1);
   expect(probe?.running ?? 0).toBeGreaterThanOrEqual(1);
-  expect(probe?.oscillators ?? 0).toBeGreaterThanOrEqual(4);
+  expect(probe?.oscillators ?? 0).toBeGreaterThanOrEqual(1);
 
   expect(errors.filter((error) => /audio/i.test(error))).toEqual([]);
 });

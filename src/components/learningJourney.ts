@@ -1,6 +1,7 @@
 import { icon, type IconName } from './icons';
 import { subjectIconName } from './subjectIcon';
 import type { PathSection, SubjectPath } from '../services/curriculum.service';
+import { contentService } from '../services/content.service';
 import { el, formatNumber } from '../utils/dom';
 import {
   activeJourneyIndex,
@@ -286,6 +287,23 @@ function createStop(
   return element;
 }
 
+/**
+ * Applies the single global background configured in the admin dashboard. Both
+ * URLs are exposed as CSS variables and the stylesheet picks the desktop or
+ * mobile image per viewport, so every subject map reads the same setting.
+ */
+function applyGlobalBackground(root: HTMLElement): void {
+  const { backgroundDesktopUrl, backgroundMobileUrl } = contentService.settings;
+  const desktop = backgroundDesktopUrl.trim();
+  const mobile = backgroundMobileUrl.trim();
+  if (!desktop && !mobile) return;
+
+  const cssUrl = (value: string): string => `url("${value.replace(/"/g, '\\"')}")`;
+  root.dataset.globalBackground = 'true';
+  if (desktop) root.style.setProperty('--journey-bg-desktop', cssUrl(desktop));
+  if (mobile) root.style.setProperty('--journey-bg-mobile', cssUrl(mobile));
+}
+
 function percentComplete(path: SubjectPath): number {
   return path.totalNodes > 0
     ? Math.min(100, Math.round((path.completedNodes / path.totalNodes) * 100))
@@ -312,6 +330,7 @@ export function createLearningJourney(
     },
   });
   root.style.setProperty('--journey-accent', subject.accent_color || '#58CC02');
+  applyGlobalBackground(root);
 
   const back = el(
     'a',

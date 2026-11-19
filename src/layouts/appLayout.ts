@@ -4,6 +4,7 @@ import { kikoMarkup } from '../components/brandArt';
 import { brandMark } from '../components/brandMark';
 import { icon, type IconName } from '../components/icons';
 import { createNotificationDot } from '../components/notificationDot';
+import { resourceIcon } from '../components/resourceIcons';
 import { showToast } from '../components/toast';
 import { contentService } from '../services/content.service';
 import {
@@ -69,12 +70,16 @@ const MOBILE_NAV_KEYS: readonly NavKey[] = [
   'profile',
 ];
 
+/**
+ * Drawer-only destinations. Toko is intentionally absent because it already
+ * has a dedicated button beside the hamburger; duplicating it in the drawer
+ * made the same page reachable twice on mobile.
+ */
 const DRAWER_NAV_KEYS: readonly NavKey[] = [
-  'shop',
-  'inventory',
   'friends',
-  'inbox',
   'leaderboard',
+  'inventory',
+  'inbox',
   'notifications',
   'settings',
 ];
@@ -145,6 +150,10 @@ function resourceChips(layout: 'mobile' | 'desktop'): ResourceView {
   const coinValue = el('span', { class: 'resource-chip__value', text: '—' });
   const heartsValue = el('span', { class: 'resource-chip__value', text: '—' });
   const streakValue = el('span', { class: 'resource-chip__value', text: '—' });
+  let lastHearts: number | null = null;
+  let lastCoins: number | null = null;
+  let heartAnimationTimer = 0;
+  let coinAnimationTimer = 0;
 
   const coinChip = el(
     'a',
@@ -156,7 +165,7 @@ function resourceChips(layout: 'mobile' | 'desktop'): ResourceView {
         title: 'Koin',
       },
     },
-    [icon('coin', 16), coinValue],
+    [resourceIcon('coin'), coinValue],
   );
 
   const heartsChip = el(
@@ -169,7 +178,7 @@ function resourceChips(layout: 'mobile' | 'desktop'): ResourceView {
         title: 'Nyawa',
       },
     },
-    [icon('heart', 16), heartsValue],
+    [resourceIcon('heart'), heartsValue],
   );
 
   const streakChip = el(
@@ -182,7 +191,7 @@ function resourceChips(layout: 'mobile' | 'desktop'): ResourceView {
         title: 'Streak harian',
       },
     },
-    [icon('flame', 16), streakValue],
+    [resourceIcon('streak'), streakValue],
   );
 
   if (layout === 'mobile') {
@@ -202,14 +211,15 @@ function resourceChips(layout: 'mobile' | 'desktop'): ResourceView {
 
   const paint = (state: PlayerStoreState) => {
     const data = state.data;
+    const hearts = data ? data.hearts.current : null;
+    const coins = data ? data.coins : null;
     coinValue.textContent = data ? formatNumber(data.coins) : '—';
-    heartsValue.textContent = data ? `${data.hearts.current}/${data.hearts.max}` : '—';
+    // The header shows the current hearts only; the maximum stays in the title
+    // and accessible label for context without printing "/5" in the UI.
+    heartsValue.textContent = data ? String(data.hearts.current) : '—';
     streakValue.textContent = data ? String(data.streak.current) : '—';
     heartsChip.classList.toggle('resource-chip--low', Boolean(data && data.hearts.current <= 1));
-    heartsChip.setAttribute(
-      'title',
-      data ? `Nyawa ${data.hearts.current}/${data.hearts.max}` : 'Nyawa',
-    );
+    heartsChip.setAttribute('title', data ? `Nyawa ${data.hearts.current}` : 'Nyawa');
     heartsChip.setAttribute(
       'aria-label',
       data
@@ -220,6 +230,29 @@ function resourceChips(layout: 'mobile' | 'desktop'): ResourceView {
       'title',
       data ? `Streak ${data.streak.current} hari` : 'Streak harian',
     );
+
+    if (hearts !== null && lastHearts !== null && hearts < lastHearts) {
+      window.clearTimeout(heartAnimationTimer);
+      heartsChip.classList.remove('is-losing');
+      void heartsChip.offsetWidth;
+      heartsChip.classList.add('is-losing');
+      heartAnimationTimer = window.setTimeout(
+        () => heartsChip.classList.remove('is-losing'),
+        700,
+      );
+    }
+    if (coins !== null && lastCoins !== null && coins > lastCoins) {
+      window.clearTimeout(coinAnimationTimer);
+      coinChip.classList.remove('is-gaining');
+      void coinChip.offsetWidth;
+      coinChip.classList.add('is-gaining');
+      coinAnimationTimer = window.setTimeout(
+        () => coinChip.classList.remove('is-gaining'),
+        900,
+      );
+    }
+    lastHearts = hearts;
+    lastCoins = coins;
   };
 
   return { root, paint };
@@ -234,9 +267,10 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
   const isStaff = user.role === 'developer' || user.role === 'admin';
   const site = contentService.settings;
   const visibleNav = NAV_ITEMS.filter((item) => item.key !== 'developer' || isStaff);
-  // Players get Teman → Liga → Notifikasi → Pengaturan. Staff sees the same
-  // order with Admin Dashboard directly below Pengaturan. The /admin route is
-  // still guarded by the router and every admin RPC, not by this menu alone.
+  // Players get Teman → Liga → Tas → Kotak Masuk → Notifikasi → Pengaturan.
+  // Staff sees the same order with Admin Dashboard directly below Pengaturan.
+  // The /admin route is still guarded by the router and every admin RPC, not
+  // by this menu alone.
   const drawerKeys: readonly NavKey[] = isStaff
     ? [...DRAWER_NAV_KEYS, 'developer']
     : DRAWER_NAV_KEYS;
@@ -317,7 +351,7 @@ export function renderAppLayout(ctx: RouteContext, options: AppLayoutOptions): v
       class: 'icon-btn header-shop',
       attrs: { href: '/shop', 'aria-label': 'Toko', title: 'Toko' },
     },
-    [icon('gift', 20)],
+    [icon('cart', 20)],
   );
 
   const drawerPanel = el('aside', {

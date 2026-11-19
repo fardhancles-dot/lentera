@@ -29,11 +29,6 @@ interface RouteDefinition {
 
 const routes: RouteDefinition[] = [
   {
-    pattern: '/',
-    access: 'public',
-    load: () => import('../pages/welcome.page'),
-  },
-  {
     pattern: '/p/:slug',
     access: 'public',
     load: () => import('../pages/info.page'),
@@ -386,6 +381,21 @@ export class Router {
     const query = parsed.searchParams;
 
     this.runCleanups();
+
+    // There is no public landing page. `/` is only an entry redirect: a player
+    // with a valid session goes straight to Beranda, everyone else to Login.
+    if (path === '/') {
+      await sessionStore.init();
+      const entry = sessionStore.getState();
+      const target =
+        entry.status === 'authenticated' && entry.user
+          ? entry.user.profile.onboarding_completed
+            ? '/app'
+            : '/onboarding'
+          : '/login';
+      this.navigate(target, { replace: true });
+      return;
+    }
 
     const matched = matchRoute(path);
     const route = matched?.route;

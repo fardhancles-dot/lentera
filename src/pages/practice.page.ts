@@ -49,7 +49,24 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     el('p', { text: 'Memuat mode latihan…' }),
   ]);
 
-  const toolbar = el('div', { class: 'practice-toolbar' });
+  const subjectList = el('div', {
+    class: 'practice-subjects__list',
+    attrs: { role: 'group', 'aria-label': 'Mata pelajaran untuk latihan' },
+  });
+  const subjectNav = el('section', { class: 'practice-subjects' }, [
+    el('div', { class: 'practice-subjects__head' }, [
+      el('span', { class: 'practice-subjects__eyebrow', text: 'Mata pelajaran' }),
+      el('span', {
+        class: 'practice-subjects__hint',
+        text: 'Pilih mapel untuk mengganti latihan',
+      }),
+    ]),
+    subjectList,
+    el('p', {
+      class: 'practice-subjects__note',
+      text: 'Review Terjadwal memakai soal yang sudah jatuh tempo; Mistakes Review memakai riwayat jawaban salah; Personalized Practice memakai topik yang paling sering salah.',
+    }),
+  ]);
   const masterySlot = el('div');
 
   const content = el('div', {}, [
@@ -59,16 +76,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       subtitle:
         'Latihan terarah dari bank soal yang sama dengan lesson. Semua jawaban dinilai di server; combo dan XP tidak dikirim dari browser.',
     }),
-    el('div', { class: 'banner banner--info' }, [
-      icon('shield', 18),
-      el('div', {}, [
-        el('p', { class: 'banner__title', text: 'Penilaian tetap di server' }),
-        el('p', {
-          class: 'banner__body',
-          text: 'Waktu dan combo dihitung ulang oleh database saat sesi selesai. Kamu hanya mengirim jawaban dan durasi menjawab.',
-        }),
-      ]),
-    ]),
+    subjectNav,
     el('a', { class: 'card friend-quest-cta', attrs: { href: '/friends-quest' } }, [
       el('span', { class: 'friend-quest-cta__icon' }, [icon('users', 24)]),
       el('span', { class: 'friend-quest-cta__text' }, [
@@ -81,7 +89,6 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       icon('chevron-right', 20),
     ]),
     masterySlot,
-    toolbar,
     listSlot,
   ]);
 
@@ -93,7 +100,9 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       el('span', { class: 'spinner' }),
       el('p', { text: 'Memuat mode latihan…' }),
     );
-    toolbar.replaceChildren();
+    subjectList.replaceChildren(
+      el('p', { class: 'form-hint', text: 'Memuat mata pelajaran…' }),
+    );
 
     void (async () => {
       try {
@@ -124,18 +133,37 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
         let selected =
           playable.find((subject) => subject.slug === preferred) ?? playable[0]!;
 
-        const select = el('select', {
-          class: 'practice-toolbar__select',
-          attrs: { 'aria-label': 'Mata pelajaran untuk latihan' },
-        });
-        for (const subject of playable) {
-          const option = el('option', {
-            text: `${subject.name} · ${formatNumber(subject.question_count)} soal`,
-            attrs: { value: subject.slug },
+        const subjectButtons = playable.map((subject) => {
+          const button = el(
+            'button',
+            {
+              class: 'practice-subject',
+              attrs: { type: 'button', 'aria-pressed': 'false' },
+            },
+            [
+              el('span', { class: 'practice-subject__name', text: subject.name }),
+              el('span', {
+                class: 'practice-subject__count',
+                text: `${formatNumber(subject.question_count)} soal`,
+              }),
+            ],
+          );
+          button.addEventListener('click', () => {
+            if (subject.slug === selected.slug) return;
+            selected = subject;
+            paintSubjects();
+            paint();
           });
-          if (subject.slug === selected.slug) option.selected = true;
-          select.append(option);
-        }
+          return { subject, button };
+        });
+
+        const paintSubjects = (): void => {
+          for (const { subject, button } of subjectButtons) {
+            const active = subject.slug === selected.slug;
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-pressed', String(active));
+          }
+        };
 
         const grid = el('div', { class: 'practice-grid' });
 
@@ -185,22 +213,8 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
           );
         };
 
-        select.addEventListener('change', () => {
-          selected = playable.find((subject) => subject.slug === select.value) ?? selected;
-          paint();
-        });
-
-        toolbar.append(
-          el('label', { class: 'practice-toolbar__label' }, [
-            el('span', { text: 'Mata pelajaran' }),
-            select,
-          ]),
-          el('span', {
-            class: 'practice-toolbar__hint',
-            text: 'Review Terjadwal memakai soal yang sudah jatuh tempo; Mistakes Review memakai riwayat jawaban salah; Personalized Practice memakai topik yang paling sering salah.',
-          }),
-        );
-
+        subjectList.replaceChildren(...subjectButtons.map(({ button }) => button));
+        paintSubjects();
         paintMastery();
         listSlot.className = '';
         listSlot.replaceChildren(grid);

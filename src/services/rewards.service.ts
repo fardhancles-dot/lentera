@@ -58,6 +58,10 @@ function asBoolean(value: unknown, fallback = false): boolean {
   return typeof value === 'boolean' ? value : fallback;
 }
 
+function asRarity(value: unknown): InventoryItem['rarity'] {
+  return value === 'rare' || value === 'legendary' ? value : 'common';
+}
+
 function asNullableString(value: unknown): string | null {
   return typeof value === 'string' && value.length > 0 ? value : null;
 }
@@ -86,7 +90,7 @@ function asItemKind(value: unknown): ShopItemKind {
 }
 
 function asShopRarity(value: unknown): ShopRarity {
-  return value === 'rare' || value === 'legendary' ? value : 'common';
+  return asRarity(value);
 }
 
 function parseQuest(value: unknown): Quest {
@@ -196,6 +200,8 @@ function parseInventoryItem(value: unknown): InventoryItem {
     quantity: Math.max(0, asNumber(record.quantity)),
     maxStack: Math.max(1, asNumber(record.maxStack, 1)),
     icon: asString(record.icon, 'bag'),
+    rarity: asRarity(record.rarity),
+    imageUrl: asNullableString(record.imageUrl),
   };
 }
 

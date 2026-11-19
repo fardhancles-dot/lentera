@@ -3,7 +3,13 @@ import { seededShuffle } from './shuffle';
 import type { MiniGameProps, MiniGameView } from './types';
 
 export function createWordBank({ question, onChange }: MiniGameProps): MiniGameView {
-  const tokens = seededShuffle(question.options, `${question.id}:word-bank`);
+  // Empty labels would render invisible buttons, so they are dropped before
+  // shuffling. A question without tokens gets an explicit message instead of
+  // an empty bank the player cannot use.
+  const tokens = seededShuffle(
+    question.options.filter((option) => option.label.trim().length > 0),
+    `${question.id}:word-bank`,
+  );
   const selected: string[] = [];
   const buttons = new Map<string, HTMLButtonElement>();
   let disabled = false;
@@ -22,6 +28,11 @@ export function createWordBank({ question, onChange }: MiniGameProps): MiniGameV
 
   const render = () => {
     bank.replaceChildren();
+    if (tokens.length === 0) {
+      bank.append(
+        el('p', { class: 'play-mini-note', text: 'Kata yang tersedia belum diisi untuk soal ini.' }),
+      );
+    }
     for (const token of tokens) {
       const used = selected.includes(token.id);
       const button = el(

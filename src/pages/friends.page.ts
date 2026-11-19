@@ -131,7 +131,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       el('p', { text: 'Memuat teman…' }),
     );
 
-    void Promise.all([socialService.getFriends(), socialService.getFriendActivity(20)])
+    void Promise.all([socialService.getFriends(), socialService.getFriendActivity(5)])
       .then(([payload, activity]) => {
         if (disposed || !friendsSlot.isConnected) return;
         friendsSlot.className = '';
@@ -330,7 +330,7 @@ function friendsContent(
         el('h2', { class: 'card__title', text: 'Aktivitas teman' }),
         el('p', {
           class: 'card__subtitle',
-          text: 'Lesson, latihan, dan pencapaian terbaru dari lingkaranmu.',
+          text: 'Lima aktivitas terbaru dari lingkaranmu, terbaru di paling atas.',
         }),
         activity.length > 0
           ? el('ul', { class: 'activity-list' }, activity.map(activityRow))

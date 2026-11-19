@@ -53,7 +53,7 @@ function parseHearts(value: unknown): PlayerHearts {
     current,
     max: max || 5,
     nextRefillSeconds: Math.max(0, asNumber(record.nextRefillSeconds)),
-    regenMinutes: Math.max(1, asNumber(record.regenMinutes, 30)),
+    regenMinutes: Math.max(1, asNumber(record.regenMinutes)),
     refillCostCoins: Math.max(0, asNumber(record.refillCostCoins, (max - current) * 10)),
   };
 }

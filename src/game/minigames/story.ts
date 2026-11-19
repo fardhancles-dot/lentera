@@ -174,6 +174,9 @@ export function createStory({ question, onChange }: MiniGameProps): MiniGameView
 
   return {
     answer: el('div', { class: 'play-story' }, [
+      question.scene?.title
+        ? el('h2', { class: 'play-story__title', text: question.scene.title })
+        : null,
       progress,
       stage,
       nextButton,

@@ -574,6 +574,36 @@
   color: var(--ink-muted, #5b6b56);
 }
 
+.notification__actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.notification__delete {
+  width: 32px;
+  height: 32px;
+  color: var(--red-600, #b34040);
+}
+
+.notification__delete:hover {
+  background: var(--red-100, #fde4e1);
+}
+
+@media (max-width: 520px) {
+  .notification {
+    gap: 0.5rem;
+    padding: 0.65rem;
+  }
+
+  .notification__actions .btn {
+    padding: 0 0.5rem;
+    font-size: 0.68rem;
+  }
+}
+
 .player-layout {
   display: flex;
   flex-direction: column;

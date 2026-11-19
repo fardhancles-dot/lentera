@@ -1,5 +1,6 @@
 import type { PageModule } from '../app/router';
-import { icon, iconName } from '../components/icons';
+import { icon } from '../components/icons';
+import { RARITY_LABEL, productArt } from '../components/productArt';
 import { storeNav } from '../components/storeNav';
 import { showToast } from '../components/toast';
 import { pageHeader, renderAppLayout } from '../layouts/appLayout';
@@ -9,38 +10,6 @@ import type { ShopItem } from '../types/rewards';
 import { el, formatNumber } from '../utils/dom';
 
 const meta = { title: 'Toko' };
-
-function productArt(item: ShopItem): HTMLElement {
-  const art = el('div', { class: 'shop-card__art' });
-  const fallback = el('span', { class: 'shop-card__fallback' }, [
-    icon(iconName(item.icon, 'bag'), 48),
-  ]);
-  art.append(fallback);
-
-  if (item.imageUrl) {
-    const image = el('img', {
-      class: 'shop-card__image',
-      attrs: { alt: item.name, loading: 'lazy', decoding: 'async' },
-    });
-    image.addEventListener('load', () => {
-      art.classList.add('has-image');
-    });
-    image.addEventListener('error', () => {
-      art.classList.remove('has-image');
-      image.remove();
-    });
-    image.src = item.imageUrl;
-    art.append(image);
-  }
-
-  return art;
-}
-
-const RARITY_LABEL = {
-  common: 'COMMON',
-  rare: 'RARE',
-  legendary: 'LEGENDARY',
-} as const;
 
 function shopCard(item: ShopItem, onBuy: (item: ShopItem) => Promise<void>): HTMLElement {
   const full = item.owned >= item.maxStack;

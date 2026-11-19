@@ -2,21 +2,12 @@ import { sessionStore } from '../../stores/session.store';
 import { SOUND_PATTERNS, volumeToGain, type SoundName } from './patterns';
 
 /**
- * Lentera's audio engine is fully synthesized with the Web Audio API. There are
- * no downloaded samples: every sound is generated from oscillators, so the
- * project ships no third-party audio licence and nothing is a silent
- * placeholder. Volumes come from the user's saved settings; the mute toggle is
- * a local device preference and never overwrites the database settings.
+ * Lentera's sound effects are synthesized with the Web Audio API; the global
+ * background track is streamed by backgroundMusic.ts from the admin library.
+ * Volumes come from the user's saved settings; the mute toggle is a local
+ * device preference and never overwrites the database settings.
  */
 
-const MUSIC_BARS: readonly (readonly number[])[] = [
-  [220, 261.63, 329.63],
-  [196, 246.94, 293.66],
-  [174.61, 220, 261.63],
-  [196, 246.94, 329.63],
-];
-const MUSIC_MELODY = [659.25, 587.33, 523.25, 587.33, 659.25, 783.99, 659.25, 587.33];
-const MUSIC_BAR_MS = 4000;
 const MUTE_KEY = 'lentera:audio-muted';
 
 type Listener = () => void;
@@ -24,13 +15,10 @@ type Listener = () => void;
 class AudioEngine {
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
-  private musicGain: GainNode | null = null;
   private sfxGain: GainNode | null = null;
-  private musicTimer: number | null = null;
-  private musicBar = 0;
-  private musicWanted = false;
   private listeners = new Set<Listener>();
   private lastPlayed = new Map<SoundName, number>();
+  private pendingGestureSfx: SoundName | null = null;
   private muted = false;
 
   constructor() {
@@ -42,9 +30,8 @@ class AudioEngine {
       this.muted = false;
     }
 
-    sessionStore.subscribe(() => this.syncWithSession());
+    sessionStore.subscribe(() => this.applyVolumes());
     document.addEventListener('visibilitychange', () => this.handleVisibility());
-    this.syncWithSession();
   }
 
   subscribe(listener: Listener): () => void {
@@ -67,8 +54,6 @@ class AudioEngine {
     } catch {
       // Private mode may reject storage; the in-memory flag still works.
     }
-    if (muted) this.stopMusic();
-    else if (this.musicWanted && this.context?.state === 'running') this.startMusic();
     this.applyVolumes();
     this.notify();
   }
@@ -80,22 +65,36 @@ class AudioEngine {
 
   /**
    * Browsers only allow audio after a user gesture. Call this from the first
-   * pointerdown/keydown so queued music can start.
+   * pointerdown/keydown so effect sounds are ready.
    */
   unlock(): void {
     if (typeof window === 'undefined') return;
     const context = this.ensureContext();
     if (!context) return;
 
-    if (context.state === 'suspended') void context.resume();
+    if (context.state === 'suspended') {
+      // The first tap's click handler can run before resume() settles; keep that
+      // effect queued so mobile users still hear feedback on the first gesture.
+      void context.resume().then(() => {
+        this.applyVolumes();
+        const pending = this.pendingGestureSfx;
+        this.pendingGestureSfx = null;
+        if (pending && this.context?.state === 'running') this.play(pending);
+      });
+      return;
+    }
     this.applyVolumes();
-    if (this.musicWanted && !this.muted) this.startMusic();
   }
 
   play(name: SoundName): void {
     if (this.muted || typeof window === 'undefined') return;
     const context = this.ensureContext();
-    if (!context || context.state !== 'running' || !this.sfxGain) return;
+    if (!context) return;
+    if (context.state !== 'running') {
+      this.pendingGestureSfx = name;
+      return;
+    }
+    if (!this.sfxGain) return;
 
     const now = context.currentTime;
     const last = this.lastPlayed.get(name) ?? 0;
@@ -125,29 +124,10 @@ class AudioEngine {
     }
   }
 
-  /** Music is allowed only while a signed-in player is in the app. */
-  setMusicEnabled(enabled: boolean): void {
-    this.musicWanted = enabled;
-    if (!enabled) this.stopMusic();
-    else if (this.context?.state === 'running' && !this.muted) this.startMusic();
-  }
-
   private sfxVolume(): number {
     const settings = sessionStore.getState().user?.settings;
     if (!settings) return 0.6;
     return volumeToGain(settings.sfx_volume, 0.8);
-  }
-
-  private musicVolume(): number {
-    const settings = sessionStore.getState().user?.settings;
-    if (!settings) return 0.25;
-    return volumeToGain(settings.music_volume, 0.3);
-  }
-
-  private syncWithSession(): void {
-    const signedIn = Boolean(sessionStore.getState().user);
-    this.setMusicEnabled(signedIn);
-    this.applyVolumes();
   }
 
   private ensureContext(): AudioContext | null {
@@ -160,10 +140,8 @@ class AudioEngine {
     try {
       this.context = new Ctor();
       this.master = this.context.createGain();
-      this.musicGain = this.context.createGain();
       this.sfxGain = this.context.createGain();
 
-      this.musicGain.connect(this.master);
       this.sfxGain.connect(this.master);
       this.master.connect(this.context.destination);
       this.applyVolumes();
@@ -176,77 +154,20 @@ class AudioEngine {
   }
 
   private applyVolumes(): void {
-    if (!this.context || !this.master || !this.musicGain || !this.sfxGain) return;
+    if (!this.context || !this.master || !this.sfxGain) return;
     const now = this.context.currentTime;
-    const muted = this.muted;
-    this.master.gain.setTargetAtTime(muted ? 0 : 1, now, 0.05);
-    this.musicGain.gain.setTargetAtTime(this.musicVolume(), now, 0.08);
+    this.master.gain.setTargetAtTime(this.muted ? 0 : 1, now, 0.05);
     this.sfxGain.gain.setTargetAtTime(this.sfxVolume(), now, 0.05);
-  }
-
-  private startMusic(): void {
-    if (this.musicTimer !== null || typeof window === 'undefined') return;
-    this.playMusicBar();
-    this.musicTimer = window.setInterval(() => this.playMusicBar(), MUSIC_BAR_MS);
-  }
-
-  private stopMusic(): void {
-    if (this.musicTimer === null) return;
-    window.clearInterval(this.musicTimer);
-    this.musicTimer = null;
-  }
-
-  private playMusicBar(): void {
-    if (this.muted) return;
-    const context = this.context;
-    if (!context || context.state !== 'running' || !this.musicGain) return;
-
-    const now = context.currentTime;
-    const chord = MUSIC_BARS[this.musicBar % MUSIC_BARS.length]!;
-    this.musicBar += 1;
-
-    chord.forEach((frequency, index) => {
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.type = index === 0 ? 'sine' : 'triangle';
-      oscillator.frequency.setValueAtTime(frequency, now);
-
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.22, now + 1.1);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + MUSIC_BAR_MS / 1000 - 0.2);
-
-      oscillator.connect(gain);
-      gain.connect(this.musicGain!);
-      oscillator.start(now);
-      oscillator.stop(now + MUSIC_BAR_MS / 1000);
-    });
-
-    const melodyFrequency = MUSIC_MELODY[this.musicBar % MUSIC_MELODY.length]!;
-    const melody = context.createOscillator();
-    const melodyGain = context.createGain();
-    melody.type = 'sine';
-    melody.frequency.setValueAtTime(melodyFrequency, now + 1.6);
-    melodyGain.gain.setValueAtTime(0.0001, now + 1.6);
-    melodyGain.gain.exponentialRampToValueAtTime(0.12, now + 1.75);
-    melodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.6);
-    melody.connect(melodyGain);
-    melodyGain.connect(this.musicGain);
-    melody.start(now + 1.6);
-    melody.stop(now + 2.7);
   }
 
   private handleVisibility(): void {
     if (!this.context) return;
     if (document.visibilityState === 'hidden') {
-      this.stopMusic();
       void this.context.suspend();
       return;
     }
 
-    void this.context.resume().then(() => {
-      this.applyVolumes();
-      if (this.musicWanted && !this.muted) this.startMusic();
-    });
+    void this.context.resume().then(() => this.applyVolumes());
   }
 }
 

@@ -83,6 +83,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
   let summary: LessonSummary | null = null;
   let nextLevelSlug: string | null = null;
   let allLevelsCompletedAfterPass = false;
+  let blockedSectionTitle: string | null = null;
   let heartsSlot: HTMLElement | null = null;
   let resultStage: { destroy: () => void } | null = null;
   let heartbeatTimer: number | null = null;
@@ -175,6 +176,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
   const load = () => {
     nextLevelSlug = null;
     allLevelsCompletedAfterPass = false;
+    blockedSectionTitle = null;
     host.className = 'play-loading';
     host.replaceChildren(el('span', { class: 'spinner' }), el('p', { text: 'Menyiapkan lesson…' }));
 
@@ -208,6 +210,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
 
         nextLevelSlug = detail.nextLevel?.lessonSlug ?? null;
         allLevelsCompletedAfterPass = detail.allLevelsCompletedAfterPass;
+        blockedSectionTitle = detail.blockedBySection?.title ?? null;
         index = 0;
         answeredCount = 0;
         summary = null;
@@ -584,6 +587,13 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
             text: 'Seluruh level di mata pelajaran ini sudah kamu selesaikan.',
           })
         : null;
+    const sectionNote =
+      passed && !canContinue && blockedSectionTitle
+        ? el('p', {
+            class: 'play-result__note',
+            text: `Pembahasan baru: ${blockedSectionTitle}. Buka Peta Belajar untuk melanjutkannya.`,
+          })
+        : null;
     const actions = el(
       'div',
       {
@@ -598,7 +608,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
           },
           [
             icon('map', 18),
-            passed ? 'Buka Peta Pelajaran' : 'Kembali ke Peta',
+            passed ? 'Buka Peta Belajar' : 'Kembali ke Peta',
           ],
         ),
         retry,
@@ -647,6 +657,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
           : null,
         note ? el('p', { class: 'play-result__note', text: note }) : null,
         completionNote,
+        sectionNote,
         actions,
       ]),
     ]);

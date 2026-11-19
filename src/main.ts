@@ -14,6 +14,7 @@ import { Router } from './app/router';
 import { kikoMarkup, lampMarkup } from './components/brandArt';
 import { brand } from './config/brand';
 import { installAudioUnlock } from './game/audio/audioEngine';
+import { backgroundMusic } from './game/audio/backgroundMusic';
 import { contentService } from './services/content.service';
 import { sessionStore } from './stores/session.store';
 
@@ -36,6 +37,10 @@ document.documentElement.dataset.reducedMotion = String(
 );
 
 installAudioUnlock();
+// Starts in the background so the first paint is never blocked by the audio
+// configuration request. The player arms a first-gesture retry if the browser
+// blocks autoplay.
+backgroundMusic.start();
 
 sessionStore.subscribe((state) => {
   if (state.user) {

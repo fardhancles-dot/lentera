@@ -43,6 +43,8 @@ const DEFAULT_SETTINGS: PublicSiteSettings = {
   footerText: '',
   maintenanceMode: false,
   registrationEnabled: true,
+  backgroundDesktopUrl: '',
+  backgroundMobileUrl: '',
 };
 
 function parseSettings(value: unknown): PublicSiteSettings {
@@ -69,6 +71,8 @@ function parseSettings(value: unknown): PublicSiteSettings {
     footerText: str(data.footerText),
     maintenanceMode: bool(data.maintenanceMode, false),
     registrationEnabled: bool(data.registrationEnabled, true),
+    backgroundDesktopUrl: str(data.backgroundDesktopUrl).trim(),
+    backgroundMobileUrl: str(data.backgroundMobileUrl).trim(),
   };
 }
 
@@ -207,6 +211,24 @@ export const contentService = {
       }
     })();
     return this._init;
+  },
+
+  /**
+   * Re-reads public content after an admin change, e.g. a new map background.
+   * A failed refresh keeps the settings already applied instead of falling back
+   * to build-time defaults.
+   */
+  async refresh(): Promise<void> {
+    try {
+      const raw = await contentRepository.getSiteContent();
+      const data = record(raw);
+      this._settings = parseSettings(data.settings);
+      this._pages = array(data.pages).map(parsePageSummary).filter((page) => page.slug);
+      applyBranding(this._settings);
+      this._loaded = true;
+    } catch (error) {
+      console.warn('[content] refresh failed, keeping the previous settings', error);
+    }
   },
 
   async getPage(slug: string): Promise<PublicContentPage | null> {

@@ -1,5 +1,6 @@
 import { adminRepository } from '../repositories/admin.repository';
 import type { AppRole, Json } from '../types/database';
+import type { AdminMusicTrack } from '../types/music';
 import type {
   AdminAnalytics,
   AdminAnnouncement,
@@ -9,6 +10,7 @@ import type {
   AdminContext,
   AdminFriendQuest,
   AdminGamification,
+  AdminHeartSettings,
   AdminLearningSection,
   AdminMediaItem,
   AdminOverview,
@@ -51,6 +53,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   question_audio_or_speech_required: 'Soal listening membutuhkan audio atau transkrip.',
   question_scene_screens_required: 'Soal percakapan/cerita membutuhkan minimal satu layar scene.',
   question_blank_required: 'Soal isian harus memuat __ pada pertanyaan.',
+  question_tokens_required:
+    'Word bank dan susun kalimat membutuhkan minimal dua kata yang bisa disusun.',
+  question_tokens_invalid: 'Ada kata kosong pada daftar kata tersedia.',
   slug_invalid: 'Slug hanya boleh huruf kecil, angka, dan tanda hubung.',
   title_invalid: 'Judul wajib diisi.',
   name_invalid: 'Nama harus 2–80 karakter.',
@@ -81,6 +86,13 @@ const ERROR_MESSAGES: Record<string, string> = {
   broadcast_body_invalid: 'Isi maksimal 300 karakter.',
   broadcast_link_invalid: 'Tautan harus path internal yang diawali /.',
   audience_invalid: 'Audiens tidak valid.',
+  music_not_found: 'Musik tidak ditemukan. Muat ulang daftar musik.',
+  music_title_invalid: 'Judul musik harus 1–120 karakter.',
+  music_type_invalid: 'Format musik harus MP3, OGG, atau WAV.',
+  music_size_invalid: 'Ukuran musik maksimal 20 MB.',
+  music_path_invalid: 'File musik harus diunggah ke folder musik.',
+  music_url_invalid: 'URL musik harus memakai HTTPS.',
+  music_inactive: 'Aktifkan musik terlebih dahulu sebelum menjadikannya musik utama.',
 };
 
 function messageFor(error: unknown): Error {
@@ -471,6 +483,28 @@ function parseMedia(value: unknown): AdminMediaItem {
   };
 }
 
+function parseMusic(value: unknown): AdminMusicTrack {
+  const data = record(value);
+  const format = data.format === 'ogg' || data.format === 'wav' ? data.format : 'mp3';
+  return {
+    id: str(data.id),
+    title: str(data.title, 'Musik Lentera'),
+    storagePath: str(data.storagePath),
+    url: str(data.url),
+    format,
+    mimeType: str(data.mimeType, 'audio/mpeg'),
+    sizeBytes: num(data.sizeBytes),
+    isActive: bool(data.isActive, true),
+    isPrimary: bool(data.isPrimary),
+    createdAt: str(data.createdAt),
+    updatedAt: str(data.updatedAt),
+  };
+}
+
+function notifyMusicUpdated(): void {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('lentera:music-updated'));
+}
+
 function parseSiteSettings(value: Json): AdminSiteSettings {
   const data = record(value);
   return {
@@ -489,6 +523,8 @@ function parseSiteSettings(value: Json): AdminSiteSettings {
     footerText: str(data.footer_text),
     maintenanceMode: bool(data.maintenance_mode),
     registrationEnabled: bool(data.registration_enabled, true),
+    backgroundDesktopUrl: str(data.background_desktop_url),
+    backgroundMobileUrl: str(data.background_mobile_url),
     updatedAt: str(data.updated_at),
   };
 }
@@ -523,6 +559,16 @@ function parseAnnouncement(value: unknown): AdminAnnouncement {
   };
 }
 
+function parseHeartSettings(value: unknown): AdminHeartSettings {
+  const data = record(value);
+  return {
+    maxHearts: Math.max(0, num(data.maxHearts, 5)),
+    regenerationMinutes: Math.max(1, num(data.regenerationMinutes, 1)),
+    status: str(data.status, 'active'),
+    updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : null,
+  };
+}
+
 function parseGamification(value: Json): AdminGamification {
   const data = record(value);
   const catalog = (key: string) => array(data[key]).map(record);
@@ -534,7 +580,7 @@ function parseGamification(value: Json): AdminGamification {
     streakMilestones: catalog('streakMilestones'),
     leagueTiers: catalog('leagueTiers'),
     events: catalog('events'),
-    heartSettings: record(data.heartSettings),
+    heartSettings: parseHeartSettings(data.heartSettings),
   };
 }
 
@@ -741,9 +787,48 @@ export const adminService = {
   uploadMedia: (file: File, altText: string, width: number | null, height: number | null) =>
     run(() => adminRepository.uploadMedia(file, altText, width, height), parseMedia),
 
+  listBackgroundMusic: () =>
+    run(() => adminRepository.listBackgroundMusic(), parseOthers(parseMusic)),
+  uploadBackgroundMusic: (file: File, title: string) =>
+    run(() => adminRepository.uploadBackgroundMusic(file, title), parseMusic),
+  setBackgroundMusicActive: (id: string, active: boolean, reason: string) =>
+    run(
+      () => adminRepository.setBackgroundMusicActive(id, active, reason),
+      (value) => {
+        notifyMusicUpdated();
+        return record(value);
+      },
+    ),
+  setPrimaryBackgroundMusic: (id: string, reason: string) =>
+    run(
+      () => adminRepository.setPrimaryBackgroundMusic(id, reason),
+      (value) => {
+        notifyMusicUpdated();
+        return record(value);
+      },
+    ),
+  deleteBackgroundMusic: (id: string, reason: string) =>
+    run(
+      async () => {
+        const row = record(await adminRepository.deleteBackgroundMusic(id, reason));
+        const path = str(row.storagePath);
+        if (path) {
+          // Metadata is already gone; a storage hiccup must not crash the UI.
+          await adminRepository
+            .removeBackgroundMusicFile(path)
+            .catch((error: unknown) => console.warn('[admin] music file removal failed', error));
+        }
+        notifyMusicUpdated();
+        return row as Json;
+      },
+      (value) => record(value),
+    ),
+
   getGamification: () => run(() => adminRepository.getGamification(), parseGamification),
   saveGameCatalog: (kind: string, payload: Json, reason: string) =>
     run(() => adminRepository.saveGameCatalog(kind, payload, reason), (value) => record(value)),
+  saveHeartSettings: (regenMinutes: number) =>
+    run(() => adminRepository.saveHeartSettings(regenMinutes), parseHeartSettings),
   saveShopItem: (payload: Json, reason: string) =>
     run(() => adminRepository.saveShopItem(payload, reason), (value) => record(value)),
   uploadProductImage: (file: File) =>
@@ -761,6 +846,14 @@ export const adminService = {
         return {} as Json;
       },
       (value) => record(value),
+    ),
+  uploadJourneyBackground: (file: File, slot: 'desktop' | 'mobile') =>
+    run(
+      async () => (await adminRepository.uploadBackgroundImage(file, slot)) as unknown as Json,
+      (value) => {
+        const data = record(value);
+        return { url: str(data.url), path: str(data.path) };
+      },
     ),
 
   listSocial: (search: string, status: string, page: number, pageSize: number) =>

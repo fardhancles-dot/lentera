@@ -12,7 +12,8 @@ export const EMPTY_NOTIFICATION_INDICATORS: NotificationIndicators = {
 
 /**
  * Maps one real server count to a navigation destination. Achievements live on
- * the Misi page, and the Learn badge covers claimable level reward nodes.
+ * the Misi page. The Learn destination intentionally has no reward badge now
+ * that reward stops are gone from the map.
  */
 export function indicatorActive(key: string, counts: NotificationIndicators): boolean {
   switch (key) {
@@ -23,7 +24,9 @@ export function indicatorActive(key: string, counts: NotificationIndicators): bo
     case 'quests':
       return counts.quests > 0 || counts.achievements > 0;
     case 'learn':
-      return counts.learnRewards > 0;
+      // Reward nodes no longer appear on the learning map. Keep the global red
+      // dot system, but never light the Learn destination from reward claims.
+      return false;
     case 'leaderboard':
       return counts.league > 0;
     case 'friends':

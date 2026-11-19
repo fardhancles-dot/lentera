@@ -8,9 +8,11 @@ import { sessionStore } from '../stores/session.store';
 import type { AdminContext } from '../types/admin';
 import { el } from '../utils/dom';
 import { renderAnalytics } from './admin/analytics';
+import { renderBackground } from './admin/background';
 import { renderCurriculum, renderMap } from './admin/curriculum';
 import { renderGamification } from './admin/gamification';
 import { renderMedia } from './admin/media';
+import { renderMusic } from './admin/music';
 import { renderOverview } from './admin/overview';
 import { renderQuestions } from './admin/questions';
 import { renderSocial } from './admin/social';
@@ -48,6 +50,8 @@ const NAV: NavGroup[] = [
       { key: 'map', label: 'Map editor', icon: 'map', permission: 'curriculum.read', render: renderMap },
       { key: 'questions', label: 'Bank soal', icon: 'target', permission: 'questions.read', render: renderQuestions },
       { key: 'media', label: 'Media', icon: 'globe', permission: 'media.manage', render: renderMedia },
+      { key: 'background', label: 'Pengaturan Background', icon: 'settings', permission: 'content.manage', render: renderBackground },
+      { key: 'music', label: 'Pengaturan Musik', icon: 'volume', permission: 'content.manage', render: renderMusic },
     ],
   },
   {

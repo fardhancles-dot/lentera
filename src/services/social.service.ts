@@ -510,8 +510,11 @@ export const socialService = {
     }
   },
 
-  getFriendActivity(limit = 20): Promise<ActivityItem[]> {
-    return run(() => socialRepository.getFriendActivity(limit), parseActivity);
+  getFriendActivity(limit = 5): Promise<ActivityItem[]> {
+    // The friends page shows the five newest events only. The database keeps the
+    // full history; the query itself stops at five rows.
+    const capped = Math.min(5, Math.max(1, limit));
+    return run(() => socialRepository.getFriendActivity(capped), parseActivity);
   },
 
   getLeaderboard(scope: 'global' | 'friends'): Promise<LeaderboardPayload> {
@@ -560,6 +563,24 @@ export const socialService = {
     try {
       const record = asRecord(await socialRepository.markNotificationsRead(id));
       return Math.max(0, asNumber(record.updated));
+    } catch (error) {
+      throw messageFor(error);
+    }
+  },
+
+  async deleteNotification(id: string): Promise<boolean> {
+    try {
+      const record = asRecord(await socialRepository.deleteNotification(id));
+      return asBoolean(record.deleted);
+    } catch (error) {
+      throw messageFor(error);
+    }
+  },
+
+  async deleteReadNotifications(): Promise<number> {
+    try {
+      const record = asRecord(await socialRepository.deleteReadNotifications());
+      return Math.max(0, asNumber(record.deleted));
     } catch (error) {
       throw messageFor(error);
     }

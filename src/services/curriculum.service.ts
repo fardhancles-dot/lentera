@@ -100,6 +100,8 @@ interface CurriculumDetailBase {
 export interface LessonDetail extends CurriculumDetailBase {
   /** Next playable level in map order; null when this is the final level. */
   nextLevel: PathNode | null;
+  /** Section divider crossed before the next level; "Lanjut" must stay hidden. */
+  blockedBySection: PathSection | null;
   /** Every other level is complete, so passing this level finishes the subject. */
   allLevelsCompletedAfterPass: boolean;
 }
@@ -414,7 +416,7 @@ export const curriculumService = {
           },
           unit,
           node,
-          ...resolveLevelNavigation(path.levels, node.id),
+          ...resolveLevelNavigation(path.levels, node.id, path.sections),
         };
       }
     }

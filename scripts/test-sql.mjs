@@ -106,6 +106,12 @@ try {
   await run('supabase/migrations/20261116130000_subject_kejuruan_category.sql');
   await run('supabase/migrations/20261116140000_notification_indicators.sql');
   await run('supabase/migrations/20261116150000_profile_account_number.sql');
+  await run('supabase/migrations/20261118100000_question_type_forms.sql');
+  await run('supabase/migrations/20261120100000_journey_background_settings.sql');
+  await run('supabase/migrations/20261120110000_notification_delete_read.sql');
+  await run('supabase/migrations/20261120120000_inventory_product_metadata.sql');
+  await run('supabase/migrations/20261120130000_background_music.sql');
+  await run('supabase/migrations/20261120140000_heart_regeneration_settings.sql');
 
   const legacyAccounts = await db.query(
     `select id, account_number::text as account_number
@@ -1070,7 +1076,8 @@ try {
   const initialProgress = await db.query('select public.get_player_state() as payload');
   check(
     initialProgress.rows[0].payload.hearts.current === 5 &&
-      initialProgress.rows[0].payload.hearts.max === 5,
+      initialProgress.rows[0].payload.hearts.max === 5 &&
+      initialProgress.rows[0].payload.hearts.regenMinutes === 30,
     'new player starts with five Hearts',
     JSON.stringify(initialProgress.rows[0].payload.hearts),
   );
@@ -1580,6 +1587,63 @@ try {
   check(!miniPayload.includes('question_answers'), 'mini-game payload never exposes answers');
   check(!miniPayload.includes('right_label'), 'mini-game payload never exposes pair rows');
 
+  // Real grading goes through submit_attempt_answer (SECURITY DEFINER). The
+  // seeded lesson has a Word Bank and a Susun Kalimat question, so both word
+  // ordering paths are exercised against the stored token rows.
+  const tokenQuestions = await db.query(
+    `select q.id, q.slug, a.answer
+     from public.questions q
+     join public.lessons l on l.id = q.lesson_id and l.slug = 'greetings-vocabulary'
+     join public.question_answers a on a.question_id = q.id
+     where q.slug in ('en-wordbank-daily-routine', 'en-builder-daily-routine')`,
+  );
+  const wordBankQuestion = tokenQuestions.rows.find(
+    (row) => row.slug === 'en-wordbank-daily-routine',
+  );
+  const builderQuestion = tokenQuestions.rows.find(
+    (row) => row.slug === 'en-builder-daily-routine',
+  );
+  check(
+    Boolean(wordBankQuestion && builderQuestion),
+    'seed keeps a word bank and a sentence builder question',
+  );
+  if (wordBankQuestion && builderQuestion) {
+    const wordBankResult = await db.query(
+      'select public.submit_attempt_answer($1, $2, $3::jsonb) as payload',
+      [
+        miniStart.attemptId,
+        wordBankQuestion.id,
+        JSON.stringify({ text: `${wordBankQuestion.answer.toUpperCase()}!` }),
+      ],
+    );
+    check(
+      wordBankResult.rows[0].payload.isCorrect === true,
+      'word bank grading ignores case and punctuation',
+    );
+    check(
+      Boolean(wordBankResult.rows[0].payload.correctAnswer),
+      'word bank feedback returns the arranged answer',
+    );
+
+    const reversed = builderQuestion.answer.trim().split(/\s+/).reverse().join(' ');
+    const builderResult = await db.query(
+      'select public.submit_attempt_answer($1, $2, $3::jsonb) as payload',
+      [miniStart.attemptId, builderQuestion.id, JSON.stringify({ text: reversed })],
+    );
+    check(
+      builderResult.rows[0].payload.isCorrect === false,
+      'sentence builder rejects a scrambled sentence',
+    );
+    check(
+      Boolean(builderResult.rows[0].payload.correctAnswer),
+      'sentence builder feedback returns the correct sentence',
+    );
+  }
+  await db.query(
+    "update public.lesson_attempts set status = 'abandoned' where id = $1",
+    [miniStart.attemptId],
+  );
+
   // Every active subject uses the same one-question level flow.
   const subjectNodes = await db.query(
     `select distinct on (s.slug) s.slug, n.id as node_id
@@ -1775,6 +1839,18 @@ try {
     potionPurchase.rows[0].payload.coinBalance === 420 &&
       potionPurchase.rows[0].payload.quantity === 1,
     'purchase deducts the configured price and adds inventory',
+  );
+  const purchasedInventory = await db.query('select public.get_my_inventory() as payload');
+  const purchasedPotion = purchasedInventory.rows[0].payload.items.find(
+    (item) => item.id === potion.id,
+  );
+  check(
+    Boolean(purchasedPotion) &&
+      purchasedPotion.quantity === 1 &&
+      purchasedPotion.rarity === 'common' &&
+      'imageUrl' in purchasedPotion,
+    'inventory exposes the same rarity and image fields as the shop product',
+    JSON.stringify(purchasedPotion ?? null),
   );
   const freezePurchase = await db.query('select public.purchase_shop_item($1) as payload', [freeze.id]);
   check(
@@ -3256,10 +3332,153 @@ try {
   const gamificationPayload = gamification.rows[0].payload;
   check(
     gamificationPayload.quests.length >= 6 && gamificationPayload.shopItems.length === 2 &&
-      gamificationPayload.heartSettings.editable === false &&
+      gamificationPayload.heartSettings.editable === true &&
+      gamificationPayload.heartSettings.regenerationMinutes === 30 &&
       gamificationPayload.shopItems.every((item) => item.rarity === 'common'),
-    'gamification catalog reads quests, shop rarity, and read-only Heart constants',
+    'gamification catalog reads quests, shop rarity, and live Heart settings',
     JSON.stringify(gamificationPayload.heartSettings),
+  );
+
+  // Heart regeneration is stored in the database. Every refresh reads the
+  // current duration, and changing it never rewrites existing Hearts rows.
+  const saveHeartSettings = async (minutes) => {
+    await db.exec('reset role');
+    await db.exec('set role authenticated');
+    await asUser(user1);
+    const result = await db.query('select public.admin_save_heart_settings($1) as payload', [minutes]);
+    await db.exec('reset role');
+    return result.rows[0].payload;
+  };
+  const readHearts = async () => {
+    await db.exec('set role authenticated');
+    await asUser(user3);
+    const result = await db.query('select public.get_player_state() as payload');
+    await db.exec('reset role');
+    return result.rows[0].payload.hearts;
+  };
+
+  const savedHeartSetting = await saveHeartSettings(15);
+  check(
+    savedHeartSetting.regenerationMinutes === 15 && savedHeartSetting.maxHearts === 5,
+    'admin saves a 15-minute Heart regeneration duration',
+    JSON.stringify(savedHeartSetting),
+  );
+
+  await db.query(
+    `update public.user_hearts set current_hearts = 2,
+       last_refill_at = now() - interval '16 minutes' where user_id = $1`,
+    [user3],
+  );
+  const fifteenMinuteHearts = await readHearts();
+  check(
+    fifteenMinuteHearts.current === 3 && fifteenMinuteHearts.regenMinutes === 15 &&
+      fifteenMinuteHearts.nextRefillSeconds >= 800 &&
+      fifteenMinuteHearts.nextRefillSeconds <= 840,
+    '15-minute setting restores one missing Heart and exposes the next countdown',
+    JSON.stringify(fifteenMinuteHearts),
+  );
+  const repeatedHearts = await readHearts();
+  check(
+    repeatedHearts.current === 3 && repeatedHearts.nextRefillSeconds <= fifteenMinuteHearts.nextRefillSeconds,
+    'two consecutive refreshes do not restore the same Heart twice',
+    JSON.stringify(repeatedHearts),
+  );
+
+  await saveHeartSettings(60);
+  await db.query(
+    `update public.user_hearts set current_hearts = 2,
+       last_refill_at = now() - interval '16 minutes' where user_id = $1`,
+    [user3],
+  );
+  const sixtyMinuteHearts = await readHearts();
+  check(
+    sixtyMinuteHearts.current === 2 && sixtyMinuteHearts.regenMinutes === 60 &&
+      sixtyMinuteHearts.nextRefillSeconds >= 2560 &&
+      sixtyMinuteHearts.nextRefillSeconds <= 2640,
+    '60-minute setting keeps a missing Heart until its new duration elapses',
+    JSON.stringify(sixtyMinuteHearts),
+  );
+
+  await saveHeartSettings(15);
+  await db.query(
+    `update public.user_hearts set current_hearts = 1,
+       last_refill_at = now() - interval '31 minutes' where user_id = $1`,
+    [user3],
+  );
+  const multipleHearts = await readHearts();
+  check(
+    multipleHearts.current === 3 && multipleHearts.nextRefillSeconds >= 800 &&
+      multipleHearts.nextRefillSeconds <= 840,
+    'multiple missing Hearts regenerate sequentially from elapsed server time',
+    JSON.stringify(multipleHearts),
+  );
+
+  await saveHeartSettings(30);
+  await db.query(
+    `update public.user_hearts set current_hearts = 3,
+       last_refill_at = now() - interval '10 minutes' where user_id = $1`,
+    [user3],
+  );
+  const beforeDurationChange = await readHearts();
+  await saveHeartSettings(15);
+  const afterShorterDuration = await readHearts();
+  check(
+    afterShorterDuration.current === 3 && afterShorterDuration.regenMinutes === 15 &&
+      afterShorterDuration.nextRefillSeconds >= 250 &&
+      afterShorterDuration.nextRefillSeconds <= 300,
+    'shortening the duration mid-window keeps Hearts and recalculates the remainder',
+    JSON.stringify({ beforeDurationChange, afterShorterDuration }),
+  );
+  await saveHeartSettings(60);
+  const afterLongerDuration = await readHearts();
+  check(
+    afterLongerDuration.current === 3 && afterLongerDuration.regenMinutes === 60 &&
+      afterLongerDuration.nextRefillSeconds >= 2950 &&
+      afterLongerDuration.nextRefillSeconds <= 3000,
+    'lengthening the duration mid-window does not reset or duplicate Hearts',
+    JSON.stringify(afterLongerDuration),
+  );
+
+  await saveHeartSettings(15);
+  await db.query(
+    `update public.user_hearts set current_hearts = 5,
+       last_refill_at = now() - interval '60 minutes' where user_id = $1`,
+    [user3],
+  );
+  const fullHearts = await readHearts();
+  check(
+    fullHearts.current === 5 && fullHearts.nextRefillSeconds === 0 &&
+      fullHearts.regenMinutes === 15,
+    'full Hearts stop regeneration and never exceed the maximum',
+    JSON.stringify(fullHearts),
+  );
+
+  await db.exec('set role authenticated');
+  await asUser(user1);
+  await expectError(
+    'Heart setting rejects zero minutes',
+    'select public.admin_save_heart_settings(0)',
+    [],
+    'regen_minutes_invalid',
+  );
+  await asUser(user3);
+  await expectError(
+    'players cannot change Heart regeneration',
+    'select public.admin_save_heart_settings(10)',
+    [],
+    'admin_permission_denied',
+  );
+  await asUser(user1);
+  const persistedHeartSettings = await db.query(
+    'select public.admin_save_heart_settings(30) as payload',
+  );
+  const refreshedGamification = await db.query('select public.admin_get_gamification() as payload');
+  check(
+    persistedHeartSettings.rows[0].payload.regenerationMinutes === 30 &&
+      refreshedGamification.rows[0].payload.heartSettings.regenerationMinutes === 30 &&
+      refreshedGamification.rows[0].payload.heartSettings.updatedAt !== null,
+    'Heart setting persists and is read back by the admin catalog',
+    JSON.stringify(refreshedGamification.rows[0].payload.heartSettings),
   );
 
   const savedShopVisual = await db.query(
@@ -3391,6 +3610,80 @@ try {
   await db.query(
     `select public.admin_save_site_settings($1::jsonb, 'Pulihkan registrasi')`,
     [JSON.stringify({ siteName: 'Lentera', registrationEnabled: true })],
+  );
+
+  // Global journey backgrounds: two independent columns on the shared settings
+  // row. Saving one must never overwrite the other, and the public RPC exposes
+  // both to every subject map.
+  const backgroundDesktopSave = await db.query(
+    `select public.admin_save_site_settings($1::jsonb, 'Uji background desktop') as payload`,
+    [
+      JSON.stringify({
+        siteName: 'Lentera',
+        backgroundDesktopUrl: 'https://example.test/journey-desktop.webp',
+      }),
+    ],
+  );
+  check(
+    backgroundDesktopSave.rows[0].payload.background_desktop_url ===
+      'https://example.test/journey-desktop.webp' &&
+      backgroundDesktopSave.rows[0].payload.background_mobile_url === '',
+    'saving the desktop background keeps the mobile background empty',
+    JSON.stringify(backgroundDesktopSave.rows[0].payload),
+  );
+
+  const backgroundMobileSave = await db.query(
+    `select public.admin_save_site_settings($1::jsonb, 'Uji background mobile') as payload`,
+    [
+      JSON.stringify({
+        siteName: 'Lentera',
+        backgroundMobileUrl: 'https://example.test/journey-mobile.webp',
+      }),
+    ],
+  );
+  check(
+    backgroundMobileSave.rows[0].payload.background_desktop_url ===
+      'https://example.test/journey-desktop.webp' &&
+      backgroundMobileSave.rows[0].payload.background_mobile_url ===
+        'https://example.test/journey-mobile.webp',
+    'saving the mobile background leaves the desktop background untouched',
+    JSON.stringify(backgroundMobileSave.rows[0].payload),
+  );
+
+  const backgroundIdentitySave = await db.query(
+    `select public.admin_save_site_settings($1::jsonb, 'Uji identitas website') as payload`,
+    [JSON.stringify({ siteName: 'Lentera', tagline: 'Belajar' })],
+  );
+  check(
+    backgroundIdentitySave.rows[0].payload.background_desktop_url ===
+      'https://example.test/journey-desktop.webp' &&
+      backgroundIdentitySave.rows[0].payload.background_mobile_url ===
+        'https://example.test/journey-mobile.webp',
+    'the website identity form cannot wipe either background',
+    JSON.stringify(backgroundIdentitySave.rows[0].payload),
+  );
+
+  const publicBackgrounds = await db.query(
+    'select public.get_public_site_content() as payload',
+  );
+  check(
+    publicBackgrounds.rows[0].payload.settings.backgroundDesktopUrl ===
+      'https://example.test/journey-desktop.webp' &&
+      publicBackgrounds.rows[0].payload.settings.backgroundMobileUrl ===
+        'https://example.test/journey-mobile.webp',
+    'public site content exposes both global backgrounds for every subject map',
+  );
+
+  await expectError(
+    'an insecure background URL is rejected',
+    `select public.admin_save_site_settings($1::jsonb, 'Uji URL background')`,
+    [
+      JSON.stringify({
+        siteName: 'Lentera',
+        backgroundDesktopUrl: 'http://example.test/journey-desktop.webp',
+      }),
+    ],
+    'background_url_invalid',
   );
 
   const savedPage = await db.query(
@@ -3577,6 +3870,114 @@ try {
   );
   check(restoredSave.rows[0].payload.slug === 'soal-izin-pulih', 'restored permission allows the save');
 
+  // Word Bank stores its available words as question_options and its arranged
+  // sentence as the text answer. The old editor saved only the answer, which
+  // is why the player saw an empty word bank.
+  const wordBankSave = await db.query(
+    `select public.admin_save_question($1::jsonb, 'Uji word bank') as payload`,
+    [JSON.stringify({
+      lessonId: lessonRow.id, slug: 'soal-word-bank-uji', type: 'word_bank',
+      prompt: 'Susun kata menjadi kalimat yang benar.', points: 10,
+      options: [
+        { label: 'Saya', isCorrect: false, sortOrder: 0 },
+        { label: 'makan', isCorrect: false, sortOrder: 1 },
+        { label: 'nasi', isCorrect: false, sortOrder: 2 },
+      ],
+      answers: [{ answer: 'Saya makan nasi.', isCaseSensitive: false }],
+      pairs: [], media: [], scene: {},
+    })],
+  );
+  check(
+    wordBankSave.rows[0].payload.options.length === 3,
+    'word bank saves its available words as options',
+    JSON.stringify(wordBankSave.rows[0].payload.options),
+  );
+  await expectError(
+    'word bank save rejects an empty word list',
+    'select public.admin_save_question($1::jsonb)',
+    [JSON.stringify({
+      lessonId: lessonRow.id, slug: 'soal-word-bank-kosong', type: 'word_bank',
+      prompt: 'Susun kata.', points: 10, options: [],
+      answers: [{ answer: 'Saya makan nasi.' }], pairs: [], media: [], scene: {},
+    })],
+    'question_tokens_required',
+  );
+
+  // Susun Kalimat stores generated tokens as options. Duplicate words keep
+  // distinct option ids so the player can place each occurrence once.
+  const builderSave = await db.query(
+    `select public.admin_save_question($1::jsonb, 'Uji susun kalimat') as payload`,
+    [JSON.stringify({
+      lessonId: lessonRow.id, slug: 'soal-susun-kalimat-uji', type: 'sentence_builder',
+      prompt: 'Susunlah kata-kata berikut menjadi kalimat yang benar.', points: 10,
+      options: [
+        { label: 'Saya', isCorrect: false, sortOrder: 0 },
+        { label: 'suka', isCorrect: false, sortOrder: 1 },
+        { label: 'suka', isCorrect: false, sortOrder: 2 },
+        { label: 'makan', isCorrect: false, sortOrder: 3 },
+      ],
+      answers: [{ answer: 'Saya suka suka makan.', isCaseSensitive: false }],
+      pairs: [], media: [], scene: {},
+    })],
+  );
+  const builderPayload = builderSave.rows[0].payload;
+  check(
+    builderPayload.options.length === 4 &&
+      new Set(builderPayload.options.map((option) => option.id)).size === 4,
+    'sentence builder keeps duplicate words as separate tokens',
+    JSON.stringify(builderPayload.options),
+  );
+
+  // New listening questions are audio plus multiple choice; older text-answer
+  // rows must still save unchanged.
+  const listeningSave = await db.query(
+    `select public.admin_save_question($1::jsonb, 'Uji menyimak') as payload`,
+    [JSON.stringify({
+      lessonId: lessonRow.id, slug: 'soal-menyimak-uji', type: 'listening',
+      prompt: 'Apa yang dibicarakan dalam audio?', points: 10,
+      options: [
+        { label: 'Percakapan di sekolah', isCorrect: true, sortOrder: 0 },
+        { label: 'Percakapan di pasar', isCorrect: false, sortOrder: 1 },
+      ],
+      answers: [], pairs: [],
+      media: [{ kind: 'audio', url: 'https://example.com/audio-uji.mp3', alt: 'Audio uji' }],
+      scene: {},
+    })],
+  );
+  check(
+    listeningSave.rows[0].payload.options.length === 2 &&
+      listeningSave.rows[0].payload.media[0]?.kind === 'audio',
+    'listening saves audio media and choice answers',
+    JSON.stringify(listeningSave.rows[0].payload),
+  );
+  await expectError(
+    'listening save requires audio or a transcript',
+    'select public.admin_save_question($1::jsonb)',
+    [JSON.stringify({
+      lessonId: lessonRow.id, slug: 'soal-menyimak-tanpa-audio', type: 'listening',
+      prompt: 'Apa yang dibicarakan?', points: 10,
+      options: [
+        { label: 'A', isCorrect: true, sortOrder: 0 },
+        { label: 'B', isCorrect: false, sortOrder: 1 },
+      ],
+      answers: [], pairs: [], media: [], scene: {},
+    })],
+    'question_audio_or_speech_required',
+  );
+  const legacyListening = await db.query(
+    `select public.admin_save_question($1::jsonb, 'Uji menyimak transkrip') as payload`,
+    [JSON.stringify({
+      lessonId: lessonRow.id, slug: 'soal-menyimak-transkrip', type: 'listening',
+      prompt: 'Ketik apa yang kamu dengar.', points: 10,
+      options: [], answers: [{ answer: 'Halo semuanya', isCaseSensitive: false }],
+      pairs: [], media: [], scene: { speech: 'Halo semuanya' },
+    })],
+  );
+  check(
+    legacyListening.rows[0].payload.answers.length === 1,
+    'text-answer listening questions still save',
+  );
+
   await asUser(user1);
   await db.query("select public.admin_set_user_role($1, 'player', 'Selesai uji')", [adminUserId]);
   await asUser(adminUserId);
@@ -3644,7 +4045,235 @@ try {
   }
   check(writesResumed, 'player writes resume after maintenance is disabled');
 
+  // -------------------------------------------------------------------------
+  // Background music library: admin-only management and a single public track.
+  // -------------------------------------------------------------------------
   await db.exec('reset role');
+  await db.query("delete from public.background_music where storage_path like 'music/qa-%'");
+  await db.exec('set role authenticated');
+  await asUser(user1);
+
+  const musicFirst = await db.query(
+    `select public.admin_register_background_music(
+       'QA Lagu Satu', 'music/qa-one.mp3', 'https://example.com/qa-one.mp3', 'audio/mpeg', 2048
+     ) as payload`,
+  );
+  check(
+    musicFirst.rows[0].payload.title === 'QA Lagu Satu' &&
+      musicFirst.rows[0].payload.format === 'mp3' &&
+      musicFirst.rows[0].payload.isActive === true &&
+      musicFirst.rows[0].payload.isPrimary === false,
+    'admin can register background music metadata',
+    JSON.stringify(musicFirst.rows[0].payload),
+  );
+  const musicFirstId = musicFirst.rows[0].payload.id;
+
+  const musicSecond = await db.query(
+    `select public.admin_register_background_music(
+       'QA Lagu Dua', 'music/qa-two.wav', 'https://example.com/qa-two.wav', 'audio/wav', 4096
+     ) as payload`,
+  );
+  const musicSecondId = musicSecond.rows[0].payload.id;
+  check(
+    musicSecond.rows[0].payload.format === 'wav',
+    'WAV uploads are stored with their own format',
+  );
+
+  let musicTypeRejected = false;
+  try {
+    await db.query(
+      `select public.admin_register_background_music(
+         'QA Salah', 'music/qa-bad.mp4', 'https://example.com/bad.mp4', 'audio/mp4', 100
+       )`,
+    );
+  } catch {
+    musicTypeRejected = true;
+  }
+  check(musicTypeRejected, 'background music rejects unsupported formats');
+
+  await db.query('select public.admin_set_primary_background_music($1, $2)', [
+    musicFirstId,
+    'Uji musik utama',
+  ]);
+  const publicMusicOne = await db.query('select public.get_background_music() as payload');
+  check(
+    publicMusicOne.rows[0].payload.id === musicFirstId,
+    'players receive the active primary track',
+  );
+
+  await db.query('select public.admin_set_primary_background_music($1, $2)', [
+    musicSecondId,
+    'Ganti musik utama',
+  ]);
+  // Raw table counts run as the owner: player roles have no table grant.
+  await db.exec('reset role');
+  const primaryCount = await db.query(
+    'select count(*)::int as count from public.background_music where is_primary',
+  );
+  check(primaryCount.rows[0].count === 1, 'only one track can be the primary track');
+  await db.exec('set role authenticated');
+  await asUser(user1);
+  const publicMusicTwo = await db.query('select public.get_background_music() as payload');
+  check(
+    publicMusicTwo.rows[0].payload.id === musicSecondId &&
+      publicMusicTwo.rows[0].payload.url === 'https://example.com/qa-two.wav',
+    'changing the primary track changes the player configuration',
+  );
+
+  await db.query('select public.admin_set_background_music_active($1, false, $2)', [
+    musicSecondId,
+    'Uji nonaktif',
+  ]);
+  const afterDeactivate = await db.query('select public.get_background_music() as payload');
+  check(
+    afterDeactivate.rows[0].payload === null,
+    'deactivating the primary track stops the public configuration',
+  );
+  await db.exec('reset role');
+  const clearedPrimary = await db.query(
+    'select is_primary from public.background_music where id = $1',
+    [musicSecondId],
+  );
+  check(clearedPrimary.rows[0].is_primary === false, 'an inactive track is never primary');
+  await db.exec('set role authenticated');
+  await asUser(user1);
+
+  let inactivePrimaryRejected = false;
+  try {
+    await db.query('select public.admin_set_primary_background_music($1, $2)', [
+      musicSecondId,
+      'Uji musik nonaktif',
+    ]);
+  } catch {
+    inactivePrimaryRejected = true;
+  }
+  check(inactivePrimaryRejected, 'an inactive track cannot become primary');
+
+  await db.query('select public.admin_set_background_music_active($1, true, $2)', [
+    musicSecondId,
+    'Uji aktif lagi',
+  ]);
+  const removedMusic = await db.query('select public.admin_delete_background_music($1, $2) as payload', [
+    musicSecondId,
+    'Uji hapus musik',
+  ]);
+  check(
+    removedMusic.rows[0].payload.storagePath === 'music/qa-two.wav',
+    'deleting music returns the storage file to remove',
+  );
+  await db.exec('reset role');
+  const deletedMusicRow = await db.query(
+    'select count(*)::int as count from public.background_music where id = $1',
+    [musicSecondId],
+  );
+  check(deletedMusicRow.rows[0].count === 0, 'deleted music metadata is gone');
+  await db.exec('set role authenticated');
+  await asUser(user1);
+  await db.query('select public.admin_delete_background_music($1, $2)', [
+    musicFirstId,
+    'Bersihkan musik uji',
+  ]);
+
+  await db.exec('set role authenticated');
+  await asUser(user2);
+  let musicManageDenied = false;
+  try {
+    await db.query('select public.admin_list_background_music()');
+  } catch {
+    musicManageDenied = true;
+  }
+  check(musicManageDenied, 'players cannot manage background music');
+
+  await db.exec('reset role');
+  await db.exec('set role anon');
+  const guestMusic = await db.query('select public.get_background_music() as payload');
+  check(
+    guestMusic.rows[0].payload === null,
+    'guests can read the public music configuration without an error',
+  );
+
+  // -------------------------------------------------------------------------
+  // Read-notification deletion: the owner may remove only read rows. Unread
+  // rows and other players' notifications must remain untouched.
+  // -------------------------------------------------------------------------
+  await db.exec('reset role');
+  const deleteFixtures = await db.query(
+    `insert into public.notifications (user_id, kind, title, body, read_at)
+     values ($1, 'info', 'Hapus satu', '', now()),
+            ($1, 'info', 'Tetap belum dibaca', '', null),
+            ($2, 'info', 'Milik pemain lain', '', now())
+     returning id, user_id, title`,
+    [user1, user3],
+  );
+  const readFixture = deleteFixtures.rows.find((row) => row.title === 'Hapus satu');
+  const unreadFixture = deleteFixtures.rows.find((row) => row.title === 'Tetap belum dibaca');
+  const otherFixture = deleteFixtures.rows.find((row) => row.title === 'Milik pemain lain');
+
+  await db.exec('set role authenticated');
+  await asUser(user1);
+  const deleteUnread = await db.query('select public.delete_my_notification($1) as payload', [
+    unreadFixture.id,
+  ]);
+  check(
+    deleteUnread.rows[0].payload.deleted === false,
+    'unread notifications cannot be deleted',
+  );
+  const deleteOther = await db.query('select public.delete_my_notification($1) as payload', [
+    otherFixture.id,
+  ]);
+  check(
+    deleteOther.rows[0].payload.deleted === false,
+    'a player cannot delete another player’s notification',
+  );
+  const deleteRead = await db.query('select public.delete_my_notification($1) as payload', [
+    readFixture.id,
+  ]);
+  check(
+    deleteRead.rows[0].payload.deleted === true,
+    'a player can delete their own read notification',
+  );
+  const readGone = await db.query(
+    'select count(*)::int as count from public.notifications where id = $1',
+    [readFixture.id],
+  );
+  check(readGone.rows[0].count === 0, 'the deleted notification is gone from the database');
+
+  await db.exec('reset role');
+  await db.query(
+    `insert into public.notifications (user_id, kind, title, body, read_at)
+     values ($1, 'info', 'Hapus massal', '', now())`,
+    [user1],
+  );
+  await db.exec('set role authenticated');
+  await asUser(user1);
+  const bulkDelete = await db.query(
+    'select public.delete_my_read_notifications() as payload',
+  );
+  check(
+    bulkDelete.rows[0].payload.deleted >= 1,
+    'bulk delete removes every read notification owned by the player',
+    JSON.stringify(bulkDelete.rows[0].payload),
+  );
+  const unreadSurvived = await db.query(
+    'select count(*)::int as count from public.notifications where user_id = $1 and read_at is null',
+    [user1],
+  );
+  check(
+    unreadSurvived.rows[0].count >= 1,
+    'bulk delete never removes unread notifications',
+    String(unreadSurvived.rows[0].count),
+  );
+  // Read the other player's row as the owner role: player RLS hides it.
+  await db.exec('reset role');
+  const otherSurvived = await db.query(
+    'select count(*)::int as count from public.notifications where id = $1',
+    [otherFixture.id],
+  );
+  check(
+    otherSurvived.rows[0].count === 1,
+    'bulk delete leaves other players’ notifications untouched',
+  );
+
   await db.query("update public.user_roles set role = 'player' where user_id = $1", [user1]);
 
   if (failures.length > 0) {

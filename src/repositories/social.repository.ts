@@ -182,6 +182,20 @@ export const socialRepository = {
     return data;
   },
 
+  async deleteNotification(id: string): Promise<Json> {
+    const { data, error } = await requireSupabase().rpc('delete_my_notification', {
+      p_id: id,
+    });
+    if (error) raise(error);
+    return data;
+  },
+
+  async deleteReadNotifications(): Promise<Json> {
+    const { data, error } = await requireSupabase().rpc('delete_my_read_notifications');
+    if (error) raise(error);
+    return data;
+  },
+
   async getNotificationIndicators(): Promise<Json> {
     const { data, error } = await requireSupabase().rpc('get_notification_indicators');
     if (error) raise(error);

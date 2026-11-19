@@ -3,7 +3,12 @@ import { seededShuffle } from './shuffle';
 import type { MiniGameProps, MiniGameView } from './types';
 
 export function createSentenceBuilder({ question, onChange }: MiniGameProps): MiniGameView {
-  const tokens = seededShuffle(question.options, `${question.id}:sentence-builder`);
+  // Empty labels would render invisible buttons; duplicates stay distinct
+  // because every token keeps its own option id.
+  const tokens = seededShuffle(
+    question.options.filter((option) => option.label.trim().length > 0),
+    `${question.id}:sentence-builder`,
+  );
   const selected: string[] = [];
   const trayButtons = new Map<string, HTMLButtonElement>();
   let disabled = false;
@@ -36,6 +41,11 @@ export function createSentenceBuilder({ question, onChange }: MiniGameProps): Mi
 
   const render = () => {
     tray.replaceChildren();
+    if (tokens.length === 0) {
+      tray.append(
+        el('p', { class: 'play-mini-note', text: 'Kata acak belum tersedia untuk soal ini.' }),
+      );
+    }
     for (const token of tokens) {
       const used = selected.includes(token.id);
       const button = el(

@@ -57,6 +57,7 @@ const PATHS = {
   chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   inbox: '<path d="M4 4h16v12H4z"/><path d="M4 16v4h16v-4"/><path d="M4 12h5a3 3 0 0 0 6 0h5"/>',
   gift: '<rect x="3" y="8" width="18" height="13" rx="2"/><path d="M3 12h18M12 8v13"/><path d="M12 8s-1-5-4-5a2.5 2.5 0 0 0 0 5h4Zm0 0s1-5 4-5a2.5 2.5 0 0 1 0 5h-4Z"/>',
+  cart: '<circle cx="8.5" cy="20.5" r="1.4"/><circle cx="18.5" cy="20.5" r="1.4"/><path d="M2.5 3h2.2l2.6 12.4a1.9 1.9 0 0 0 1.9 1.5h9.1a1.9 1.9 0 0 0 1.9-1.5L22 7H5.2"/>',
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
 } as const;
 

@@ -238,6 +238,8 @@ export interface AdminSiteSettings {
   footerText: string;
   maintenanceMode: boolean;
   registrationEnabled: boolean;
+  backgroundDesktopUrl: string;
+  backgroundMobileUrl: string;
   updatedAt: string;
 }
 
@@ -265,6 +267,13 @@ export interface AdminAnnouncement {
   createdAt: string;
 }
 
+export interface AdminHeartSettings {
+  maxHearts: number;
+  regenerationMinutes: number;
+  status: string;
+  updatedAt: string | null;
+}
+
 export interface AdminGamification {
   quests: Array<Record<string, unknown>>;
   achievements: Array<Record<string, unknown>>;
@@ -273,7 +282,7 @@ export interface AdminGamification {
   streakMilestones: Array<Record<string, unknown>>;
   leagueTiers: Array<Record<string, unknown>>;
   events: Array<Record<string, unknown>>;
-  heartSettings: Record<string, unknown>;
+  heartSettings: AdminHeartSettings;
 }
 
 export interface AdminSocialLink {

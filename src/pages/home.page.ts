@@ -4,15 +4,9 @@ import { icon } from '../components/icons';
 import { renderAppLayout } from '../layouts/appLayout';
 import { studyService } from '../services/study.service';
 import { sessionStore } from '../stores/session.store';
-import { el, formatDate } from '../utils/dom';
+import { el } from '../utils/dom';
 
 const meta = { title: 'Beranda' };
-
-const ROLE_LABEL = {
-  player: 'Pemain',
-  admin: 'Admin',
-  developer: 'Developer',
-} as const;
 
 function greetingForHour(hour: number): string {
   if (hour < 11) return 'Selamat pagi';
@@ -29,18 +23,11 @@ function formatStudyDuration(totalSeconds: number): string {
   return rest > 0 ? `${minutes} menit ${rest} detik` : `${minutes} menit`;
 }
 
-function summaryRow(label: string, value: Node | string): HTMLElement {
-  return el('div', { class: 'summary-list__row' }, [
-    el('span', { class: 'summary-list__label', text: label }),
-    el('span', { class: 'summary-list__value' }, [value]),
-  ]);
-}
-
 function render(ctx: Parameters<PageModule['render']>[0]): void {
   const user = sessionStore.getState().user;
   if (!user) return;
 
-  const { profile, settings, role, email } = user;
+  const { profile, settings } = user;
   const displayName = profile.display_name || profile.username;
   const goal = settings.daily_goal_minutes;
 
@@ -115,21 +102,6 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     ]),
   ]);
 
-  const accountCard = el('section', { class: 'card card--padded' }, [
-    el('div', { class: 'card__header' }, [
-      el('div', {}, [
-        el('h2', { class: 'card__title', text: 'Akunmu' }),
-        el('p', { class: 'card__subtitle', text: 'Tersimpan di database, bukan hanya di browser.' }),
-      ]),
-    ]),
-    el('div', { class: 'summary-list' }, [
-      summaryRow('Username', `@${profile.username}`),
-      summaryRow('Email', email),
-      summaryRow('Peran', el('span', { class: 'badge badge--muted', text: ROLE_LABEL[role] })),
-      summaryRow('Bergabung', formatDate(profile.created_at)),
-    ]),
-  ]);
-
   const tipCard = el('section', { class: 'card card--padded', style: { background: 'linear-gradient(150deg,#f4fcef,#e9f9dc)' } }, [
     el('div', { style: { display: 'flex', gap: '0.75rem', alignItems: 'flex-start' } }, [
       el('span', { html: kikoMarkup(64), style: { width: '64px', flex: '0 0 auto' } }),
@@ -146,10 +118,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
 
   const content = el('div', {}, [
     greetingCard,
-    el('div', { class: 'dashboard-grid', style: { marginTop: '1.25rem' } }, [
-      el('div', { class: 'dashboard-main' }, [goalCard]),
-      el('div', { class: 'dashboard-aside' }, [accountCard, tipCard]),
-    ]),
+    el('div', { class: 'home-stack' }, [goalCard, tipCard]),
   ]);
 
   renderAppLayout(ctx, { active: 'home', title: 'Beranda', content });

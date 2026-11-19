@@ -14,7 +14,7 @@ describe('notification indicator mapping', () => {
     expect(drawerIndicatorActive(counts)).toBe(false);
   });
 
-  it('uses one badge per destination regardless of item count', () => {
+  it('uses one badge per destination and ignores retired reward counts', () => {
     const counts = {
       ...EMPTY_NOTIFICATION_INDICATORS,
       notifications: 7,
@@ -29,7 +29,8 @@ describe('notification indicator mapping', () => {
     expect(indicatorActive('notifications', counts)).toBe(true);
     expect(indicatorActive('inbox', counts)).toBe(true);
     expect(indicatorActive('quests', counts)).toBe(true);
-    expect(indicatorActive('learn', counts)).toBe(true);
+    // Reward nodes are gone from the map, so learnRewards must not light Learn.
+    expect(indicatorActive('learn', counts)).toBe(false);
     expect(indicatorActive('leaderboard', counts)).toBe(true);
     expect(indicatorActive('friends', counts)).toBe(true);
   });

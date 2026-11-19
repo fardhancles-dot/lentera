@@ -103,7 +103,9 @@ test('league, friends, notifications, and profile privacy work across two accoun
     await expect(mobileHeader.locator('.header-hamburger')).toBeVisible();
     await expect(mobileHeader.locator('.header-shop')).toBeVisible();
     await expect(mobileHeader.locator('.header-resources .resource-chip')).toHaveCount(3);
-    await expect(mobileHeader.locator('.resource-chip--hearts')).toContainText('5/5');
+    await expect(mobileHeader.locator('.resource-chip--hearts .resource-chip__value')).toHaveText(
+      '5',
+    );
     await expect(mobileHeader.locator('.resource-chip--coin .resource-chip__value')).not.toHaveText('—');
     await expect(mobileHeader.locator('.resource-chip--streak .resource-chip__value')).not.toHaveText('—');
     await expect(mobileHeader.locator('.header-avatar')).toBeVisible();

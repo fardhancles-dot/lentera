@@ -31,6 +31,8 @@ export interface LessonSceneScreen {
 
 export interface LessonScene {
   lang?: string;
+  /** Shown above the story screens. Optional for older questions. */
+  title?: string;
   speech?: string;
   npc?: { name: string; role?: string };
   screens: LessonSceneScreen[];
@@ -198,6 +200,7 @@ function parseScene(value: unknown): LessonScene {
     : [];
 
   return {
+    ...(asString(record.title) ? { title: asString(record.title) } : {}),
     ...(asString(record.lang) ? { lang: asString(record.lang) } : {}),
     ...(asString(record.speech) ? { speech: asString(record.speech) } : {}),
     ...(asString(npc.name)

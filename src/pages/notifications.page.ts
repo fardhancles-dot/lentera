@@ -9,13 +9,40 @@ import { el, formatDate } from '../utils/dom';
 
 const meta = { title: 'Notifikasi' };
 
-function notificationRow(item: NotificationItem, onRead: (item: NotificationItem) => void) {
+function notificationRow(
+  item: NotificationItem,
+  onRead: (item: NotificationItem) => void,
+  onDelete: (item: NotificationItem) => Promise<void>,
+): HTMLElement {
   const mark = el('button', {
     class: 'btn btn--ghost btn--sm',
     attrs: { type: 'button' },
     text: item.read ? 'Dibaca' : 'Tandai dibaca',
   });
   mark.disabled = item.read;
+
+  const actions = el('span', { class: 'notification__actions' });
+  actions.append(mark);
+
+  // Only read notifications can be deleted; the database enforces the same
+  // rule, so hiding the button is not the protection itself.
+  if (item.read) {
+    const remove = el('button', {
+      class: 'icon-btn notification__delete',
+      attrs: {
+        type: 'button',
+        'aria-label': `Hapus notifikasi ${item.title}`,
+        title: 'Hapus notifikasi',
+      },
+    }, [icon('close', 16)]);
+    remove.addEventListener('click', () => {
+      remove.disabled = true;
+      void onDelete(item).catch(() => {
+        remove.disabled = false;
+      });
+    });
+    actions.append(remove);
+  }
 
   const body = el('div', { class: 'notification__body' }, [
     el('p', { class: 'notification__title', text: item.title }),
@@ -48,7 +75,7 @@ function notificationRow(item: NotificationItem, onRead: (item: NotificationItem
         ),
       ]),
       content,
-      mark,
+      actions,
     ],
   );
 }
@@ -67,6 +94,58 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     icon('check', 16),
     'Tandai semua dibaca',
   ]);
+  const deleteRead = el('button', { class: 'btn btn--ghost btn--sm', attrs: { type: 'button' } }, [
+    icon('close', 16),
+    'Hapus semua yang dibaca',
+  ]);
+  deleteRead.disabled = true;
+
+  const removeOne = async (item: NotificationItem): Promise<void> => {
+    try {
+      const deleted = await socialService.deleteNotification(item.id);
+      if (!deleted) {
+        showToast('Notifikasi tidak ditemukan atau belum dibaca.', 'default');
+        load();
+        return;
+      }
+      showToast('Notifikasi dihapus.', 'success');
+      void notificationIndicatorsStore.refresh();
+      load();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Notifikasi gagal dihapus.', 'error');
+      throw error;
+    }
+  };
+
+  const removeRead = (): void => {
+    if (
+      !window.confirm(
+        'Hapus semua notifikasi yang sudah dibaca? Notifikasi yang belum dibaca tidak ikut terhapus.',
+      )
+    ) {
+      return;
+    }
+    deleteRead.disabled = true;
+    void socialService
+      .deleteReadNotifications()
+      .then((deleted) => {
+        showToast(
+          deleted > 0
+            ? `${deleted} notifikasi dibaca dihapus.`
+            : 'Tidak ada notifikasi dibaca untuk dihapus.',
+          deleted > 0 ? 'success' : 'default',
+        );
+        void notificationIndicatorsStore.refresh();
+        load();
+      })
+      .catch((error: unknown) => {
+        deleteRead.disabled = false;
+        showToast(
+          error instanceof Error ? error.message : 'Notifikasi gagal dihapus.',
+          'error',
+        );
+      });
+  };
 
   const load = () => {
     slot.className = 'loading-screen';
@@ -80,6 +159,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
         if (disposed || !slot.isConnected) return;
         slot.className = '';
         markAll.disabled = payload.unreadCount === 0;
+        deleteRead.disabled = payload.items.every((item) => !item.read);
         if (payload.items.length === 0) {
           slot.replaceChildren(
             el('div', { class: 'card empty-state' }, [
@@ -114,7 +194,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
           el(
             'ul',
             { class: 'notification-list' },
-            payload.items.map((item) => notificationRow(item, onRead)),
+            payload.items.map((item) => notificationRow(item, onRead, removeOne)),
           ),
         );
       })
@@ -158,12 +238,14 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       });
   });
 
+  deleteRead.addEventListener('click', removeRead);
+
   const content = el('div', {}, [
     pageHeader({
       eyebrow: 'Tahap 7 · sosial',
       title: 'Notifikasi',
       subtitle: 'Permintaan teman, hasil liga, dan kabar penting dari Lentera.',
-      actions: [markAll],
+      actions: [markAll, deleteRead],
     }),
     slot,
   ]);

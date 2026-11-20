@@ -148,7 +148,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     value: profile.username,
     autocomplete: 'username',
     maxLength: 20,
-    hint: '3–20 karakter. Huruf kecil, angka, atau garis bawah.',
+    hint: '3–20 karakter. Huruf besar/kecil, angka, spasi, dan simbol seperti @ . _ ! & diperbolehkan.',
     required: true,
   });
 

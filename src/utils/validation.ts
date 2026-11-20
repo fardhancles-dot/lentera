@@ -1,7 +1,9 @@
 export type ValidationResult<T> = { ok: true; value: T } | { ok: false; message: string };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-const USERNAME_PATTERN = /^[a-z][a-z0-9_]{2,19}$/;
+// Letters, digits, spaces, and common username symbols. Emoji and other
+// pictographic characters are not part of the allowlist.
+const USERNAME_PATTERN = /^[A-Za-z0-9 @_.!$%&+-]{3,20}$/;
 
 const RESERVED_USERNAMES = new Set([
   'admin',
@@ -24,14 +26,128 @@ export const DAILY_GOAL_OPTIONS = [
   { minutes: 20, title: 'Intens', description: '20 menit per hari' },
 ] as const;
 
-export const TIMEZONE_OPTIONS = [
-  { value: 'Asia/Jakarta', label: 'WIB — Asia/Jakarta' },
-  { value: 'Asia/Makassar', label: 'WITA — Asia/Makassar' },
-  { value: 'Asia/Jayapura', label: 'WIT — Asia/Jayapura' },
-  { value: 'Asia/Kuala_Lumpur', label: 'Asia/Kuala Lumpur' },
-  { value: 'Asia/Singapore', label: 'Asia/Singapore' },
-  { value: 'UTC', label: 'UTC' },
-] as const;
+export interface TimezoneOption {
+  value: string;
+  label: string;
+}
+
+export interface TimezoneGroup {
+  country: string;
+  zones: TimezoneOption[];
+}
+
+export const TIMEZONE_GROUPS: TimezoneGroup[] = [
+  {
+    country: 'INDONESIA',
+    zones: [
+      { value: 'Asia/Jakarta', label: 'Asia/Jakarta (WIB)' },
+      { value: 'Asia/Pontianak', label: 'Asia/Pontianak (WIB)' },
+      { value: 'Asia/Makassar', label: 'Asia/Makassar (WITA)' },
+      { value: 'Asia/Jayapura', label: 'Asia/Jayapura (WIT)' },
+    ],
+  },
+  { country: 'AFGHANISTAN', zones: [{ value: 'Asia/Kabul', label: 'Asia/Kabul (Afghanistan)' }] },
+  { country: 'ARAB SAUDI', zones: [{ value: 'Asia/Riyadh', label: 'Asia/Riyadh (Arab Saudi)' }] },
+  { country: 'ARMENIA', zones: [{ value: 'Asia/Yerevan', label: 'Asia/Yerevan (Armenia)' }] },
+  { country: 'AZERBAIJAN', zones: [{ value: 'Asia/Baku', label: 'Asia/Baku (Azerbaijan)' }] },
+  { country: 'BAHRAIN', zones: [{ value: 'Asia/Bahrain', label: 'Asia/Bahrain (Bahrain)' }] },
+  { country: 'BANGLADESH', zones: [{ value: 'Asia/Dhaka', label: 'Asia/Dhaka (Bangladesh)' }] },
+  { country: 'BHUTAN', zones: [{ value: 'Asia/Thimphu', label: 'Asia/Thimphu (Bhutan)' }] },
+  { country: 'BRUNEI DARUSSALAM', zones: [{ value: 'Asia/Brunei', label: 'Asia/Brunei (Brunei Darussalam)' }] },
+  {
+    country: 'CHINA',
+    zones: [
+      { value: 'Asia/Shanghai', label: 'Asia/Shanghai (China)' },
+      { value: 'Asia/Urumqi', label: 'Asia/Urumqi (China)' },
+    ],
+  },
+  { country: 'FILIPINA', zones: [{ value: 'Asia/Manila', label: 'Asia/Manila (Filipina)' }] },
+  { country: 'GEORGIA', zones: [{ value: 'Asia/Tbilisi', label: 'Asia/Tbilisi (Georgia)' }] },
+  { country: 'HONG KONG', zones: [{ value: 'Asia/Hong_Kong', label: 'Asia/Hong_Kong (Hong Kong)' }] },
+  { country: 'INDIA', zones: [{ value: 'Asia/Kolkata', label: 'Asia/Kolkata (India)' }] },
+  { country: 'IRAK', zones: [{ value: 'Asia/Baghdad', label: 'Asia/Baghdad (Irak)' }] },
+  { country: 'IRAN', zones: [{ value: 'Asia/Tehran', label: 'Asia/Tehran (Iran)' }] },
+  { country: 'ISRAEL', zones: [{ value: 'Asia/Jerusalem', label: 'Asia/Jerusalem (Israel)' }] },
+  { country: 'JEPANG', zones: [{ value: 'Asia/Tokyo', label: 'Asia/Tokyo (Jepang)' }] },
+  { country: 'KAMBOJA', zones: [{ value: 'Asia/Phnom_Penh', label: 'Asia/Phnom_Penh (Kamboja)' }] },
+  {
+    country: 'KAZAKHSTAN',
+    zones: [
+      { value: 'Asia/Almaty', label: 'Asia/Almaty (Kazakhstan)' },
+      { value: 'Asia/Aqtobe', label: 'Asia/Aqtobe (Kazakhstan)' },
+      { value: 'Asia/Atyrau', label: 'Asia/Atyrau (Kazakhstan)' },
+      { value: 'Asia/Oral', label: 'Asia/Oral (Kazakhstan)' },
+      { value: 'Asia/Qostanay', label: 'Asia/Qostanay (Kazakhstan)' },
+      { value: 'Asia/Qyzylorda', label: 'Asia/Qyzylorda (Kazakhstan)' },
+    ],
+  },
+  { country: 'KIRGIZSTAN', zones: [{ value: 'Asia/Bishkek', label: 'Asia/Bishkek (Kirgizstan)' }] },
+  { country: 'KOREA SELATAN', zones: [{ value: 'Asia/Seoul', label: 'Asia/Seoul (Korea Selatan)' }] },
+  { country: 'KOREA UTARA', zones: [{ value: 'Asia/Pyongyang', label: 'Asia/Pyongyang (Korea Utara)' }] },
+  { country: 'KUWAIT', zones: [{ value: 'Asia/Kuwait', label: 'Asia/Kuwait (Kuwait)' }] },
+  { country: 'LAOS', zones: [{ value: 'Asia/Vientiane', label: 'Asia/Vientiane (Laos)' }] },
+  { country: 'LEBANON', zones: [{ value: 'Asia/Beirut', label: 'Asia/Beirut (Lebanon)' }] },
+  { country: 'MAKAU', zones: [{ value: 'Asia/Macau', label: 'Asia/Macau (Makau)' }] },
+  {
+    country: 'MALAYSIA',
+    zones: [
+      { value: 'Asia/Kuala_Lumpur', label: 'Asia/Kuala_Lumpur (Malaysia)' },
+      { value: 'Asia/Kuching', label: 'Asia/Kuching (Malaysia)' },
+    ],
+  },
+  { country: 'MALADEWA', zones: [{ value: 'Indian/Maldives', label: 'Indian/Maldives (Maladewa)' }] },
+  {
+    country: 'MONGOLIA',
+    zones: [
+      { value: 'Asia/Ulaanbaatar', label: 'Asia/Ulaanbaatar (Mongolia)' },
+      { value: 'Asia/Hovd', label: 'Asia/Hovd (Mongolia)' },
+      { value: 'Asia/Choibalsan', label: 'Asia/Choibalsan (Mongolia)' },
+    ],
+  },
+  { country: 'MYANMAR', zones: [{ value: 'Asia/Yangon', label: 'Asia/Yangon (Myanmar)' }] },
+  { country: 'NEPAL', zones: [{ value: 'Asia/Kathmandu', label: 'Asia/Kathmandu (Nepal)' }] },
+  { country: 'OMAN', zones: [{ value: 'Asia/Muscat', label: 'Asia/Muscat (Oman)' }] },
+  { country: 'PAKISTAN', zones: [{ value: 'Asia/Karachi', label: 'Asia/Karachi (Pakistan)' }] },
+  {
+    country: 'PALESTINA',
+    zones: [
+      { value: 'Asia/Gaza', label: 'Asia/Gaza (Palestina)' },
+      { value: 'Asia/Hebron', label: 'Asia/Hebron (Palestina)' },
+    ],
+  },
+  { country: 'QATAR', zones: [{ value: 'Asia/Qatar', label: 'Asia/Qatar (Qatar)' }] },
+  {
+    country: 'SIPRUS',
+    zones: [
+      { value: 'Asia/Nicosia', label: 'Asia/Nicosia (Siprus)' },
+      { value: 'Asia/Famagusta', label: 'Asia/Famagusta (Siprus)' },
+    ],
+  },
+  { country: 'SINGAPURA', zones: [{ value: 'Asia/Singapore', label: 'Asia/Singapore (Singapura)' }] },
+  { country: 'SRI LANKA', zones: [{ value: 'Asia/Colombo', label: 'Asia/Colombo (Sri Lanka)' }] },
+  { country: 'SURIAH', zones: [{ value: 'Asia/Damascus', label: 'Asia/Damascus (Suriah)' }] },
+  { country: 'TAIWAN', zones: [{ value: 'Asia/Taipei', label: 'Asia/Taipei (Taiwan)' }] },
+  { country: 'TAJIKISTAN', zones: [{ value: 'Asia/Dushanbe', label: 'Asia/Dushanbe (Tajikistan)' }] },
+  { country: 'THAILAND', zones: [{ value: 'Asia/Bangkok', label: 'Asia/Bangkok (Thailand)' }] },
+  { country: 'TIMOR LESTE', zones: [{ value: 'Asia/Dili', label: 'Asia/Dili (Timor Leste)' }] },
+  { country: 'TURKI', zones: [{ value: 'Europe/Istanbul', label: 'Europe/Istanbul (Turki)' }] },
+  { country: 'TURKMENISTAN', zones: [{ value: 'Asia/Ashgabat', label: 'Asia/Ashgabat (Turkmenistan)' }] },
+  { country: 'UNI EMIRAT ARAB', zones: [{ value: 'Asia/Dubai', label: 'Asia/Dubai (Uni Emirat Arab)' }] },
+  {
+    country: 'UZBEKISTAN',
+    zones: [
+      { value: 'Asia/Tashkent', label: 'Asia/Tashkent (Uzbekistan)' },
+      { value: 'Asia/Samarkand', label: 'Asia/Samarkand (Uzbekistan)' },
+    ],
+  },
+  { country: 'VIETNAM', zones: [{ value: 'Asia/Ho_Chi_Minh', label: 'Asia/Ho_Chi_Minh (Vietnam)' }] },
+  { country: 'YAMAN', zones: [{ value: 'Asia/Aden', label: 'Asia/Aden (Yaman)' }] },
+  { country: 'YORDANIA', zones: [{ value: 'Asia/Amman', label: 'Asia/Amman (Yordania)' }] },
+];
+
+export const TIMEZONE_OPTIONS: TimezoneOption[] = TIMEZONE_GROUPS.flatMap(
+  (group) => group.zones,
+);
 
 export function normalizeEmail(raw: string): string {
   return raw.trim().toLowerCase();
@@ -81,17 +197,17 @@ export function validateOtpCode(raw: string): ValidationResult<string> {
 }
 
 export function validateUsername(raw: string): ValidationResult<string> {
-  const value = raw.trim().toLowerCase();
+  const value = raw.trim();
   if (!value) return { ok: false, message: 'Username wajib diisi.' };
   if (value.length < 3) return { ok: false, message: 'Username minimal 3 karakter.' };
   if (value.length > 20) return { ok: false, message: 'Username maksimal 20 karakter.' };
   if (!USERNAME_PATTERN.test(value)) {
     return {
       ok: false,
-      message: 'Gunakan huruf kecil, angka, atau garis bawah. Awali dengan huruf.',
+      message: 'Gunakan huruf, angka, spasi, atau simbol @ _ . ! $ % & + -',
     };
   }
-  if (RESERVED_USERNAMES.has(value)) {
+  if (RESERVED_USERNAMES.has(value.toLowerCase())) {
     return { ok: false, message: 'Username ini dipakai untuk sistem. Pilih yang lain.' };
   }
   return { ok: true, value };

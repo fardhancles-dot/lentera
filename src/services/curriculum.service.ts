@@ -127,6 +127,43 @@ function groupBy<T>(items: T[], key: (item: T) => string): Map<string, T[]> {
   return map;
 }
 
+/**
+ * A map opened from the catalog stays warm long enough for the player to tap a
+ * level. Gameplay invalidates it explicitly, so this never hides a completed
+ * lesson; the short TTL only bounds changes made in another tab.
+ */
+const SUBJECT_PATH_CACHE_TTL_MS = 20_000;
+
+interface SubjectPathCacheEntry {
+  path: SubjectPath;
+  savedAt: number;
+}
+
+const subjectPathCache = new Map<string, SubjectPathCacheEntry>();
+const subjectPathLoads = new Map<string, Promise<SubjectPath | null>>();
+
+function subjectPathCacheKey(
+  slug: string,
+  userId: string,
+  developerPreview: boolean,
+): string {
+  return `${userId}:${slug}:${developerPreview ? '1' : '0'}`;
+}
+
+function readSubjectPathCache(key: string): SubjectPath | null {
+  const entry = subjectPathCache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.savedAt >= SUBJECT_PATH_CACHE_TTL_MS) {
+    subjectPathCache.delete(key);
+    return null;
+  }
+  return entry.path;
+}
+
+function rememberSubjectPath(key: string, path: SubjectPath): void {
+  subjectPathCache.set(key, { path, savedAt: Date.now() });
+}
+
 export const curriculumService = {
   async loadCatalog(userId: string): Promise<SubjectCard[]> {
     const [subjects, courseProgress, nodeProgress, levelIndex] = await Promise.all([
@@ -172,17 +209,58 @@ export const curriculumService = {
   async loadSubjectPath(
     slug: string,
     userId: string,
+    options: { developerPreview?: boolean; force?: boolean } = {},
+  ): Promise<SubjectPath | null> {
+    const developerPreview = options.developerPreview ?? false;
+    const cacheKey = subjectPathCacheKey(slug, userId, developerPreview);
+
+    if (!options.force) {
+      const cached = readSubjectPathCache(cacheKey);
+      if (cached) return cached;
+
+      // A map and the lesson it opens often ask for the same path at almost the
+      // same time. Share the in-flight request instead of downloading it twice.
+      const pending = subjectPathLoads.get(cacheKey);
+      if (pending) return pending;
+    }
+
+    const load = this.fetchSubjectPath(slug, userId, options);
+    subjectPathLoads.set(cacheKey, load);
+
+    try {
+      const path = await load;
+      if (path) rememberSubjectPath(cacheKey, path);
+      return path;
+    } finally {
+      if (subjectPathLoads.get(cacheKey) === load) subjectPathLoads.delete(cacheKey);
+    }
+  },
+
+  /** Removes a cached map after progress or rewards change. */
+  invalidateSubjectPath(userId: string, slug: string): void {
+    const prefix = `${userId}:${slug}:`;
+    for (const key of subjectPathCache.keys()) {
+      if (key.startsWith(prefix)) subjectPathCache.delete(key);
+    }
+  },
+
+  async fetchSubjectPath(
+    slug: string,
+    userId: string,
     options: { developerPreview?: boolean } = {},
   ): Promise<SubjectPath | null> {
     const subject = await curriculumRepository.fetchSubject(slug);
     if (!subject) return null;
 
-    // Sections are an optional overlay on the map. A database that has not run
-    // the migration yet keeps rendering exactly the same journey as before.
-    const sections = await curriculumRepository.listSections(subject.id).catch((error) => {
-      console.warn('[curriculum] pemisah materi tidak tersedia:', error);
-      return [];
-    });
+    // Sections and courses are independent reads. Starting both together saves
+    // one full network round trip on every cold map load.
+    const [sections, courses] = await Promise.all([
+      curriculumRepository.listSections(subject.id).catch((error) => {
+        console.warn('[curriculum] pemisah materi tidak tersedia:', error);
+        return [];
+      }),
+      curriculumRepository.listCourses(subject.id),
+    ]);
     const pathSections: PathSection[] = sections.map((section) => ({
       id: section.id,
       title: section.title,
@@ -191,7 +269,6 @@ export const curriculumService = {
       endLevel: section.end_level,
     }));
 
-    const courses = await curriculumRepository.listCourses(subject.id);
     const course = courses[0] ?? null;
 
     if (!course) {

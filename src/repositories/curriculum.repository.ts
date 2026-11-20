@@ -203,21 +203,23 @@ export const curriculumRepository = {
   async fetchSubject(slug: string): Promise<SubjectRow | null> {
     const { data, error } = await requireSupabase()
       .from('subjects')
-      .select('*')
+      .select(
+        'id,slug,name,short_name,description,category,learn_category,icon_key,icon_url,accent_color,status,is_primary,sort_order',
+      )
       .eq('slug', slug)
       .maybeSingle();
     if (error) raise(error);
-    return data;
+    return data as unknown as SubjectRow | null;
   },
 
   async listCourses(subjectId: string): Promise<CourseRow[]> {
     const { data, error } = await requireSupabase()
       .from('courses')
-      .select('*')
+      .select('id,subject_id,slug,title,description,category,icon_key,sort_order,is_published')
       .eq('subject_id', subjectId)
       .order('sort_order', { ascending: true });
     if (error) raise(error);
-    return data;
+    return data as unknown as CourseRow[];
   },
 
   async listLevels(courseIds: string[]): Promise<CourseLevelRow[]> {
@@ -225,11 +227,11 @@ export const curriculumRepository = {
     if (ids.length === 0) return [];
     const { data, error } = await requireSupabase()
       .from('course_levels')
-      .select('*')
+      .select('id,course_id,slug,title,description,difficulty,sort_order,is_published')
       .in('course_id', ids)
       .order('sort_order', { ascending: true });
     if (error) raise(error);
-    return data;
+    return data as unknown as CourseLevelRow[];
   },
 
   /** Active map dividers for one subject, ordered by their first level. */
@@ -237,12 +239,12 @@ export const curriculumRepository = {
     if (!subjectId) return [];
     const { data, error } = await requireSupabase()
       .from('learning_sections')
-      .select('*')
+      .select('id,subject_id,title,description,start_level,end_level,is_active')
       .eq('subject_id', subjectId)
       .eq('is_active', true)
       .order('start_level', { ascending: true });
     if (error) raise(error);
-    return data ?? [];
+    return (data ?? []) as unknown as LearningSectionRow[];
   },
 
   async listUnits(levelIds: string[]): Promise<UnitRow[]> {
@@ -250,11 +252,11 @@ export const curriculumRepository = {
     if (ids.length === 0) return [];
     const { data, error } = await requireSupabase()
       .from('units')
-      .select('*')
+      .select('id,course_level_id,slug,title,description,objectives,sort_order,is_published')
       .in('course_level_id', ids)
       .order('sort_order', { ascending: true });
     if (error) raise(error);
-    return data;
+    return data as unknown as UnitRow[];
   },
 
   async listNodes(unitIds: string[]): Promise<LearningNodeRow[]> {
@@ -262,12 +264,14 @@ export const curriculumRepository = {
     if (ids.length === 0) return [];
     const { data, error } = await requireSupabase()
       .from('learning_nodes')
-      .select('*')
+      .select(
+        'id,unit_id,slug,title,description,node_type,lesson_id,question_id,level_number,sort_order,is_active,reward_coins,reward_xp',
+      )
       .in('unit_id', ids)
       .eq('is_active', true)
       .order('sort_order', { ascending: true });
     if (error) raise(error);
-    return data;
+    return data as unknown as LearningNodeRow[];
   },
 
   async listLessons(lessonIds: string[]): Promise<LessonRow[]> {
@@ -275,11 +279,11 @@ export const curriculumRepository = {
     if (ids.length === 0) return [];
     const { data, error } = await requireSupabase()
       .from('lessons')
-      .select('*')
+      .select('id,slug,title,description,estimated_minutes,xp_reward,coin_reward')
       .in('id', ids)
       .order('sort_order', { ascending: true });
     if (error) raise(error);
-    return data;
+    return data as unknown as LessonRow[];
   },
 
   /** Playable levels keyed by subject, used for catalog progress. */
@@ -337,9 +341,9 @@ export const curriculumRepository = {
     if (ids.length === 0) return [];
     const { data, error } = await requireSupabase()
       .from('lesson_question_stats')
-      .select('*')
+      .select('lesson_id,question_count,topics,question_types')
       .in('lesson_id', ids);
     if (error) raise(error);
-    return data;
+    return data as unknown as LessonQuestionStatsRow[];
   },
 };

@@ -513,13 +513,24 @@
   display: -webkit-box;
   overflow: hidden;
   max-width: min(86%, 34rem);
+  box-sizing: border-box;
+  /* Small padding keeps the 3D extrusion inside the clipped line box. It is
+     not a surface: the span still has no background, border, or container. */
+  padding: 0.22em 0.4em 0.5em;
   margin: 0 auto;
-  color: var(--ink);
-  font-size: clamp(0.95rem, 0.88rem + 0.35vw, 1.08rem);
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  line-height: 1.25;
+  color: #fffdf5;
+  font-size: clamp(0.98rem, 0.9rem + 0.38vw, 1.14rem);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  line-height: 1.28;
   overflow-wrap: anywhere;
+  text-wrap: balance;
+  -webkit-text-stroke: 0.04em #593a22;
+  text-shadow:
+    0 -0.03em 0 #e8c98a,
+    0 0.06em 0 #c09450,
+    0 0.12em 0 #b88645,
+    0 0.18em 0.14em rgba(89, 58, 34, 0.3);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -541,6 +552,11 @@
   transform: translate(-50%, -50%);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  /* A long map can have hundreds of stops. Skip layout/paint for the ones far
+     outside the viewport without removing them from the DOM or changing the
+     journey order. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 110px;
 }
 
 .journey-stop--locked {

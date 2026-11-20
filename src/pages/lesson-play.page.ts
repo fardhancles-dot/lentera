@@ -154,6 +154,9 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
     document.removeEventListener('visibilitychange', onVisibilityChange);
     resultStage?.destroy();
     resultStage = null;
+    // Leaving the game always refreshes the map, even after an unfinished
+    // attempt, so an "in progress" state is never served from the cache.
+    curriculumService.invalidateSubjectPath(user.id, subjectSlug);
   });
   void playerStore.load();
 
@@ -515,6 +518,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
 
     try {
       summary = await lessonService.complete(start.attemptId);
+      curriculumService.invalidateSubjectPath(user.id, subjectSlug);
       await playerStore.load(true);
       if (disposed) return;
       renderResult();

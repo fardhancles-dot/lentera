@@ -112,6 +112,8 @@ try {
   await run('supabase/migrations/20261120120000_inventory_product_metadata.sql');
   await run('supabase/migrations/20261120130000_background_music.sql');
   await run('supabase/migrations/20261120140000_heart_regeneration_settings.sql');
+  await run('supabase/migrations/20261121100000_username_format.sql');
+  await run('supabase/migrations/20261121110000_subject_overview_perf.sql');
 
   const legacyAccounts = await db.query(
     `select id, account_number::text as account_number

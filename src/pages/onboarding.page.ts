@@ -10,6 +10,7 @@ import { sessionStore } from '../stores/session.store';
 import { el } from '../utils/dom';
 import {
   DAILY_GOAL_OPTIONS,
+  TIMEZONE_GROUPS,
   TIMEZONE_OPTIONS,
   suggestUsername,
   validateDisplayName,
@@ -96,10 +97,10 @@ async function render(ctx: Parameters<PageModule['render']>[0]): Promise<void> {
     const usernameField = createField({
       label: 'Username',
       name: 'username',
-      placeholder: 'contoh: kiko_belajar',
+      placeholder: 'contoh: Fardhan_Dev@2026',
       value: state.username,
       autocomplete: 'username',
-      hint: '3–20 karakter. Huruf kecil, angka, atau garis bawah.',
+      hint: '3–20 karakter. Huruf besar/kecil, angka, spasi, dan simbol seperti @ . _ ! & diperbolehkan.',
       maxLength: 20,
       required: true,
     });
@@ -169,7 +170,6 @@ async function render(ctx: Parameters<PageModule['render']>[0]): Promise<void> {
         usernameField.root,
         displayField.root,
         errorSlot,
-        devNote(),
       ]),
       el('div', { class: 'onboarding__actions' }, [back.button, next.button]),
     );
@@ -249,11 +249,17 @@ async function render(ctx: Parameters<PageModule['render']>[0]): Promise<void> {
     const timezoneSelect = el(
       'select',
       { class: 'select', attrs: { id: 'timezone', name: 'timezone' } },
-      TIMEZONE_OPTIONS.map((option) =>
+      TIMEZONE_GROUPS.map((group) =>
         el(
-          'option',
-          { attrs: { value: option.value, selected: option.value === state.timezone } },
-          [option.label],
+          'optgroup',
+          { attrs: { label: group.country } },
+          group.zones.map((option) =>
+            el(
+              'option',
+              { attrs: { value: option.value, selected: option.value === state.timezone } },
+              [option.label],
+            ),
+          ),
         ),
       ),
     );
@@ -410,19 +416,6 @@ function summaryRow(label: string, value: string): HTMLElement {
   return el('div', { class: 'summary-list__row' }, [
     el('span', { class: 'summary-list__label', text: label }),
     el('span', { class: 'summary-list__value', text: value }),
-  ]);
-}
-
-function devNote(): HTMLElement {
-  return el('div', { class: 'banner banner--info' }, [
-    icon('info', 18),
-    el('div', {}, [
-      el('p', { class: 'banner__title', text: 'Satu akun, banyak petualangan' }),
-      el('p', {
-        class: 'banner__body',
-        text: 'Progres tiap mata pelajaran akan disimpan terpisah, jadi pindah mapel tidak menghapus progres.',
-      }),
-    ]),
   ]);
 }
 

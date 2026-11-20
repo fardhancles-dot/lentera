@@ -82,6 +82,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
     disposed = true;
     window.clearInterval(countdownTimer);
     window.clearInterval(rampTimer);
+    if (subjectSlug) curriculumService.invalidateSubjectPath(user.id, subjectSlug);
   });
 
   if (!info || !courseId) {
@@ -264,6 +265,7 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
 
     try {
       summary = await practiceService.complete(start.sessionId);
+      if (subjectSlug) curriculumService.invalidateSubjectPath(user.id, subjectSlug);
       await playerStore.load(true);
       if (disposed) return;
       renderSummary();

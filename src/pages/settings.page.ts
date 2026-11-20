@@ -4,11 +4,10 @@ import { icon } from '../components/icons';
 import { showToast } from '../components/toast';
 import { audioEngine } from '../game/audio/audioEngine';
 import { pageHeader, renderAppLayout } from '../layouts/appLayout';
-import { authService } from '../services/auth.service';
 import { profileService } from '../services/profile.service';
 import { sessionStore } from '../stores/session.store';
 import { el } from '../utils/dom';
-import { DAILY_GOAL_OPTIONS, TIMEZONE_OPTIONS } from '../utils/validation';
+import { DAILY_GOAL_OPTIONS, TIMEZONE_GROUPS, TIMEZONE_OPTIONS } from '../utils/validation';
 
 const meta = { title: 'Pengaturan' };
 
@@ -84,7 +83,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
   const user = sessionStore.getState().user;
   if (!user) return;
 
-  const { settings, email, profile } = user;
+  const { settings, profile } = user;
 
   const goalSelect = el(
     'select',
@@ -101,13 +100,21 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
   const timezoneSelect = el(
     'select',
     { class: 'select', attrs: { id: 'timezone' } },
-    TIMEZONE_OPTIONS.map((option) =>
-      el('option', { attrs: { value: option.value } }, [option.label]),
+    TIMEZONE_GROUPS.map((group) =>
+      el(
+        'optgroup',
+        { attrs: { label: group.country } },
+        group.zones.map((option) =>
+          el('option', { attrs: { value: option.value } }, [option.label]),
+        ),
+      ),
     ),
   );
   if (!timezoneValues.includes(settings.timezone)) {
     timezoneSelect.append(
-      el('option', { attrs: { value: settings.timezone } }, [settings.timezone.replace('_', ' ')]),
+      el('option', { attrs: { value: settings.timezone } }, [
+        settings.timezone.replaceAll('_', ' '),
+      ]),
     );
   }
   timezoneSelect.value = settings.timezone;
@@ -283,24 +290,6 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     })();
   });
 
-  const resendPassword = createButton({
-    label: 'Kirim tautan ubah password',
-    variant: 'secondary',
-    size: 'sm',
-  });
-  resendPassword.button.addEventListener('click', () => {
-    void (async () => {
-      resendPassword.setLoading(true);
-      const result = await authService.requestPasswordReset(email);
-      resendPassword.setLoading(false);
-      if (result.ok) {
-        showToast('Tautan dikirim jika email terdaftar. Periksa kotak masuk.', 'success');
-      } else {
-        showToast(result.message, 'error');
-      }
-    })();
-  });
-
   const logout = createButton({
     label: 'Keluar dari akun',
     variant: 'danger',
@@ -324,26 +313,6 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
     }),
     form,
     el('div', { class: 'settings-layout', style: { marginTop: '1.25rem' } }, [
-      el('section', { class: 'card settings-section' }, [
-        el('h2', { class: 'settings-section__title', text: 'Keamanan akun' }),
-        el('p', {
-          class: 'settings-section__description',
-          text: `Email terdaftar: ${email}`,
-        }),
-        el('div', { class: 'banner banner--info' }, [
-          icon('shield', 18),
-          el('div', {}, [
-            el('p', { class: 'banner__title', text: 'Ganti password dengan aman' }),
-            el('p', {
-              class: 'banner__body',
-              text: 'Kami mengirim tautan resmi Supabase. Password tidak pernah disimpan di aplikasi ini.',
-            }),
-          ]),
-        ]),
-        el('div', { class: 'settings-actions', style: { justifyContent: 'flex-start' } }, [
-          resendPassword.button,
-        ]),
-      ]),
       el('section', { class: 'card settings-section' }, [
         el('h2', { class: 'settings-section__title', text: 'Akun' }),
         el('p', { class: 'settings-section__description' }, [

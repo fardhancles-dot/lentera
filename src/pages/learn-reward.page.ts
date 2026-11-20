@@ -243,6 +243,7 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
                 'success',
               );
             }
+            curriculumService.invalidateSubjectPath(user.id, subjectSlug);
             void playerStore.load(true);
             void notificationIndicatorsStore.refresh();
             load();

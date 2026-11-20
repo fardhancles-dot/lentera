@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  TIMEZONE_GROUPS,
+  TIMEZONE_OPTIONS,
   suggestUsername,
   validateBio,
   validateDailyGoal,
@@ -70,12 +72,32 @@ describe('validatePasswordConfirmation', () => {
 });
 
 describe('validateUsername', () => {
-  it('normalizes valid usernames', () => {
-    expect(validateUsername('  Kiko_Belajar ')).toEqual({ ok: true, value: 'kiko_belajar' });
+  it('trims but preserves the entered case', () => {
+    expect(validateUsername('  Kiko_Belajar ')).toEqual({ ok: true, value: 'Kiko_Belajar' });
   });
 
-  it.each(['ab', '1kiko', 'kiko-belajar', 'kiko belajar', 'admin', 'a'.repeat(21)])(
+  it.each([
+    'fardhan123',
+    'fardhan_123',
+    'fardhan@123',
+    'fardhan.dev',
+    'fardhan!2026',
+    'Fardhan Web&App',
+    'fardhan 123',
+    'Fardhan_Dev@2026',
+  ])('accepts %j', (input) => {
+    expect(validateUsername(input)).toEqual({ ok: true, value: input });
+  });
+
+  it.each(['ab', 'kiko/ belajar', 'admin', 'Admin', 'a'.repeat(21)])(
     'rejects %j',
+    (input) => {
+      expect(validateUsername(input).ok).toBe(false);
+    },
+  );
+
+  it.each(['fardhan😀', '😀😀😀', 'fardhan❤️', '👨‍👩‍👧‍👦', '🇮🇩'])(
+    'rejects emoji in %j',
     (input) => {
       expect(validateUsername(input).ok).toBe(false);
     },
@@ -103,6 +125,35 @@ describe('preference validation', () => {
   it('validates timezones against Intl', () => {
     expect(validateTimezone('Asia/Jakarta').ok).toBe(true);
     expect(validateTimezone('Mars/Olympus').ok).toBe(false);
+  });
+
+  it('lists Indonesia first and every zone is a valid IANA identifier', () => {
+    expect(TIMEZONE_GROUPS[0]?.country).toBe('INDONESIA');
+    expect(TIMEZONE_GROUPS[0]?.zones[0]?.value).toBe('Asia/Jakarta');
+    expect(TIMEZONE_OPTIONS[0]?.label).toBe('Asia/Jakarta (WIB)');
+    for (const option of TIMEZONE_OPTIONS) {
+      expect(validateTimezone(option.value).ok).toBe(true);
+    }
+    expect(new Set(TIMEZONE_OPTIONS.map((option) => option.value)).size).toBe(
+      TIMEZONE_OPTIONS.length,
+    );
+  });
+
+  it('covers Asian countries and no longer offers UTC', () => {
+    const values = TIMEZONE_OPTIONS.map((option) => option.value);
+    expect(values).toContain('Asia/Makassar');
+    expect(values).toContain('Asia/Jayapura');
+    expect(values).toContain('Asia/Kuala_Lumpur');
+    expect(values).toContain('Asia/Singapore');
+    expect(values).toContain('Asia/Bangkok');
+    expect(values).toContain('Asia/Manila');
+    expect(values).toContain('Asia/Tokyo');
+    expect(values).toContain('Asia/Seoul');
+    expect(values).toContain('Asia/Amman');
+    expect(values).toContain('Asia/Dubai');
+    expect(values).toContain('Asia/Kolkata');
+    expect(values).toContain('Asia/Shanghai');
+    expect(values).not.toContain('UTC');
   });
 
   it('accepts only integer volumes 0–100', () => {

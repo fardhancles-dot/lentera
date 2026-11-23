@@ -162,7 +162,6 @@ export function createListening({ question, onChange }: MiniGameProps): MiniGame
       audioPanel,
       ...(buttons.length > 0 ? [el('p', { class: 'play-mini-label', text: 'Pilih jawaban' }), options] : [typedFallback]),
     ]),
-    ownsMedia: true,
     getAnswer: () => {
       if (buttons.length > 0) return selectedId ? { optionId: selectedId } : null;
       return typedFallback.value.trim() ? { text: typedFallback.value } : null;

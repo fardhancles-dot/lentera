@@ -73,6 +73,46 @@ const ALLOWED_AUDIO_MIME = [
   'audio/ogg',
   'audio/webm',
 ];
+const ALLOWED_IMAGE_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const ALLOWED_VIDEO_MIME = ['video/mp4', 'video/webm'];
+const MEDIA_ACCEPT: Record<MediaKind, string> = {
+  image: 'image/jpeg,image/png,image/webp,image/gif',
+  audio: 'audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm',
+  video: 'video/mp4,video/webm',
+};
+const ALL_MEDIA_KINDS: MediaKind[] = ['image', 'audio', 'video'];
+
+type MediaKind = 'image' | 'audio' | 'video';
+
+/** Audio is handled by its dedicated field on these two types. */
+function mediaKindsFor(type: string): MediaKind[] {
+  return type === 'listening' || type === 'sentence_builder'
+    ? ['image', 'video']
+    : ALL_MEDIA_KINDS;
+}
+
+function mediaMime(file: File): string {
+  const raw = file.type.toLowerCase();
+  if (raw === 'audio/mp3') return 'audio/mpeg';
+  if (raw === 'audio/x-wav') return 'audio/wav';
+  if (raw === 'image/jpg') return 'image/jpeg';
+  if (raw) return raw;
+  const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+  return (
+    {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      webp: 'image/webp',
+      gif: 'image/gif',
+      mp3: 'audio/mpeg',
+      wav: 'audio/wav',
+      ogg: 'audio/ogg',
+      webm: 'video/webm',
+      mp4: 'video/mp4',
+    }[extension] ?? ''
+  );
+}
 
 export interface SubjectLevel {
   nodeId: string;
@@ -188,12 +228,16 @@ function wordRow(word = ''): HTMLElement {
   return row;
 }
 
-function mediaRow(kind = 'image', url = '', alt = ''): HTMLElement {
-  const kindSelect = select('mediaKind', [
-    { value: 'image', label: 'Gambar' },
-    { value: 'audio', label: 'Audio' },
-    { value: 'video', label: 'Video' },
-  ], kind);
+function mediaRow(
+  kind: MediaKind = 'image',
+  url = '',
+  alt = '',
+  kinds: MediaKind[] = ALL_MEDIA_KINDS,
+): HTMLElement {
+  const kindSelect = select('mediaKind', kinds.map((value) => ({
+    value,
+    label: value === 'image' ? 'Gambar' : value === 'audio' ? 'Audio' : 'Video',
+  })), kinds.includes(kind) ? kind : kinds[0]);
   const urlInput = el('input', {
     class: 'input',
     attrs: { name: 'mediaUrl', placeholder: 'https://… atau /assets/…', value: url },
@@ -202,25 +246,120 @@ function mediaRow(kind = 'image', url = '', alt = ''): HTMLElement {
     class: 'input',
     attrs: { name: 'mediaAlt', placeholder: 'Alt / transkrip', value: alt },
   });
+  const uploadInput = el('input', {
+    class: 'admin-audio__file',
+    attrs: { type: 'file' },
+  });
+  const uploadButton = el('button', {
+    class: 'btn btn--secondary btn--sm',
+    attrs: { type: 'button' },
+  }, [icon('plus', 16), 'Upload']);
   const library = el('button', {
     class: 'btn btn--secondary btn--sm',
     attrs: { type: 'button' },
     text: 'Library',
     events: {
       click: () =>
-        pickMedia(kindSelect.value as 'image' | 'audio' | 'video', (item) => {
-          kindSelect.value = item.kind;
+        pickMedia(kindSelect.value as MediaKind, (item) => {
+          const pickedKind = kinds.includes(item.kind as MediaKind)
+            ? (item.kind as MediaKind)
+            : (kindSelect.value as MediaKind);
+          kindSelect.value = pickedKind;
           urlInput.value = item.url;
           altInput.value = item.altText;
           urlInput.dispatchEvent(new Event('input', { bubbles: true }));
         }),
     },
   });
+
+  const syncUpload = (): void => {
+    const selected = kindSelect.value as MediaKind;
+    uploadInput.accept = MEDIA_ACCEPT[selected];
+    uploadButton.replaceChildren(
+      icon('plus', 16),
+      document.createTextNode(
+        selected === 'image' ? 'Upload gambar' : selected === 'audio' ? 'Upload MP3' : 'Upload video',
+      ),
+    );
+  };
+
+  const uploadFile = async (file: File): Promise<void> => {
+    const selected = kindSelect.value as MediaKind;
+    const mime = mediaMime(file);
+    const allowed =
+      selected === 'image'
+        ? ALLOWED_IMAGE_MIME
+        : selected === 'audio'
+          ? ALLOWED_AUDIO_MIME
+          : ALLOWED_VIDEO_MIME;
+    if (!allowed.includes(mime)) {
+      showToast(
+        selected === 'image'
+          ? 'Format gambar harus JPG, PNG, WebP, atau GIF.'
+          : selected === 'audio'
+            ? 'Format audio harus MP3, WAV, OGG, atau WebM.'
+            : 'Format video harus MP4 atau WebM.',
+        'error',
+      );
+      return;
+    }
+    if (file.size > MAX_AUDIO_BYTES) {
+      showToast('Ukuran media maksimal 20 MB.', 'error');
+      return;
+    }
+
+    const altText = altInput.value.trim() || file.name;
+    let width: number | null = null;
+    let height: number | null = null;
+    if (selected === 'image') {
+      try {
+        const bitmap = await createImageBitmap(file);
+        width = bitmap.width;
+        height = bitmap.height;
+        bitmap.close();
+      } catch {
+        width = null;
+        height = null;
+      }
+    }
+
+    uploadButton.disabled = true;
+    uploadButton.textContent = 'Mengunggah…';
+    try {
+      const uploaded = await adminService.uploadMedia(
+        mime === file.type.toLowerCase()
+          ? file
+          : new File([file], file.name, { type: mime, lastModified: file.lastModified }),
+        altText,
+        width,
+        height,
+      );
+      urlInput.value = uploaded.url;
+      if (!altInput.value.trim()) altInput.value = altText;
+      urlInput.dispatchEvent(new Event('input', { bubbles: true }));
+      showToast('Media terunggah. Simpan soal untuk memakainya.', 'success');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Media gagal diunggah.', 'error');
+    } finally {
+      uploadButton.disabled = false;
+      syncUpload();
+    }
+  };
+
+  uploadButton.addEventListener('click', () => uploadInput.click());
+  uploadInput.addEventListener('change', () => {
+    const file = uploadInput.files?.[0];
+    uploadInput.value = '';
+    if (file) void uploadFile(file);
+  });
+  kindSelect.addEventListener('change', syncUpload);
+  syncUpload();
+
   const row = el('div', { class: 'admin-repeater__row admin-media-row' }, [
     kindSelect,
     urlInput,
     altInput,
-    library,
+    el('span', { class: 'admin-row-actions' }, [uploadButton, library, uploadInput]),
   ]);
   row.append(removeRowButton('Hapus media', row));
   return row;
@@ -232,13 +371,14 @@ interface AudioField {
   url: () => string;
   previewUrl: () => string;
   transcript: () => string;
+  setTranscriptVisible: (visible: boolean) => void;
 }
 
 /**
- * Audio input for listening questions. A picked or recorded file stays local
- * until the question is saved, then it is uploaded to the content-media bucket
- * so every player can stream it. The preview player uses an object URL until
- * the upload finishes.
+ * Audio input for listening and sentence-builder questions. A picked or
+ * recorded file stays local until the question is saved, then it is uploaded
+ * to the content-media bucket so every player can stream it. The preview player
+ * uses an object URL until the upload finishes.
  */
 function audioField(initialUrl: string, initialTranscript: string): AudioField {
   let currentUrl = initialUrl;
@@ -271,6 +411,11 @@ function audioField(initialUrl: string, initialTranscript: string): AudioField {
   const transcriptInput = input('audioTranscript', initialTranscript, 'text', {
     placeholder: 'Opsional. Isi transkrip agar soal tetap bisa dijawab bila audio gagal diputar.',
   });
+  const transcriptField = field(
+    'Transkrip audio (opsional)',
+    transcriptInput,
+    'Ditampilkan sebagai cadangan bila pemutar audio tidak tersedia.',
+  );
 
   const sync = (): void => {
     const src = objectUrl || currentUrl;
@@ -291,7 +436,8 @@ function audioField(initialUrl: string, initialTranscript: string): AudioField {
   };
 
   const applyFile = (file: File): void => {
-    if (!ALLOWED_AUDIO_MIME.includes(file.type.toLowerCase())) {
+    const mime = mediaMime(file);
+    if (!ALLOWED_AUDIO_MIME.includes(mime)) {
       status.textContent = 'Format audio harus MP3, WAV, OGG, atau WebM.';
       return;
     }
@@ -304,8 +450,11 @@ function audioField(initialUrl: string, initialTranscript: string): AudioField {
       return;
     }
     releaseObjectUrl();
-    pending = file;
-    objectUrl = URL.createObjectURL(file);
+    pending =
+      mime === file.type.toLowerCase()
+        ? file
+        : new File([file], file.name, { type: mime, lastModified: file.lastModified });
+    objectUrl = URL.createObjectURL(pending);
     status.textContent = `${file.name} siap diunggah saat soal disimpan.`;
     sync();
   };
@@ -376,16 +525,16 @@ function audioField(initialUrl: string, initialTranscript: string): AudioField {
       fileInput,
       player,
       status,
-      field(
-        'Transkrip audio (opsional)',
-        transcriptInput,
-        'Ditampilkan sebagai cadangan bila pemutar audio tidak tersedia.',
-      ),
+      transcriptField,
     ]),
     file: () => pending,
     url: () => currentUrl,
     previewUrl: () => objectUrl || currentUrl,
     transcript: () => transcriptInput.value.trim(),
+    setTranscriptVisible: (visible) => {
+      transcriptField.hidden = !visible;
+      transcriptField.style.display = visible ? '' : 'none';
+    },
   };
 }
 
@@ -661,8 +810,14 @@ export function openQuestionEditor(
   } else {
     pairsBox.append(pairRow(), pairRow());
   }
+  const initialMediaKinds = mediaKindsFor(item?.type ?? 'multiple_choice');
   if (item?.media.length) {
-    for (const media of item.media) mediaBox.append(mediaRow(media.kind, media.url, media.alt));
+    for (const media of item.media) {
+      if (!initialMediaKinds.includes(media.kind as MediaKind)) continue;
+      mediaBox.append(
+        mediaRow(media.kind as MediaKind, media.url, media.alt, initialMediaKinds),
+      );
+    }
   }
 
   const initialWords = item?.type === 'word_bank' ? item.options.map((option) => option.label) : [];
@@ -710,7 +865,9 @@ export function openQuestionEditor(
 
   const audio = audioField(legacyAudio?.url ?? '', typeof legacyScene.speech === 'string' ? legacyScene.speech : '');
 
-  const addMedia = button('Tambah media', 'plus', () => mediaBox.append(mediaRow()));
+  const addMedia = button('Tambah media', 'plus', () =>
+    mediaBox.append(mediaRow('image', '', '', mediaKindsFor(typeSelect.value))),
+  );
   const addOption = button('Tambah pilihan', 'plus', () => optionsBox.append(optionRow()));
   const addAnswer = button('Tambah jawaban', 'plus', () => answersBox.append(answerRow()));
   const addPair = button('Tambah pasangan', 'plus', () => pairsBox.append(pairRow()));
@@ -773,11 +930,18 @@ export function openQuestionEditor(
   }
 
   function mediaSection(): HTMLElement {
+    const visualOnly = mediaKindsFor(typeSelect.value).length < ALL_MEDIA_KINDS.length;
     return el('div', {}, [
       el('div', { class: 'admin-subhead-row' }, [
-        el('h3', { class: 'admin-subhead', text: 'Media (opsional)' }),
+        el('h3', { class: 'admin-subhead', text: 'Media soal (opsional)' }),
         addMedia,
       ]),
+      el('p', {
+        class: 'form-hint',
+        text: visualOnly
+          ? 'Unggah gambar atau video. Audio memakai bagian Audio soal di atas, maksimal 20 MB.'
+          : 'Unggah gambar atau MP3 langsung dari perangkat. Maksimal 20 MB per file.',
+      }),
       mediaBox,
     ]);
   }
@@ -789,6 +953,7 @@ export function openQuestionEditor(
     renderedType = type;
     materi.replaceChildren();
     answersSection.replaceChildren();
+    audio.setTranscriptVisible(type === 'listening');
 
     if (type === 'listening') {
       promptLabel.textContent = 'Pertanyaan';
@@ -857,6 +1022,12 @@ export function openQuestionEditor(
       promptLabel.textContent = 'Pertanyaan / instruksi';
       prompt.setAttribute('placeholder', 'Contoh: Susunlah kata-kata berikut menjadi kalimat yang benar.');
       materi.append(
+        el('h3', { class: 'admin-subhead', text: 'Audio soal (opsional)' }),
+        el('p', {
+          class: 'form-hint',
+          text: 'Unggah file MP3 agar pemain bisa mendengarkan kalimat sebelum menyusunnya.',
+        }),
+        audio.element,
         field(
           'Kalimat yang benar',
           sentenceInput,
@@ -915,7 +1086,7 @@ export function openQuestionEditor(
         ]),
       );
     }
-    if (!SIMPLIFIED_TYPES.has(type)) answersSection.append(mediaSection());
+    answersSection.append(mediaSection());
 
     // Story, conversation, listening, and token questions read the material
     // first, then the question; the generic types keep the question on top.
@@ -1051,22 +1222,33 @@ export function openQuestionEditor(
 
   function previewQuestion(snapshot: Snapshot): LessonQuestion {
     const sceneValue = sceneFor(snapshot, legacyScene) as unknown as LessonScene;
+    const previewAudio = audio.previewUrl();
+    const genericMedia = snapshot.media.map((entry) => ({
+      kind: entry.kind as 'image' | 'audio' | 'video',
+      url: entry.url,
+      alt: entry.alt,
+    }));
     const media =
-      snapshot.type === 'listening'
-        ? audio.previewUrl()
-          ? [
-              {
-                kind: 'audio' as const,
-                url: audio.previewUrl(),
-                alt: snapshot.transcript || 'Audio soal',
-              },
-            ]
-          : []
-        : snapshot.media.map((entry) => ({
-            kind: entry.kind as 'image' | 'audio' | 'video',
-            url: entry.url,
-            alt: entry.alt,
-          }));
+      snapshot.type === 'listening' || snapshot.type === 'sentence_builder'
+        ? [
+            ...genericMedia.filter((entry) => entry.kind !== 'audio'),
+            ...(previewAudio
+              ? [
+                  {
+                    kind: 'audio' as const,
+                    url: previewAudio,
+                    alt: snapshot.transcript || 'Audio soal',
+                  },
+                ]
+              : []),
+          ]
+        : genericMedia;
+    const previewPairs = snapshot.pairs.map((pair, index) => ({
+      leftId: `left-${index}`,
+      rightId: `right-${index}`,
+      left: pair.left,
+      right: pair.right,
+    }));
 
     return {
       id: 'preview',
@@ -1078,8 +1260,18 @@ export function openQuestionEditor(
       hint: null,
       points: snapshot.points,
       options: previewOptions(snapshot),
-      leftItems: [],
-      rightItems: [],
+      leftItems:
+        snapshot.type === 'matching_pairs'
+          ? previewPairs.map((pair) => ({ id: pair.leftId, label: pair.left }))
+          : [],
+      rightItems:
+        snapshot.type === 'matching_pairs'
+          ? previewPairs.map((pair) => ({ id: pair.rightId, label: pair.right }))
+          : [],
+      pairs:
+        snapshot.type === 'matching_pairs'
+          ? previewPairs.map((pair) => ({ leftId: pair.leftId, rightId: pair.rightId }))
+          : [],
       media,
       scene: sceneValue,
     };
@@ -1118,6 +1310,19 @@ export function openQuestionEditor(
                   class: 'play-media',
                   attrs: { src: media.url, alt: media.alt || 'Ilustrasi soal' },
                 }),
+              )),
+        ...(snapshot.type === 'listening' || snapshot.type === 'sentence_builder'
+          ? []
+          : question.media
+              .filter((media) => media.kind === 'audio' && media.url)
+              .map((media) =>
+                el('div', { class: 'play-question-audio' }, [
+                  el('p', { class: 'play-mini-label', text: 'Audio soal' }),
+                  el('audio', {
+                    class: 'play-question-audio__player',
+                    attrs: { src: media.url, controls: true, preload: 'metadata' },
+                  }),
+                ]),
               )),
         el('div', { class: 'play-answer' }, [view.answer]),
         el('p', {
@@ -1191,45 +1396,37 @@ export function openQuestionEditor(
       const finalSlug = item?.slug || slugify(snapshot.prompt) || `level-${Date.now()}`;
 
       let media = snapshot.media;
-      if (type === 'listening') {
+      if (type === 'listening' || type === 'sentence_builder') {
         let audioUrl = snapshot.audioUrl;
         const file = audio.file();
         if (file) {
           const uploaded = await adminService.uploadMedia(
             file,
-            snapshot.transcript || 'Audio soal menyimak',
+            snapshot.transcript || 'Audio soal',
             null,
             null,
           );
           audioUrl = uploaded.url;
         }
+        const visualMedia = snapshot.media
+          .filter((entry) => entry.kind !== 'audio')
+          .map((entry, index) => ({
+            kind: entry.kind,
+            url: entry.url,
+            alt: entry.alt,
+            sortOrder: index,
+          }));
         media = [
-          ...(item?.media ?? [])
-            .filter((entry) => entry.kind !== 'audio')
-            .map((entry, index) => ({
-              kind: entry.kind,
-              url: entry.url,
-              alt: entry.alt,
-              sortOrder: index,
-            })),
+          ...visualMedia,
           ...(audioUrl
             ? [{
                 kind: 'audio',
                 url: audioUrl,
-                alt: snapshot.transcript || 'Audio soal menyimak',
-                sortOrder: (item?.media ?? []).filter((entry) => entry.kind !== 'audio').length,
+                alt: snapshot.transcript || 'Audio soal',
+                sortOrder: visualMedia.length,
               }]
             : []),
         ];
-      } else if (SIMPLIFIED_TYPES.has(type)) {
-        // The simplified forms do not edit media, so the existing media is kept
-        // as-is instead of being wiped when a question is saved again.
-        media = (item?.media ?? []).map((entry, index) => ({
-          kind: entry.kind,
-          url: entry.url,
-          alt: entry.alt,
-          sortOrder: index,
-        }));
       }
 
       let options = snapshot.options;

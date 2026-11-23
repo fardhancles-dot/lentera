@@ -114,6 +114,7 @@ try {
   await run('supabase/migrations/20261120140000_heart_regeneration_settings.sql');
   await run('supabase/migrations/20261121100000_username_format.sql');
   await run('supabase/migrations/20261121110000_subject_overview_perf.sql');
+  await run('supabase/migrations/20261123100000_matching_pairs_payload.sql');
 
   const legacyAccounts = await db.query(
     `select id, account_number::text as account_number
@@ -1358,6 +1359,20 @@ try {
     'match madness only uses matching pair questions',
   );
   check(madness.timeLimitSeconds === 90, 'match madness carries a 90 second limit');
+  check(
+    madness.questions.every(
+      (question) =>
+        Array.isArray(question.pairs) &&
+        question.pairs.length === question.leftItems.length &&
+        question.pairs.length === question.rightItems.length,
+    ),
+    'matching questions include the correct pair mapping',
+    JSON.stringify(madness.questions.map((question) => ({
+      left: question.leftItems.length,
+      right: question.rightItems.length,
+      pairs: question.pairs?.length ?? 0,
+    }))),
+  );
 
   await expectError(
     'unit review requires a unit',

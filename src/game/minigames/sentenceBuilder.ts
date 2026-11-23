@@ -13,6 +13,20 @@ export function createSentenceBuilder({ question, onChange }: MiniGameProps): Mi
   const trayButtons = new Map<string, HTMLButtonElement>();
   let disabled = false;
 
+  const audioMedia = question.media.find((media) => media.kind === 'audio' && media.url);
+  const audio = audioMedia
+    ? el('audio', {
+        class: 'play-question-audio__player',
+        attrs: { src: audioMedia.url, controls: true, preload: 'metadata' },
+      })
+    : null;
+  const audioPanel = audio
+    ? el('div', { class: 'play-question-audio' }, [
+        el('p', { class: 'play-mini-label', text: 'Audio soal' }),
+        audio,
+      ])
+    : null;
+
   const tray = el('div', {
     class: 'play-bank',
     attrs: { role: 'group', 'aria-label': 'Kata acak' },
@@ -142,6 +156,7 @@ export function createSentenceBuilder({ question, onChange }: MiniGameProps): Mi
 
   return {
     answer: el('div', { class: 'play-wordbank' }, [
+      ...(audioPanel ? [audioPanel] : []),
       el('p', { class: 'play-mini-label', text: 'Kata acak' }),
       tray,
       el('p', { class: 'play-mini-label', text: 'Susunanmu' }),
@@ -153,6 +168,7 @@ export function createSentenceBuilder({ question, onChange }: MiniGameProps): Mi
     focus: () => trayButtons.get(tokens[0]?.id ?? '')?.focus({ preventScroll: true }),
     setDisabled: (value) => {
       disabled = value;
+      if (value) audio?.pause();
       render();
     },
     markResult: (isCorrect) => {

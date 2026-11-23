@@ -365,6 +365,19 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
                   attrs: { src: media.url, alt: media.alt || 'Ilustrasi soal' },
                 }),
               )),
+        ...(question.type === 'listening' || question.type === 'sentence_builder'
+          ? []
+          : question.media
+              .filter((media) => media.kind === 'audio' && media.url)
+              .map((media) =>
+                el('div', { class: 'play-question-audio' }, [
+                  el('p', { class: 'play-mini-label', text: 'Audio soal' }),
+                  el('audio', {
+                    class: 'play-question-audio__player',
+                    attrs: { src: media.url, controls: true, preload: 'metadata' },
+                  }),
+                ]),
+              )),
         hint,
         answerArea,
       ]),

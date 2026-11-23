@@ -46,32 +46,24 @@ export async function answerFirstQuestion(page: Page): Promise<boolean> {
     return true;
   }
 
-  const columns = page.locator('.play-pair-column');
-  if ((await columns.count()) === 2) {
-    // Matching pairs needs one pick per column; clicking both columns in DOM
-    // order would only reselect the left side.
-    const left = columns.nth(0).locator('button');
-    const right = columns.nth(1).locator('button');
-    const total = Math.min(await left.count(), await right.count());
+  // Matching pairs uses one grid with data-side and data-match, so the
+  // helper can pick the real partner instead of guessing by DOM order.
+  const leftCards = page.locator('.play-pair[data-side="left"]');
+  if (await leftCards.count()) {
+    const total = await leftCards.count();
     for (let index = 0; index < total; index += 1) {
-      await left.nth(index).click();
-      await right.nth(index).click();
+      const left = leftCards.nth(index);
+      if (await left.isDisabled().catch(() => true)) continue;
+      const match = await left.getAttribute('data-match');
+      if (!match) continue;
+      await left.click();
+      const right = page.locator(
+        `.play-pair[data-side="right"][data-match="${match}"]`,
+      );
+      if (await right.count()) await right.click();
+      await page.waitForTimeout(40);
     }
     return total > 0;
-  }
-
-  const pair = page.locator('.play-pair').first();
-  if (await pair.count()) {
-    const pairs = page.locator('.play-pair');
-    const total = await pairs.count();
-    for (let index = 0; index < total; index += 1) {
-      const candidate = pairs.nth(index);
-      if (await candidate.isVisible().catch(() => false)) {
-        await candidate.click();
-        await page.waitForTimeout(120);
-      }
-    }
-    return true;
   }
 
   const input = page.locator('.play-input').first();

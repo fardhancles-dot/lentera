@@ -17,6 +17,11 @@ export interface LessonMatchItem {
   label: string;
 }
 
+export interface LessonMatchPair {
+  leftId: string;
+  rightId: string;
+}
+
 export interface LessonSceneChoice {
   label: string;
   reply: string;
@@ -52,6 +57,7 @@ export interface LessonQuestion {
   options: LessonQuestionOption[];
   leftItems: LessonMatchItem[];
   rightItems: LessonMatchItem[];
+  pairs: LessonMatchPair[];
   media: LessonQuestionMedia[];
   scene: LessonScene;
 }
@@ -167,6 +173,20 @@ function parseMatchItems(value: unknown): LessonMatchItem[] {
     : [];
 }
 
+function parseMatchPairs(value: unknown): LessonMatchPair[] {
+  return Array.isArray(value)
+    ? value
+        .map((item) => {
+          const record = asRecord(item);
+          return {
+            leftId: asString(record.leftId),
+            rightId: asString(record.rightId),
+          };
+        })
+        .filter((pair) => Boolean(pair.leftId) && Boolean(pair.rightId))
+    : [];
+}
+
 function parseScene(value: unknown): LessonScene {
   const record = asRecord(value);
   const npc = asRecord(record.npc);
@@ -234,6 +254,7 @@ export function parseLessonQuestions(value: unknown): LessonQuestion[] {
         : [],
       leftItems: parseMatchItems(question.leftItems),
       rightItems: parseMatchItems(question.rightItems),
+      pairs: parseMatchPairs(question.pairs),
       media: Array.isArray(question.media)
         ? question.media.map((media) => {
             const record = asRecord(media);

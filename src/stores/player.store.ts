@@ -1,5 +1,10 @@
 import { playerService } from '../services/player.service';
-import type { PlayerState, PlayerWallet, RefillOutcome } from '../types/player';
+import type {
+  DiamondExchangeOutcome,
+  PlayerState,
+  PlayerWallet,
+  RefillOutcome,
+} from '../types/player';
 import { sessionStore } from './session.store';
 
 export type PlayerLoadStatus = 'idle' | 'loading' | 'ready' | 'error';
@@ -133,6 +138,14 @@ class PlayerStore {
 
     this.walletPromise = promise;
     return promise;
+  }
+
+  async exchangeDiamonds(diamonds: number): Promise<DiamondExchangeOutcome> {
+    const outcome = await playerService.exchangeDiamonds(diamonds);
+    if (this.userId !== this.currentUserId()) return outcome;
+
+    await this.loadWallet(true);
+    return outcome;
   }
 
   async refill(): Promise<RefillOutcome> {

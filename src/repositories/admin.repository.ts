@@ -225,6 +225,28 @@ export const adminRepository = {
   },
 
   getGamification: () => call('admin_get_gamification'),
+  getDiamondOverview: (limit: number) =>
+    call('admin_get_diamond_overview', { p_limit: limit }),
+  saveQuestDiamonds: (questId: string, rewardDiamonds: number, reason: string) =>
+    call('admin_save_quest_diamonds', {
+      p_quest_id: questId,
+      p_reward_diamonds: rewardDiamonds,
+      p_reason: reason,
+    }),
+  saveDiamondExchangeRate: (
+    diamonds: number,
+    coins: number,
+    isActive: boolean,
+    sortOrder: number,
+    reason: string,
+  ) =>
+    call('admin_save_diamond_exchange_rate', {
+      p_diamonds: diamonds,
+      p_coins: coins,
+      p_is_active: isActive,
+      p_sort_order: sortOrder,
+      p_reason: reason,
+    }),
   saveGameCatalog: (kind: string, payload: Json, reason: string) =>
     call('admin_save_game_catalog', { p_kind: kind, p_payload: payload, p_reason: reason }),
   saveHeartSettings: (regenMinutes: number) =>

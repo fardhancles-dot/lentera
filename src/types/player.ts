@@ -28,9 +28,17 @@ export interface PlayerState {
   totalXp: number;
   todayXp: number;
   coins: number;
+  diamonds: number;
   hearts: PlayerHearts;
   streak: PlayerStreak;
   level: PlayerLevel;
+}
+
+export interface DiamondExchangeRate {
+  diamonds: number;
+  coins: number;
+  isActive: boolean;
+  sortOrder: number;
 }
 
 export interface WalletTransaction {
@@ -58,9 +66,19 @@ export interface StreakMilestone {
 
 export interface PlayerWallet extends PlayerState {
   transactions: WalletTransaction[];
+  diamondTransactions: WalletTransaction[];
+  exchangeRates: DiamondExchangeRate[];
   xpTransactions: WalletTransaction[];
   levelRewards: LevelReward[];
   streakMilestones: StreakMilestone[];
+}
+
+export interface DiamondExchangeOutcome {
+  diamondsSpent: number;
+  coinsAwarded: number;
+  diamondBalance: number;
+  coinBalance: number;
+  referenceId: string;
 }
 
 export interface RefillOutcome {

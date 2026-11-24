@@ -274,6 +274,37 @@ export interface AdminHeartSettings {
   updatedAt: string | null;
 }
 
+export interface AdminDiamondStats {
+  diamondsCirculating: number;
+  coinsCirculating: number;
+  diamondsEarned: number;
+  diamondsSpent: number;
+  transactionCount: number;
+}
+
+export interface AdminExchangeRate {
+  diamonds: number;
+  coins: number;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export interface AdminDiamondTransaction {
+  id: string;
+  userId: string;
+  username: string;
+  displayName: string;
+  amount: number;
+  source: string;
+  createdAt: string;
+}
+
+export interface AdminDiamondOverview {
+  stats: AdminDiamondStats;
+  exchangeRates: AdminExchangeRate[];
+  transactions: AdminDiamondTransaction[];
+}
+
 export interface AdminGamification {
   quests: Array<Record<string, unknown>>;
   achievements: Array<Record<string, unknown>>;

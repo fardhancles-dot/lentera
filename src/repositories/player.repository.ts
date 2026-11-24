@@ -25,4 +25,12 @@ export const playerRepository = {
     if (error) raise(error);
     return data ?? {};
   },
+
+  async exchangeDiamonds(diamonds: number): Promise<Json> {
+    const { data, error } = await requireSupabase().rpc('exchange_diamonds_to_coins', {
+      p_diamonds: diamonds,
+    });
+    if (error) raise(error);
+    return data ?? {};
+  },
 };

@@ -894,6 +894,10 @@ html.app-drawer-open body {
   color: var(--yellow-500);
 }
 
+.resource-chip--diamond svg {
+  color: #2f8ff0;
+}
+
 .resource-chip--hearts svg {
   color: var(--red-500);
 }
@@ -1010,6 +1014,14 @@ html.app-drawer-open body {
   content: '';
 }
 
+.resource-icon--diamond::before {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(90, 196, 255, 0.45), transparent 70%);
+  content: '';
+}
+
 .resource-icon--coin {
   animation: resource-coin-tilt 7s ease-in-out infinite;
 }
@@ -1071,6 +1083,36 @@ html.app-drawer-open body {
 .resource-chip--coin.is-gaining .resource-chip__value {
   animation: resource-value-pop 0.8s var(--ease-out);
   color: #a86e00;
+}
+
+.resource-chip--diamond.is-gaining {
+  border-color: #8dd8ff;
+  background: #effaff;
+}
+
+.resource-chip--diamond.is-gaining .resource-icon {
+  animation: resource-coin-gain 0.8s var(--ease-out);
+}
+
+.resource-chip--diamond.is-gaining .resource-chip__value {
+  animation: resource-value-pop 0.8s var(--ease-out);
+  color: #1f6fc4;
+}
+
+@media (max-width: 520px) {
+  .header-resources {
+    gap: 4px;
+  }
+
+  .header-resources .resource-chip {
+    padding: 0 6px;
+    gap: 3px;
+  }
+
+  .header-resources .resource-chip svg {
+    width: 14px;
+    height: 14px;
+  }
 }
 
 @keyframes resource-heartbeat {

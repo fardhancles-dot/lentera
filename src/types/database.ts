@@ -302,6 +302,7 @@ export type StudySessionRow = {
 export type UserWalletRow = {
   user_id: string;
   coins: number;
+  diamonds: number;
   updated_at: string;
 };
 
@@ -365,6 +366,7 @@ export type QuestDefinitionRow = {
   metric: 'xp' | 'lesson' | 'practice';
   target: number;
   reward_coins: number;
+  reward_diamonds: number;
   title: string;
   description: string;
   icon: string;
@@ -379,6 +381,7 @@ export type UserQuestClaimRow = {
   quest_id: string;
   period_start: string;
   coins: number;
+  diamonds: number;
   claimed_at: string;
 };
 
@@ -972,6 +975,10 @@ export type Database = {
       };
       claim_quest_reward: {
         Args: { p_quest_id: string };
+        Returns: Json;
+      };
+      exchange_diamonds_to_coins: {
+        Args: { p_diamonds: number };
         Returns: Json;
       };
       get_my_achievements: {

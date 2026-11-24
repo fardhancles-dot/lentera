@@ -115,6 +115,127 @@ try {
   await run('supabase/migrations/20261121100000_username_format.sql');
   await run('supabase/migrations/20261121110000_subject_overview_perf.sql');
   await run('supabase/migrations/20261123100000_matching_pairs_payload.sql');
+  await run('supabase/migrations/20261124100000_diamond_economy.sql');
+
+  // Diamond economy: the server owns the rate, the balance, and the ledgers.
+  const diamondUserRow = await db.query(
+    "insert into auth.users (email) values ('diamond-check@example.com') returning id",
+  );
+  const diamondUser = diamondUserRow.rows[0].id;
+  await db.query(
+    `insert into public.user_wallets (user_id, coins, diamonds)
+     values ($1, 0, 10)
+     on conflict (user_id) do update set coins = 0, diamonds = 10`,
+    [diamondUser],
+  );
+  await db.query(
+    "insert into public.user_xp_ledger (user_id, amount, source) values ($1, 10, 'lesson')",
+    [diamondUser],
+  );
+  const diamondQuest = await db.query(
+    "select id from public.quest_definitions where code = 'daily-lesson-1'",
+  );
+
+  await db.exec('set role authenticated');
+  try {
+    await asUser(diamondUser);
+
+    const diamondState = await db.query('select public.get_player_state() as payload');
+    check(
+      diamondState.rows[0].payload.diamonds === 10,
+      'player state exposes the Diamond balance',
+      String(diamondState.rows[0].payload.diamonds),
+    );
+
+    const diamondWallet = await db.query('select public.get_my_wallet() as payload');
+    check(
+      diamondWallet.rows[0].payload.exchangeRates.length === 4 &&
+        diamondWallet.rows[0].payload.exchangeRates[0].diamonds === 10 &&
+        diamondWallet.rows[0].payload.exchangeRates[0].coins === 100,
+      'wallet exposes the configured Diamond exchange rates',
+      JSON.stringify(diamondWallet.rows[0].payload.exchangeRates),
+    );
+
+    const exchanged = await db.query(
+      'select public.exchange_diamonds_to_coins(10) as payload',
+    );
+    check(
+      exchanged.rows[0].payload.diamondsSpent === 10 &&
+        exchanged.rows[0].payload.coinsAwarded === 100 &&
+        exchanged.rows[0].payload.diamondBalance === 0 &&
+        exchanged.rows[0].payload.coinBalance === 100,
+      'exchanging 10 Diamonds credits exactly 100 Coins',
+      JSON.stringify(exchanged.rows[0].payload),
+    );
+
+    await expectError(
+      'an exchange above the Diamond balance is rejected',
+      'select public.exchange_diamonds_to_coins(10)',
+      [],
+      'not_enough_diamonds',
+    );
+
+    await expectError(
+      'an unknown exchange rate is rejected',
+      'select public.exchange_diamonds_to_coins(7)',
+      [],
+      'exchange_rate_not_found',
+    );
+
+    const diamondQuests = await db.query('select public.get_my_quests() as payload');
+    const diamondQuestRow = diamondQuests.rows[0].payload.quests.find(
+      (quest) => quest.code === 'daily-lesson-1',
+    );
+    check(
+      diamondQuestRow?.rewardCoins === 15 && diamondQuestRow?.rewardDiamonds === 2,
+      'quest board exposes Coin and Diamond rewards together',
+      JSON.stringify(diamondQuestRow),
+    );
+
+    const claimed = await db.query('select public.claim_quest_reward($1) as payload', [
+      diamondQuest.rows[0].id,
+    ]);
+    check(
+      claimed.rows[0].payload.diamondsAwarded === 2 &&
+        claimed.rows[0].payload.diamondBalance === 2 &&
+        claimed.rows[0].payload.coinBalance === 115,
+      'claiming a quest grants its Diamond reward once',
+      JSON.stringify(claimed.rows[0].payload),
+    );
+
+    const replayClaim = await db.query('select public.claim_quest_reward($1) as payload', [
+      diamondQuest.rows[0].id,
+    ]);
+    check(
+      replayClaim.rows[0].payload.alreadyClaimed === true &&
+        replayClaim.rows[0].payload.diamondsAwarded === 0,
+      'a repeated quest claim pays no extra Diamonds',
+      JSON.stringify(replayClaim.rows[0].payload),
+    );
+
+    const diamondLedger = await db.query(
+      `select count(*)::int as count, coalesce(sum(amount), 0)::int as total
+       from public.diamond_transactions where user_id = $1`,
+      [diamondUser],
+    );
+    check(
+      diamondLedger.rows[0].count === 2 && diamondLedger.rows[0].total === -8,
+      'Diamond ledger records the exchange and the quest reward',
+      JSON.stringify(diamondLedger.rows[0]),
+    );
+
+    const diamondBalances = await db.query(
+      'select coins, diamonds from public.user_wallets where user_id = $1',
+      [diamondUser],
+    );
+    check(
+      diamondBalances.rows[0].coins === 115 && diamondBalances.rows[0].diamonds === 2,
+      'Coin and Diamond balances stay consistent after the claim',
+      JSON.stringify(diamondBalances.rows[0]),
+    );
+  } finally {
+    await db.exec('reset role');
+  }
 
   const legacyAccounts = await db.query(
     `select id, account_number::text as account_number

@@ -1,6 +1,8 @@
 import { playerRepository } from '../repositories/player.repository';
 import type { Json } from '../types/database';
 import type {
+  DiamondExchangeOutcome,
+  DiamondExchangeRate,
   LevelReward,
   PlayerHearts,
   PlayerLevel,
@@ -16,6 +18,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   not_authenticated: 'Sesi kamu sudah berakhir. Masuk kembali untuk melihat progres.',
   not_enough_coins: 'Koin kamu belum cukup untuk mengisi Hearts.',
   hearts_empty: 'Hearts habis. Isi Hearts atau tunggu pemulihan otomatis.',
+  not_enough_diamonds: 'Diamond kamu belum cukup untuk penukaran ini.',
+  exchange_rate_not_found: 'Nilai tukar ini sudah tidak tersedia. Muat ulang halaman.',
+  exchange_amount_invalid: 'Jumlah Diamond yang ditukar tidak valid.',
 };
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -92,6 +97,7 @@ export function parsePlayerState(value: unknown): PlayerState {
     totalXp: Math.max(0, asNumber(record.totalXp)),
     todayXp: Math.max(0, asNumber(record.todayXp)),
     coins: Math.max(0, asNumber(record.coins)),
+    diamonds: Math.max(0, asNumber(record.diamonds)),
     hearts: parseHearts(record.hearts),
     streak: parseStreak(record.streak),
     level: parseLevel(record.level),
@@ -125,6 +131,17 @@ function parseLevelReward(value: unknown): LevelReward {
   };
 }
 
+function parseExchangeRate(value: unknown): DiamondExchangeRate {
+  const record = asRecord(value);
+
+  return {
+    diamonds: Math.max(1, asNumber(record.diamonds, 1)),
+    coins: Math.max(0, asNumber(record.coins)),
+    isActive: record.isActive !== false,
+    sortOrder: asNumber(record.sortOrder),
+  };
+}
+
 function parseStreakMilestone(value: unknown): StreakMilestone {
   const record = asRecord(value);
 
@@ -143,6 +160,10 @@ export function parsePlayerWallet(value: unknown): PlayerWallet {
   return {
     ...parsePlayerState(record),
     transactions: parseTransactions(record.transactions),
+    diamondTransactions: parseTransactions(record.diamondTransactions),
+    exchangeRates: Array.isArray(record.exchangeRates)
+      ? record.exchangeRates.map(parseExchangeRate).filter((rate) => rate.coins > 0)
+      : [],
     xpTransactions: parseTransactions(record.xpTransactions),
     levelRewards: Array.isArray(record.levelRewards)
       ? record.levelRewards.map(parseLevelReward)
@@ -186,6 +207,23 @@ export const playerService = {
         alreadyFull: record.alreadyFull === true,
         coinsSpent: Math.max(0, asNumber(record.coinsSpent)),
         heartsRestored: Math.max(0, asNumber(record.heartsRestored)),
+      };
+    } catch (error) {
+      throw messageFor(error);
+    }
+  },
+
+  async exchangeDiamonds(diamonds: number): Promise<DiamondExchangeOutcome> {
+    try {
+      const payload: Json = await playerRepository.exchangeDiamonds(diamonds);
+      const record = asRecord(payload);
+
+      return {
+        diamondsSpent: Math.max(0, asNumber(record.diamondsSpent)),
+        coinsAwarded: Math.max(0, asNumber(record.coinsAwarded)),
+        diamondBalance: Math.max(0, asNumber(record.diamondBalance)),
+        coinBalance: Math.max(0, asNumber(record.coinBalance)),
+        referenceId: asString(record.referenceId),
       };
     } catch (error) {
       throw messageFor(error);

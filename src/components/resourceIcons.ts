@@ -1,4 +1,4 @@
-export type ResourceIconName = 'heart' | 'streak' | 'coin';
+export type ResourceIconName = 'heart' | 'streak' | 'coin' | 'diamond';
 
 let iconSerial = 0;
 
@@ -113,9 +113,45 @@ function coinMarkup(): string {
 </svg>`;
 }
 
+function diamondMarkup(): string {
+  const body = uniqueId('diamond-body');
+  const facet = uniqueId('diamond-facet');
+  const shine = uniqueId('diamond-shine');
+  const glow = uniqueId('diamond-glow');
+
+  return `<svg viewBox="0 0 24 24" role="presentation" focusable="false">
+  <defs>
+    <linearGradient id="${body}" x1="7" y1="3" x2="17" y2="21" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e8fbff"/>
+      <stop offset="0.38" stop-color="#7fe7ff"/>
+      <stop offset="0.72" stop-color="#3aa8f0"/>
+      <stop offset="1" stop-color="#2361d6"/>
+    </linearGradient>
+    <linearGradient id="${facet}" x1="12" y1="4" x2="12" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="0.55" stop-color="#b8f4ff" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#2f7de0" stop-opacity="0.35"/>
+    </linearGradient>
+    <radialGradient id="${shine}" cx="0.32" cy="0.25" r="0.6">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.85"/>
+      <stop offset="0.6" stop-color="#ffffff" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="${glow}" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.3" flood-color="#2f8ff0" flood-opacity="0.55"/>
+    </filter>
+  </defs>
+  <path d="M7 3h10l4 6-9 12L3 9l4-6Z" fill="url(#${body})" stroke="#1d5aa8" stroke-width="0.7" filter="url(#${glow})"/>
+  <path d="M3.4 9h17.2L12 20.4 3.4 9Z" fill="url(#${facet})" opacity="0.55"/>
+  <path d="M3.4 9h17.2M7 3.2l2 5.8M17 3.2l-2 5.8M9 9l3 11.2L15 9" stroke="#ffffff" stroke-opacity="0.55" stroke-width="0.7" fill="none"/>
+  <ellipse cx="8.9" cy="6.6" rx="2.6" ry="1.3" transform="rotate(-24 8.9 6.6)" fill="url(#${shine})"/>
+</svg>`;
+}
+
 function markup(name: ResourceIconName): string {
   if (name === 'heart') return heartMarkup();
   if (name === 'streak') return flameMarkup();
+  if (name === 'diamond') return diamondMarkup();
   return coinMarkup();
 }
 

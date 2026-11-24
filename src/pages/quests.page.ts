@@ -26,6 +26,18 @@ function cadenceLabel(cadence: Quest['cadence']): string {
   return cadence === 'weekly' ? 'Mingguan' : 'Harian';
 }
 
+function questRewardLabel(quest: Quest, withPlus = false): string {
+  const parts: string[] = [];
+  const prefix = withPlus ? '+' : '';
+  if (quest.rewardCoins > 0 || quest.rewardDiamonds === 0) {
+    parts.push(`${prefix}${formatNumber(quest.rewardCoins)} Koin`);
+  }
+  if (quest.rewardDiamonds > 0) {
+    parts.push(`${prefix}${formatNumber(quest.rewardDiamonds)} Diamond`);
+  }
+  return parts.join(' + ');
+}
+
 function progressBar(progress: number, target: number, label: string): HTMLElement {
   const percent = target > 0 ? Math.min(100, Math.round((progress / target) * 100)) : 0;
   const fill = el('span', { class: 'progress__bar' });
@@ -54,7 +66,7 @@ function questCard(quest: Quest, onClaim: (quest: Quest) => Promise<void>): HTML
     claimed
       ? 'Hadiah sudah diterima'
       : quest.canClaim
-        ? `Klaim +${formatNumber(quest.rewardCoins)} Koin`
+        ? `Klaim ${questRewardLabel(quest, true)}`
         : 'Belum selesai',
   ]);
   claim.disabled = claimed || !quest.canClaim;
@@ -83,7 +95,7 @@ function questCard(quest: Quest, onClaim: (quest: Quest) => Promise<void>): HTML
       el('span', {
         text: `${formatNumber(Math.min(quest.progress, quest.target))} / ${formatNumber(quest.target)} ${metricLabel(quest.metric)}`,
       }),
-      el('span', { text: `${formatNumber(quest.rewardCoins)} Koin` }),
+      el('span', { text: questRewardLabel(quest) }),
     ]),
     progressBar(quest.progress, quest.target, `Progres ${quest.title}`),
     claimed
@@ -216,7 +228,13 @@ export function render(ctx: Parameters<PageModule['render']>[0]): void {
       if (result.alreadyClaimed) {
         showToast('Hadiah misi ini sudah kamu klaim.', 'default');
       } else {
-        showToast(`Hadiah diterima: +${formatNumber(result.coinsAwarded)} Koin.`, 'success');
+        const parts = [
+          result.coinsAwarded > 0 ? `+${formatNumber(result.coinsAwarded)} Koin` : '',
+          result.diamondsAwarded > 0
+            ? `+${formatNumber(result.diamondsAwarded)} Diamond`
+            : '',
+        ].filter(Boolean);
+        showToast(`Hadiah diterima: ${parts.join(' dan ')}.`, 'success');
       }
       await load();
     } catch (error) {

@@ -8,6 +8,9 @@ import type {
   AdminContentHealth,
   AdminContentPage,
   AdminContext,
+  AdminDiamondOverview,
+  AdminDiamondTransaction,
+  AdminExchangeRate,
   AdminFriendQuest,
   AdminGamification,
   AdminHeartSettings,
@@ -93,6 +96,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   music_path_invalid: 'File musik harus diunggah ke folder musik.',
   music_url_invalid: 'URL musik harus memakai HTTPS.',
   music_inactive: 'Aktifkan musik terlebih dahulu sebelum menjadikannya musik utama.',
+  diamond_reward_invalid: 'Hadiah Diamond harus angka bulat 0–10.000.',
+  exchange_diamonds_invalid: 'Jumlah Diamond pada nilai tukar harus 1–1.000.000.',
+  exchange_coins_invalid: 'Jumlah Koin pada nilai tukar harus 1–100.000.000.',
 };
 
 function messageFor(error: unknown): Error {
@@ -143,6 +149,50 @@ async function run<T>(task: () => Promise<Json>, parse: (value: Json) => T): Pro
   } catch (error) {
     throw messageFor(error);
   }
+}
+
+function parseExchangeRate(value: unknown): AdminExchangeRate {
+  const data = record(value);
+  return {
+    diamonds: Math.max(1, num(data.diamonds, 1)),
+    coins: Math.max(1, num(data.coins, 1)),
+    isActive: bool(data.isActive, true),
+    sortOrder: num(data.sortOrder),
+  };
+}
+
+function parseDiamondTransaction(value: unknown): AdminDiamondTransaction {
+  const data = record(value);
+  return {
+    id: str(data.id),
+    userId: str(data.userId),
+    username: str(data.username, 'pemain'),
+    displayName: str(data.displayName, 'Pemain'),
+    amount: num(data.amount),
+    source: str(data.source, 'other'),
+    createdAt: str(data.createdAt),
+  };
+}
+
+function parseDiamondOverview(value: Json): AdminDiamondOverview {
+  const data = record(value);
+  const stats = record(data.stats);
+
+  return {
+    stats: {
+      diamondsCirculating: num(stats.diamondsCirculating),
+      coinsCirculating: num(stats.coinsCirculating),
+      diamondsEarned: num(stats.diamondsEarned),
+      diamondsSpent: num(stats.diamondsSpent),
+      transactionCount: num(stats.transactionCount),
+    },
+    exchangeRates: array(data.exchangeRates)
+      .map(parseExchangeRate)
+      .filter((rate) => rate.coins > 0),
+    transactions: array(data.transactions)
+      .map(parseDiamondTransaction)
+      .filter((entry) => Boolean(entry.id)),
+  };
 }
 
 function parseContext(value: Json): AdminContext {
@@ -825,6 +875,25 @@ export const adminService = {
     ),
 
   getGamification: () => run(() => adminRepository.getGamification(), parseGamification),
+  getDiamondOverview: (limit = 50) =>
+    run(() => adminRepository.getDiamondOverview(limit), parseDiamondOverview),
+  saveQuestDiamonds: (questId: string, rewardDiamonds: number, reason: string) =>
+    run(
+      () => adminRepository.saveQuestDiamonds(questId, rewardDiamonds, reason),
+      (value) => record(value),
+    ),
+  saveDiamondExchangeRate: (
+    diamonds: number,
+    coins: number,
+    isActive: boolean,
+    sortOrder: number,
+    reason: string,
+  ) =>
+    run(
+      () =>
+        adminRepository.saveDiamondExchangeRate(diamonds, coins, isActive, sortOrder, reason),
+      (value) => record(value),
+    ),
   saveGameCatalog: (kind: string, payload: Json, reason: string) =>
     run(() => adminRepository.saveGameCatalog(kind, payload, reason), (value) => record(value)),
   saveHeartSettings: (regenMinutes: number) =>

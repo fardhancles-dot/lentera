@@ -1,7 +1,12 @@
 import { icon, iconName } from '../../components/icons';
 import { showToast } from '../../components/toast';
 import { adminService } from '../../services/admin.service';
-import type { AdminGamification, AdminHeartSettings } from '../../types/admin';
+import type {
+  AdminDiamondOverview,
+  AdminExchangeRate,
+  AdminGamification,
+  AdminHeartSettings,
+} from '../../types/admin';
 import type { Json } from '../../types/database';
 import { el, formatNumber } from '../../utils/dom';
 import type { AdminSectionContext } from './ui';
@@ -14,6 +19,7 @@ import {
   formGrid,
   input,
   loading,
+  metric,
   openDialog,
   panel,
   select,
@@ -553,6 +559,209 @@ function heartSettingsPanel(
   ]);
 }
 
+function openExchangeRateEditor(
+  rate: AdminExchangeRate | null,
+  onDone: () => void,
+): void {
+  const isEdit = Boolean(rate);
+  const diamonds = input('diamonds', rate?.diamonds ?? '', 'number', {
+    min: '1',
+    max: '1000000',
+    required: true,
+  });
+  diamonds.disabled = isEdit;
+
+  const content = el('div', {}, [
+    formGrid([
+      field(
+        'Jumlah Diamond',
+        diamonds,
+        isEdit
+          ? 'Jumlah Diamond adalah kunci nilai tukar dan tidak bisa diubah. Buat baris baru untuk nilai lain.'
+          : 'Jumlah Diamond yang ditukar pemain.',
+      ),
+      field(
+        'Koin diterima',
+        input('coins', rate?.coins ?? '', 'number', { min: '1', max: '100000000', required: true }),
+      ),
+      field('Urutan', input('sortOrder', rate?.sortOrder ?? 0, 'number', { min: '0' })),
+      checkbox('isActive', rate?.isActive ?? true, 'Tampilkan di halaman pemain'),
+      field(
+        'Alasan',
+        input('reason', '', 'text', {
+          minlength: '3',
+          maxlength: '160',
+          placeholder: 'Alasan perubahan',
+        }),
+        'Wajib untuk audit log.',
+      ),
+    ]),
+  ]);
+
+  openDialog({
+    title: `${rate ? 'Edit' : 'Tambah'} Nilai Tukar Diamond`,
+    subtitle: 'Nilai tukar dibaca langsung oleh RPC penukaran. Transaksi lama tidak berubah.',
+    content,
+    submitLabel: 'Simpan',
+    onSubmit: async (form) => {
+      const data = new FormData(form);
+      const reason = valueOf(data, 'reason');
+      if (reason.length < 3) throw new Error('Alasan minimal 3 karakter.');
+
+      await adminService.saveDiamondExchangeRate(
+        isEdit ? rate!.diamonds : numOf(data, 'diamonds'),
+        numOf(data, 'coins'),
+        boolOf(data, 'isActive'),
+        numOf(data, 'sortOrder'),
+        reason,
+      );
+      showToast('Nilai tukar Diamond tersimpan.', 'success');
+      onDone();
+    },
+  });
+}
+
+function questDiamondTable(
+  quests: Array<Record<string, unknown>>,
+  onSaved: () => void,
+): HTMLElement {
+  const rows = quests.map((quest) => {
+    const current =
+      typeof quest.rewardDiamonds === 'number' ? quest.rewardDiamonds : 0;
+    const control = input('rewardDiamonds', current, 'number', {
+      min: '0',
+      max: '10000',
+    });
+    const save = button('Simpan', 'check', () => {
+      save.disabled = true;
+      save.replaceChildren(el('span', { class: 'btn__spinner' }), 'Menyimpan…');
+      void adminService
+        .saveQuestDiamonds(
+          String(quest.id),
+          Number(control.value),
+          'Ubah hadiah Diamond dari dashboard',
+        )
+        .then(() => {
+          showToast(`Hadiah Diamond “${String(quest.title ?? 'Misi')}” disimpan.`, 'success');
+          onSaved();
+        })
+        .catch((error: unknown) => {
+          showToast(
+            error instanceof Error ? error.message : 'Hadiah Diamond gagal disimpan.',
+            'error',
+          );
+          save.disabled = false;
+          save.replaceChildren(icon('check', 16), 'Simpan');
+        });
+    });
+
+    return [
+      String(quest.title ?? 'Misi'),
+      String(quest.cadence ?? '—') === 'weekly' ? 'Mingguan' : 'Harian',
+      `${formatNumber(typeof quest.rewardCoins === 'number' ? quest.rewardCoins : 0)} Koin`,
+      control,
+      save,
+    ];
+  });
+
+  if (rows.length === 0) {
+    return el('p', { class: 'form-hint', text: 'Belum ada misi pada katalog.' });
+  }
+
+  return table(['Misi', 'Jadwal', 'Hadiah Koin', 'Hadiah Diamond', 'Aksi'], rows);
+}
+
+async function diamondPanel(
+  gamification: AdminGamification,
+  refresh: () => void,
+): Promise<HTMLElement> {
+  try {
+    const overview: AdminDiamondOverview = await adminService.getDiamondOverview(50);
+
+    return el('div', {}, [
+      el('div', { class: 'admin-metrics' }, [
+        metric(
+          'Diamond beredar',
+          formatNumber(overview.stats.diamondsCirculating),
+          'Total saldo Diamond pemain',
+          'diamond',
+        ),
+        metric(
+          'Koin beredar',
+          formatNumber(overview.stats.coinsCirculating),
+          'Total saldo Koin pemain',
+          'coin',
+        ),
+        metric(
+          'Diamond didapat',
+          formatNumber(overview.stats.diamondsEarned),
+          'Akumulasi hadiah masuk',
+          'sparkles',
+        ),
+        metric(
+          'Transaksi Diamond',
+          formatNumber(overview.stats.transactionCount),
+          'Seluruh baris ledger',
+          'chart',
+        ),
+      ]),
+      panel(
+        'Nilai Tukar Diamond',
+        'Nilai tukar aktif yang dipakai halaman Coin & Diamond.',
+        [
+          overview.exchangeRates.length === 0
+            ? el('p', { class: 'form-hint', text: 'Belum ada nilai tukar aktif.' })
+            : table(
+                ['Diamond', 'Koin', 'Status', 'Urutan', 'Aksi'],
+                overview.exchangeRates.map((rate) => [
+                  formatNumber(rate.diamonds),
+                  formatNumber(rate.coins),
+                  badge(rate.isActive ? 'Aktif' : 'Nonaktif', rate.isActive ? 'ok' : 'muted'),
+                  String(rate.sortOrder),
+                  button('Edit', 'settings', () =>
+                    openExchangeRateEditor(rate, refresh),
+                  ),
+                ]),
+              ),
+        ],
+        [
+          button('Tambah', 'plus', () => openExchangeRateEditor(null, refresh), 'primary'),
+        ],
+      ),
+      panel(
+        'Hadiah Diamond pada Misi',
+        'Atur misi mana yang memberi Diamond. Hadiah Koin tetap seperti sebelumnya.',
+        [questDiamondTable(gamification.quests, refresh)],
+      ),
+      panel(
+        'Riwayat Transaksi Diamond',
+        '50 transaksi terbaru dari seluruh pemain.',
+        [
+          overview.transactions.length === 0
+            ? el('p', { class: 'form-hint', text: 'Belum ada transaksi Diamond.' })
+            : table(
+                ['Pemain', 'Jumlah', 'Sumber', 'Waktu'],
+                overview.transactions.map((entry) => [
+                  el('div', {}, [
+                    el('strong', { text: entry.displayName || entry.username }),
+                    el('span', { class: 'form-hint', text: `@${entry.username}` }),
+                  ]),
+                  `${entry.amount > 0 ? '+' : ''}${formatNumber(entry.amount)}`,
+                  entry.source.replaceAll('_', ' '),
+                  toLocalInput(entry.createdAt) || '—',
+                ]),
+              ),
+        ],
+      ),
+    ]);
+  } catch (error) {
+    return errorState(
+      error instanceof Error ? error.message : 'Data Diamond gagal dimuat.',
+      refresh,
+    );
+  }
+}
+
 function catalogTable(config: CatalogConfig, items: Record<string, unknown>[], onDone: () => void): HTMLElement {
   if (items.length === 0) return el('p', { class: 'form-hint', text: 'Belum ada data pada katalog ini.' });
   return table(
@@ -586,6 +795,13 @@ export async function renderGamification(ctx: AdminSectionContext): Promise<void
     const tabs = el('div', { class: 'admin-tabs' });
     let active = CONFIGS.find((candidate) => candidate.kind === lastCatalogKind)?.kind ?? CONFIGS[0]!.kind;
 
+    const refreshDiamond = () => {
+      slot.replaceChildren(loading('Memuat data Diamond…'));
+      void diamondPanel(data, refreshDiamond).then((element) => {
+        if (active === 'diamond') slot.replaceChildren(element);
+      });
+    };
+
     const paint = () => {
       for (const buttonElement of tabs.querySelectorAll('button')) {
         buttonElement.classList.toggle('is-active', buttonElement.dataset.kind === active);
@@ -597,6 +813,10 @@ export async function renderGamification(ctx: AdminSectionContext): Promise<void
             paint();
           }),
         );
+        return;
+      }
+      if (active === 'diamond') {
+        refreshDiamond();
         return;
       }
       const config = CONFIGS.find((candidate) => candidate.kind === active) ?? CONFIGS[0]!;
@@ -641,6 +861,18 @@ export async function renderGamification(ctx: AdminSectionContext): Promise<void
         events: {
           click: () => {
             active = 'hearts';
+            paint();
+          },
+        },
+      }),
+      el('button', {
+        class: 'admin-tab',
+        attrs: { type: 'button' },
+        dataset: { kind: 'diamond' },
+        text: 'Diamond',
+        events: {
+          click: () => {
+            active = 'diamond';
             paint();
           },
         },

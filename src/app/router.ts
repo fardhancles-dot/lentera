@@ -109,6 +109,11 @@ const routes: RouteDefinition[] = [
     load: () => import('../pages/wallet.page'),
   },
   {
+    pattern: '/diamond',
+    access: 'onboarded',
+    load: () => import('../pages/diamond.page'),
+  },
+  {
     pattern: '/quests',
     access: 'onboarded',
     load: () => import('../pages/quests.page'),

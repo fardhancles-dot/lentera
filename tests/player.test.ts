@@ -71,9 +71,34 @@ describe('player payload parsing', () => {
 
     expect(state.totalXp).toBe(0);
     expect(state.coins).toBe(0);
+    expect(state.diamonds).toBe(0);
     expect(state.hearts.max).toBe(5);
     expect(state.streak.current).toBe(0);
     expect(state.level.level).toBe(1);
+  });
+
+  it('parses Diamond balances, ledger, and exchange rates', () => {
+    const state = parsePlayerState({ diamonds: 18 });
+    expect(state.diamonds).toBe(18);
+
+    const wallet = parsePlayerWallet({
+      diamonds: 18,
+      diamondTransactions: [
+        { id: 'd-1', amount: -10, source: 'diamond_exchange', createdAt: '2026-11-24T10:00:00Z' },
+        { amount: 5 },
+      ],
+      exchangeRates: [
+        { diamonds: 10, coins: 100, isActive: true, sortOrder: 1 },
+        { diamonds: 25, coins: 0 },
+      ],
+    });
+
+    expect(wallet.diamonds).toBe(18);
+    expect(wallet.diamondTransactions).toHaveLength(1);
+    expect(wallet.diamondTransactions[0]?.amount).toBe(-10);
+    expect(wallet.exchangeRates).toEqual([
+      { diamonds: 10, coins: 100, isActive: true, sortOrder: 1 },
+    ]);
   });
 
   it('parses wallet transactions and drops malformed rows', () => {

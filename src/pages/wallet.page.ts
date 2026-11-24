@@ -362,6 +362,10 @@ function buildWallet(state: PlayerWallet): HTMLElement {
           icon('gift', 16),
           'Buka toko',
         ]),
+        el('a', { class: 'btn btn--ghost btn--sm', attrs: { href: '/diamond' } }, [
+          icon('diamond', 16),
+          'Coin & Diamond',
+        ]),
       ]),
     ]),
 

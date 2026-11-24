@@ -104,6 +104,7 @@ function parseQuest(value: unknown): Quest {
     metric: asQuestMetric(record.metric),
     target,
     rewardCoins: Math.max(0, asNumber(record.rewardCoins)),
+    rewardDiamonds: Math.max(0, asNumber(record.rewardDiamonds)),
     title: asString(record.title, 'Misi'),
     description: asString(record.description),
     icon: asString(record.icon, 'target'),
@@ -224,7 +225,9 @@ export function parseQuestClaim(value: unknown): QuestClaim {
     alreadyClaimed: asBoolean(record.alreadyClaimed),
     questId: asString(record.questId),
     coinsAwarded: Math.max(0, asNumber(record.coinsAwarded)),
+    diamondsAwarded: Math.max(0, asNumber(record.diamondsAwarded)),
     coinBalance: Math.max(0, asNumber(record.coinBalance)),
+    diamondBalance: Math.max(0, asNumber(record.diamondBalance)),
     claimedAt: asNullableString(record.claimedAt),
   };
 }

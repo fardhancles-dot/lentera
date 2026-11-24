@@ -49,6 +49,40 @@ describe('reward payload parsing', () => {
     expect(board.quests[1]?.target).toBe(1);
     expect(board.quests[1]?.progress).toBe(0);
     expect(board.quests[1]?.canClaim).toBe(false);
+    expect(board.quests[1]?.rewardDiamonds).toBe(0);
+  });
+
+  it('keeps Diamond rewards on quests and claims', () => {
+    const board = parseQuestBoard({
+      quests: [
+        {
+          id: 'daily-1',
+          code: 'daily-lesson-1',
+          cadence: 'daily',
+          metric: 'lesson',
+          target: 1,
+          rewardCoins: 15,
+          rewardDiamonds: 2,
+          title: 'Satu Langkah Baru',
+          progress: 1,
+          canClaim: true,
+        },
+      ],
+    });
+    expect(board.quests[0]?.rewardCoins).toBe(15);
+    expect(board.quests[0]?.rewardDiamonds).toBe(2);
+
+    const claim = parseQuestClaim({
+      alreadyClaimed: false,
+      questId: 'daily-1',
+      coinsAwarded: 15,
+      diamondsAwarded: 2,
+      coinBalance: 115,
+      diamondBalance: 2,
+      claimedAt: '2026-11-24T10:00:00Z',
+    });
+    expect(claim.diamondsAwarded).toBe(2);
+    expect(claim.diamondBalance).toBe(2);
   });
 
   it('drops quests without an id', () => {

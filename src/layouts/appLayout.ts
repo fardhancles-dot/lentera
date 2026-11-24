@@ -21,6 +21,7 @@ export type NavKey =
   | 'learn'
   | 'practice'
   | 'wallet'
+  | 'diamond'
   | 'quests'
   | 'friends'
   | 'leaderboard'
@@ -148,12 +149,15 @@ interface ResourceView {
 
 function resourceChips(layout: 'mobile' | 'desktop'): ResourceView {
   const coinValue = el('span', { class: 'resource-chip__value', text: '—' });
+  const diamondValue = el('span', { class: 'resource-chip__value', text: '—' });
   const heartsValue = el('span', { class: 'resource-chip__value', text: '—' });
   const streakValue = el('span', { class: 'resource-chip__value', text: '—' });
   let lastHearts: number | null = null;
   let lastCoins: number | null = null;
+  let lastDiamonds: number | null = null;
   let heartAnimationTimer = 0;
   let coinAnimationTimer = 0;
+  let diamondAnimationTimer = 0;
 
   const coinChip = el(
     'a',
@@ -166,6 +170,19 @@ function resourceChips(layout: 'mobile' | 'desktop'): ResourceView {
       },
     },
     [resourceIcon('coin'), coinValue],
+  );
+
+  const diamondChip = el(
+    'a',
+    {
+      class: 'resource-chip resource-chip--diamond',
+      attrs: {
+        href: '/diamond',
+        'aria-label': 'Buka Coin & Diamond Shop',
+        title: 'Diamond',
+      },
+    },
+    [resourceIcon('diamond'), diamondValue],
   );
 
   const heartsChip = el(
@@ -195,7 +212,7 @@ function resourceChips(layout: 'mobile' | 'desktop'): ResourceView {
   );
 
   if (layout === 'mobile') {
-    for (const chip of [coinChip, heartsChip, streakChip]) {
+    for (const chip of [coinChip, diamondChip, heartsChip, streakChip]) {
       chip.classList.add('header-resource');
     }
   }
@@ -206,14 +223,22 @@ function resourceChips(layout: 'mobile' | 'desktop'): ResourceView {
       class: layout === 'mobile' ? 'header-resources' : 'resource-bar',
       attrs: { 'aria-label': 'Ringkasan progres' },
     },
-    layout === 'mobile' ? [heartsChip, coinChip, streakChip] : [coinChip, heartsChip, streakChip],
+    [coinChip, diamondChip, heartsChip, streakChip],
   );
 
   const paint = (state: PlayerStoreState) => {
     const data = state.data;
     const hearts = data ? data.hearts.current : null;
     const coins = data ? data.coins : null;
+    const diamonds = data ? data.diamonds : null;
     coinValue.textContent = data ? formatNumber(data.coins) : '—';
+    diamondValue.textContent = data ? formatNumber(data.diamonds) : '—';
+    diamondChip.setAttribute(
+      'aria-label',
+      data
+        ? `Buka Coin & Diamond Shop, ${data.diamonds} Diamond`
+        : 'Buka Coin & Diamond Shop',
+    );
     // The header shows the current hearts only; the maximum stays in the title
     // and accessible label for context without printing "/5" in the UI.
     heartsValue.textContent = data ? String(data.hearts.current) : '—';
@@ -251,8 +276,19 @@ function resourceChips(layout: 'mobile' | 'desktop'): ResourceView {
         900,
       );
     }
+    if (diamonds !== null && lastDiamonds !== null && diamonds > lastDiamonds) {
+      window.clearTimeout(diamondAnimationTimer);
+      diamondChip.classList.remove('is-gaining');
+      void diamondChip.offsetWidth;
+      diamondChip.classList.add('is-gaining');
+      diamondAnimationTimer = window.setTimeout(
+        () => diamondChip.classList.remove('is-gaining'),
+        900,
+      );
+    }
     lastHearts = hearts;
     lastCoins = coins;
+    lastDiamonds = diamonds;
   };
 
   return { root, paint };

@@ -11,6 +11,7 @@ export interface Quest {
   metric: QuestMetric;
   target: number;
   rewardCoins: number;
+  rewardDiamonds: number;
   title: string;
   description: string;
   icon: string;
@@ -88,7 +89,9 @@ export interface QuestClaim {
   alreadyClaimed: boolean;
   questId: string;
   coinsAwarded: number;
+  diamondsAwarded: number;
   coinBalance: number;
+  diamondBalance: number;
   claimedAt: string | null;
 }
 

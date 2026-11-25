@@ -1,5 +1,6 @@
 import type { LessonQuestion } from '../../services/lesson.service';
 import type { QuestionType } from '../../types/database';
+import { createCombined } from './combined';
 import { createFillBlank } from './fillBlank';
 import { createConversation } from './conversation';
 import { createListening } from './listening';
@@ -28,6 +29,7 @@ const RENDERERS: Partial<Record<QuestionType, MiniGameRenderer>> = {
   speaking: createSpeaking,
   conversation: createConversation,
   story: createStory,
+  combined: createCombined,
 };
 
 const fallback: MiniGameRenderer = () => createUnsupported();

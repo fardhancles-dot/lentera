@@ -173,7 +173,8 @@ Batas kepercayaan:
 | `multipleChoice.ts` | `multiple_choice` | Pilih satu opsi. |
 | `typing.ts` | `typing`, `translation` | Input teks (translation masih fallback, belum mekanik khusus). |
 | `wordBank.ts` | `word_bank` | Bank kata + strip jawaban + hapus/reset. |
-| `sentenceBuilder.ts` | `sentence_builder` | Kata acak + geser urutan + kembalikan kata. |
+| `sentenceBuilder.ts` | `sentence_builder` | Kata acak + geser urutan + kembalikan kata; kata pengecoh opsional. |
+| `combined.ts` | `combined` | Satu soal menggabungkan beberapa mekanisme (elemen teks/cerita/percakapan/gambar/audio) dengan satu interaksi jawaban. |
 | `matchingPairs.ts` | `matching_pairs` | Dua kolom terpisah, pasangan bisa dibatalkan. |
 | `fillBlank.ts` | `fill_blank` | Input inline pada penanda `__`. |
 | `pictureIdentification.ts` | `picture_identification` | Gambar media + opsi nama. |

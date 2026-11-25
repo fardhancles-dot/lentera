@@ -40,7 +40,9 @@ export function createSentenceBuilder({ question, onChange }: MiniGameProps): Mi
   ]);
 
   const tokenLabel = (id: string) => question.options.find((option) => option.id === id)?.label ?? '';
-  const complete = () => selected.length === tokens.length && tokens.length > 0;
+  // Extra distractor words are allowed in the tray, so the answer is ready as
+  // soon as the player arranges something instead of needing every token.
+  const complete = () => selected.length > 0;
 
   const move = (id: string, direction: -1 | 1) => {
     if (disabled) return;

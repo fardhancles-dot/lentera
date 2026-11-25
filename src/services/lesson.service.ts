@@ -1,5 +1,6 @@
 import { lessonRepository } from '../repositories/lesson.repository';
 import type { DifficultyBand, Json, QuestionType } from '../types/database';
+import { parseCombinedConfig, type CombinedConfig } from '../utils/combinedQuestion';
 
 export interface LessonQuestionOption {
   id: string;
@@ -60,6 +61,8 @@ export interface LessonQuestion {
   pairs: LessonMatchPair[];
   media: LessonQuestionMedia[];
   scene: LessonScene;
+  /** Presentation config for Soal Kombinasi; empty for other types. */
+  combined: CombinedConfig;
 }
 
 export interface LessonStart {
@@ -119,6 +122,7 @@ export interface LessonAttemptSummary {
 export type LessonAnswer =
   | { optionId: string }
   | { text: string }
+  | { parts: string[] }
   | { matches: Array<{ leftId: string; rightId: string }> };
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -266,6 +270,7 @@ export function parseLessonQuestions(value: unknown): LessonQuestion[] {
           })
         : [],
       scene: parseScene(question.scene),
+      combined: parseCombinedConfig(question.scene),
     };
   });
 }

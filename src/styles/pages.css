@@ -1414,18 +1414,6 @@
   margin-bottom: var(--space-5);
 }
 
-.learn-summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-8);
-  padding: var(--space-5) var(--space-6);
-  margin-bottom: var(--space-5);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: linear-gradient(150deg, #ffffff, var(--green-50));
-  box-shadow: var(--shadow-soft);
-}
-
 /* Fixed category navigation: Mapel Umum · Bahasa Daerah · Kursus Bahasa · Kejuruan.
    Four equal columns always stay visible; labels wrap instead of scrolling. */
 .learn-categories {
@@ -2110,11 +2098,6 @@ a.path-node:hover {
 }
 
 @media (max-width: 640px) {
-  .learn-summary {
-    gap: var(--space-5);
-    padding: var(--space-4) var(--space-5);
-  }
-
   .subject-hero__top {
     flex-direction: column;
   }
@@ -6063,4 +6046,83 @@ a.path-node:hover {
     width: 100%;
     padding-left: 50px;
   }
+}
+
+/* Soal Kombinasi: one card that combines several question mechanisms. */
+.play-combined {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.play-combined__content {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.play-combined__text {
+  font-weight: 600;
+}
+
+.play-combined__hint {
+  padding: var(--space-3);
+  border-left: 4px solid var(--green-300);
+  border-radius: var(--radius-md);
+  background: var(--green-50);
+  color: var(--muted-strong);
+  font-weight: 600;
+}
+
+.play-combined__story,
+.play-combined__dialog {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: #fff;
+}
+
+.play-combined__story p,
+.play-combined__dialog p {
+  margin: 0;
+}
+
+.play-combined__slot {
+  display: inline-flex;
+  align-items: center;
+  min-width: 84px;
+  margin: 0 4px;
+  padding: 0 6px;
+  border-bottom: 2px solid var(--border-strong);
+  color: var(--muted-strong);
+  font-weight: 700;
+}
+
+.play-combined__slot--input {
+  min-width: 0;
+  padding: 0;
+  border-bottom: 0;
+}
+
+.play-combined__parts,
+.play-combined__notes,
+.play-combined__answer {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.play-combined__part {
+  display: grid;
+  gap: 4px;
+}
+
+.play-token--selected,
+.play-token--correct {
+  border-color: var(--green-500);
+  background: var(--green-50);
+}
+
+.play-token--wrong {
+  border-color: var(--red-500);
+  background: var(--red-100);
 }

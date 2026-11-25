@@ -6,6 +6,20 @@ import { adminService } from '../../services/admin.service';
 import type { AdminQuestion, CurriculumSubject } from '../../types/admin';
 import type { Json, QuestionType } from '../../types/database';
 import { el } from '../../utils/dom';
+import {
+  COMBINED_ELEMENT_KINDS,
+  COMBINED_GRADINGS,
+  COMBINED_MODES,
+  MECHANIC_LABELS,
+  countPromptBlanks,
+  describeMechanics,
+  parseCombinedConfig,
+  type CombinedAnswerMode,
+  type CombinedConfig,
+  type CombinedElement,
+  type CombinedElementKind,
+  type CombinedGrading,
+} from '../../utils/combinedQuestion';
 import { normalizeSentenceAnswer, splitSentenceTokens } from '../../utils/questionText';
 import { pickMedia } from './media';
 import type { AdminSectionContext } from './ui';
@@ -40,6 +54,7 @@ const TYPES = [
   ['word_bank', 'Word bank'],
   ['sentence_builder', 'Susun kalimat'],
   ['translation', 'Terjemahan'],
+  ['combined', 'Soal kombinasi'],
 ] as const;
 
 const TYPE_LABELS = new Map<string, string>(TYPES.map(([value, label]) => [value, label]));
@@ -225,6 +240,133 @@ function wordRow(word = ''): HTMLElement {
     }),
   ]);
   row.append(removeRowButton('Hapus kata', row));
+  return row;
+}
+
+function distractorRow(word = ''): HTMLElement {
+  const row = el('div', { class: 'admin-repeater__row admin-distractor-row' }, [
+    el('input', {
+      class: 'input',
+      attrs: { name: 'distractorValue', placeholder: 'Kata pengecoh', value: word },
+    }),
+  ]);
+  row.append(removeRowButton('Hapus kata pengecoh', row));
+  return row;
+}
+
+/** Suggested decoy words; the admin can edit or delete every one of them. */
+const DISTRACTOR_POOL = [
+  'milk', 'water', 'tea', 'coffee', 'juice', 'bread', 'rice', 'apple', 'book',
+  'pencil', 'table', 'chair', 'school', 'market', 'river', 'night', 'happy',
+  'blue', 'yellow', 'orange',
+];
+
+interface CombinedElementDraft {
+  kind: CombinedElementKind;
+  text: string;
+  title: string;
+  body: string;
+  speaker: string;
+  lines: string;
+}
+
+function moveRow(row: HTMLElement, direction: -1 | 1): void {
+  const parent = row.parentElement;
+  if (!parent) return;
+  const sibling = direction < 0 ? row.previousElementSibling : row.nextElementSibling;
+  if (!sibling) return;
+  if (direction < 0) parent.insertBefore(row, sibling);
+  else parent.insertBefore(sibling, row);
+}
+
+function combinedElementRow(draft?: Partial<CombinedElementDraft>): HTMLElement {
+  const state: CombinedElementDraft = {
+    kind: draft?.kind ?? 'text',
+    text: draft?.text ?? '',
+    title: draft?.title ?? '',
+    body: draft?.body ?? '',
+    speaker: draft?.speaker ?? '',
+    lines: draft?.lines ?? '',
+  };
+  const kindSelect = select(
+    'elementKind',
+    COMBINED_ELEMENT_KINDS.map((entry) => ({ value: entry.value, label: entry.label })),
+    state.kind,
+  );
+  const fields = el('div', { class: 'admin-combined-row__fields' });
+
+  const capture = (): void => {
+    const read = (name: string) =>
+      fields.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name=${name}]`)?.value;
+    state.text = read('elementText') ?? state.text;
+    state.title = read('elementTitle') ?? state.title;
+    state.body = read('elementBody') ?? state.body;
+    state.speaker = read('elementSpeaker') ?? state.speaker;
+    state.lines = read('elementLines') ?? state.lines;
+  };
+
+  const paint = (): void => {
+    const kind = kindSelect.value as CombinedElementKind;
+    state.kind = kind;
+    fields.replaceChildren();
+    if (kind === 'text' || kind === 'hint') {
+      fields.append(
+        input('elementText', state.text, 'text', {
+          placeholder:
+            kind === 'text'
+              ? 'Teks pendukung, boleh memuat __ untuk rumpang'
+              : 'Catatan kecil untuk pemain',
+        }),
+      );
+    } else if (kind === 'story') {
+      fields.append(
+        input('elementTitle', state.title, 'text', { placeholder: 'Judul cerita (opsional)' }),
+        textarea('elementBody', state.body, 4, { placeholder: 'Isi cerita…' }),
+      );
+    } else if (kind === 'conversation') {
+      fields.append(
+        input('elementSpeaker', state.speaker, 'text', {
+          placeholder: 'Nama pembicara (opsional)',
+        }),
+        textarea('elementLines', state.lines, 3, {
+          placeholder: 'Satu baris = satu ucapan. Bisa juga format "Nama: ucapan".',
+        }),
+      );
+    } else {
+      fields.append(
+        el('p', {
+          class: 'form-hint',
+          text:
+            kind === 'image'
+              ? 'Memakai gambar dari Media soal, urut sesuai elemen gambar.'
+              : 'Memakai audio dari Media soal, urut sesuai elemen audio.',
+        }),
+      );
+    }
+  };
+
+  const up = el('button', {
+    class: 'icon-btn',
+    attrs: { type: 'button', 'aria-label': 'Geser elemen ke atas' },
+    events: { click: () => moveRow(row, -1) },
+  }, [el('span', { text: '↑' })]);
+  const down = el('button', {
+    class: 'icon-btn',
+    attrs: { type: 'button', 'aria-label': 'Geser elemen ke bawah' },
+    events: { click: () => moveRow(row, 1) },
+  }, [el('span', { text: '↓' })]);
+
+  const row = el('div', { class: 'admin-repeater__row admin-combined-row' }, [
+    kindSelect,
+    fields,
+    el('span', { class: 'admin-row-actions' }, [up, down]),
+  ]);
+  row.append(removeRowButton('Hapus elemen', row));
+  kindSelect.addEventListener('change', () => {
+    capture();
+    paint();
+  });
+  paint();
   return row;
 }
 
@@ -560,6 +702,11 @@ interface Snapshot {
   hasAudio: boolean;
   transcript: string;
   sceneText: string;
+  combinedMode: CombinedAnswerMode;
+  combinedGrading: CombinedGrading;
+  combinedDisplay: 'bank' | 'choices';
+  combinedElements: CombinedElementDraft[];
+  distractors: string[];
 }
 
 function canFormAnswer(words: string[], answer: string): boolean {
@@ -647,6 +794,50 @@ function problemsOf(snapshot: Snapshot): string[] {
       issues.push('Scene JSON tidak valid.');
     }
   }
+  if (type === 'combined') {
+    if (snapshot.combinedElements.length === 0) {
+      issues.push('Tambahkan minimal satu elemen soal (teks, cerita, gambar, atau audio).');
+    }
+    if (snapshot.combinedMode === 'choice') {
+      const filled = snapshot.options.filter((option) => option.label.trim().length > 0);
+      if (filled.length < 2) issues.push('Tambahkan minimal dua pilihan jawaban.');
+      if (filled.filter((option) => option.isCorrect).length !== 1) {
+        issues.push('Tandai tepat satu pilihan sebagai kunci jawaban.');
+      }
+    }
+    if (snapshot.combinedMode === 'text') {
+      const blanks = countPromptBlanks(snapshot.prompt);
+      if (blanks === 0) issues.push('Tandai bagian kosong dengan __ pada pertanyaan.');
+      if (snapshot.answers.length === 0) issues.push('Isi jawaban untuk setiap rumpang.');
+      if (blanks > 0 && snapshot.answers.length !== blanks) {
+        issues.push(`Isi ${blanks} jawaban agar cocok dengan ${blanks} rumpang.`);
+      }
+    }
+    if (snapshot.combinedMode === 'speak' || snapshot.combinedMode === 'translate') {
+      if (snapshot.answers.length === 0) issues.push('Isi minimal satu jawaban teks yang diterima.');
+    }
+    if (snapshot.combinedMode === 'order') {
+      if (!snapshot.sentence) issues.push('Kalimat yang benar wajib diisi.');
+      else if (splitSentenceTokens(snapshot.sentence).length < 2) {
+        issues.push('Kalimat minimal terdiri dari dua kata agar bisa disusun.');
+      }
+    }
+    if (snapshot.combinedMode === 'match' && snapshot.pairs.length < 2) {
+      issues.push('Tambahkan minimal dua pasangan.');
+    }
+    if (
+      snapshot.combinedElements.some((element) => element.kind === 'image') &&
+      !snapshot.media.some((media) => media.kind === 'image' && media.url)
+    ) {
+      issues.push('Tambahkan gambar pada bagian Media soal.');
+    }
+    if (
+      snapshot.combinedElements.some((element) => element.kind === 'audio') &&
+      !snapshot.media.some((media) => media.kind === 'audio' && media.url)
+    ) {
+      issues.push('Tambahkan audio pada bagian Media soal.');
+    }
+  }
   return issues;
 }
 
@@ -715,6 +906,64 @@ function sceneFor(snapshot: Snapshot, legacy: Record<string, unknown>): Json {
   return legacy as unknown as Json;
 }
 
+/**
+ * Builds the presentation JSON for Soal Kombinasi. Answer keys are never put
+ * here: choice keys stay in options, typed keys in answers, and pair keys in
+ * question_pairs, exactly like the other types.
+ */
+function combinedScene(snapshot: Snapshot): Json {
+  const elements = snapshot.combinedElements
+    .map((element): CombinedElement | null => {
+      if (element.kind === 'text' || element.kind === 'hint') {
+        return element.text ? { kind: element.kind, text: element.text } : null;
+      }
+      if (element.kind === 'story') {
+        return element.body ? { kind: 'story', title: element.title, body: element.body } : null;
+      }
+      if (element.kind === 'conversation') {
+        const lines = element.lines
+          .split('\n')
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .map((line) => {
+            const separator = line.indexOf(':');
+            return separator > 0
+              ? {
+                  speaker: line.slice(0, separator).trim(),
+                  line: line.slice(separator + 1).trim(),
+                }
+              : { speaker: element.speaker || 'Pembicara', line };
+          })
+          .filter((line) => line.line.length > 0);
+        return lines.length > 0 ? { kind: 'conversation', lines } : null;
+      }
+      return { kind: element.kind };
+    })
+    .filter((element): element is CombinedElement => element !== null);
+
+  const config: CombinedConfig = {
+    elements,
+    mechanics: [],
+    answer: {
+      mode: snapshot.combinedMode,
+      grading: snapshot.combinedGrading,
+      display: snapshot.combinedDisplay,
+      partLabels: [],
+    },
+  };
+  const mechanics = describeMechanics(
+    config,
+    snapshot.media.some((media) => media.kind === 'image'),
+  );
+
+  return {
+    kind: 'combined',
+    elements,
+    mechanics,
+    answer: config.answer,
+  } as unknown as Json;
+}
+
 export function openQuestionEditor(
   item: AdminQuestion | null,
   subjects: CurriculumSubject[],
@@ -763,6 +1012,30 @@ export function openQuestionEditor(
   const mediaBox = el('div', { class: 'admin-repeater' });
   const wordsBox = el('div', { class: 'admin-repeater' });
   const dialogBox = el('div', { class: 'admin-repeater' });
+  const combinedElementsBox = el('div', { class: 'admin-repeater' });
+  const distractorBox = el('div', { class: 'admin-repeater' });
+  const combinedModeSelect = select(
+    'combinedMode',
+    COMBINED_MODES.map((entry) => ({ value: entry.value, label: entry.label })),
+    'choice',
+  );
+  const combinedGradingSelect = select(
+    'combinedGrading',
+    COMBINED_GRADINGS.map((entry) => ({ value: entry.value, label: entry.label })),
+    'all',
+  );
+  const combinedDisplaySelect = select(
+    'combinedDisplay',
+    [
+      { value: 'bank', label: 'Word bank (kartu kata)' },
+      { value: 'choices', label: 'Daftar pilihan (A, B, C)' },
+    ],
+    'bank',
+  );
+  const combinedMechanicNote = el('p', {
+    class: 'form-hint',
+    attrs: { 'aria-live': 'polite' },
+  });
   const scene = textarea('scene', JSON.stringify(item?.scene ?? {}, null, 2), 5, {
     placeholder: '{ "speech": "…", "screens": [] }',
   });
@@ -789,7 +1062,8 @@ export function openQuestionEditor(
   // parts of the existing content.
   const legacyTextListening =
     item?.type === 'listening' && item.options.length === 0 && item.answers.length > 0;
-  const initialOptions = item && OPTION_TYPES.has(item.type) ? item.options : [];
+  const initialOptions =
+    item && (OPTION_TYPES.has(item.type) || item.type === 'combined') ? item.options : [];
   if (initialOptions.length > 0) {
     for (const option of initialOptions) optionsBox.append(optionRow(option.label, option.isCorrect));
   } else {
@@ -863,6 +1137,42 @@ export function openQuestionEditor(
       item.answers[0]?.answer || item.options.map((option) => option.label).join(' ');
   }
 
+  if (item?.type === 'combined') {
+    const config = parseCombinedConfig(item.scene);
+    combinedModeSelect.value = config.answer.mode;
+    combinedGradingSelect.value = config.answer.grading;
+    combinedDisplaySelect.value = config.answer.display;
+    for (const element of config.elements) {
+      combinedElementsBox.append(
+        combinedElementRow({
+          kind: element.kind,
+          text: element.text ?? '',
+          title: element.title ?? '',
+          body: element.body ?? '',
+          speaker: element.lines?.[0]?.speaker ?? '',
+          lines: (element.lines ?? [])
+            .map((line) => `${line.speaker ? `${line.speaker}: ` : ''}${line.line}`)
+            .join('\n'),
+        }),
+      );
+    }
+    if (config.answer.mode === 'order') {
+      sentenceInput.value = item.answers[0]?.answer ?? '';
+    }
+  }
+  if (combinedElementsBox.childElementCount === 0) {
+    combinedElementsBox.append(
+      combinedElementRow({ kind: 'text' }),
+      combinedElementRow({ kind: 'image' }),
+    );
+  }
+  const initialDistractors = Array.isArray(item?.scene?.distractors)
+    ? (item?.scene?.distractors as unknown[]).filter(
+        (word): word is string => typeof word === 'string',
+      )
+    : [];
+  for (const word of initialDistractors) distractorBox.append(distractorRow(word));
+
   const audio = audioField(legacyAudio?.url ?? '', typeof legacyScene.speech === 'string' ? legacyScene.speech : '');
 
   const addMedia = button('Tambah media', 'plus', () =>
@@ -927,6 +1237,54 @@ export function openQuestionEditor(
         : []),
       answersBox,
     ]);
+  }
+
+  function distractorEditor(): HTMLElement {
+    return el('div', {}, [
+      el('div', { class: 'admin-subhead-row' }, [
+        el('h3', { class: 'admin-subhead', text: 'Kata pengecoh (opsional)' }),
+        button('Tambah kata', 'plus', () => distractorBox.append(distractorRow())),
+        button('Buat otomatis', 'refresh', () => {
+          const used = new Set(
+            [
+              ...splitSentenceTokens(sentenceInput.value),
+              ...Array.from(
+                distractorBox.querySelectorAll<HTMLInputElement>('[name=distractorValue]'),
+              ).map((entry) => entry.value),
+            ].map((word) => normalizeSentenceAnswer(word)),
+          );
+          let added = 0;
+          for (const word of DISTRACTOR_POOL) {
+            if (added >= 3) break;
+            const normalized = normalizeSentenceAnswer(word);
+            if (!normalized || used.has(normalized)) continue;
+            distractorBox.append(distractorRow(word));
+            used.add(normalized);
+            added += 1;
+          }
+        }),
+      ]),
+      el('p', {
+        class: 'form-hint',
+        text: 'Kata pengecoh tampil bersama kata benar, tetapi tidak dihitung sebagai bagian jawaban benar. Kosongkan bila tidak diperlukan.',
+      }),
+      distractorBox,
+    ]);
+  }
+
+  function refreshCombinedMechanics(): void {
+    if (typeSelect.value !== 'combined') return;
+    const form = content.closest('form');
+    if (!form) {
+      combinedMechanicNote.textContent = '';
+      return;
+    }
+    const scene = combinedScene(snapshotOf(form)) as unknown as { mechanics?: string[] };
+    const labels = (scene.mechanics ?? []).map((code) => MECHANIC_LABELS[code] ?? code);
+    combinedMechanicNote.textContent =
+      labels.length > 0
+        ? `Mekanisme aktif: ${labels.join(' · ')}`
+        : 'Mekanisme aktif: belum ada.';
   }
 
   function mediaSection(): HTMLElement {
@@ -1033,6 +1391,7 @@ export function openQuestionEditor(
           sentenceInput,
           'Sistem otomatis memecah kalimat menjadi kata dan mengacak urutannya. Kamu tidak perlu menulis kata acak satu per satu.',
         ),
+        distractorEditor(),
         el('div', { class: 'admin-subhead-row' }, [
           el('h3', { class: 'admin-subhead', text: 'Pratinjau kata acak' }),
           button('Buat kata acak', 'refresh', () => paintTokens(true)),
@@ -1043,6 +1402,41 @@ export function openQuestionEditor(
         }),
         tokenPreview,
       );
+    }
+
+    if (type === 'combined') {
+      promptLabel.textContent = 'Pertanyaan / kalimat';
+      prompt.setAttribute('placeholder', 'Contoh: Hello! I am from ______.');
+      materi.append(
+        el('div', { class: 'admin-subhead-row' }, [
+          el('h3', { class: 'admin-subhead', text: 'Elemen soal' }),
+          button('Tambah elemen', 'plus', () => {
+            combinedElementsBox.append(combinedElementRow());
+            refreshCombinedMechanics();
+          }),
+        ]),
+        el('p', {
+          class: 'form-hint',
+          text: 'Semua elemen tampil dalam satu kartu soal. Gunakan panah untuk mengatur urutan, dan pilih satu bentuk jawaban di bawah.',
+        }),
+        combinedElementsBox,
+        formGrid([
+          field('Bentuk jawaban', combinedModeSelect),
+          field('Penilaian', combinedGradingSelect),
+          field('Tampilan pilihan', combinedDisplaySelect),
+        ]),
+        el('p', {
+          class: 'form-hint',
+          text: 'Bentuk jawaban menentukan cara pemain menjawab; gambar dan audio pada elemen hanya petunjuk, bukan jawaban terpisah.',
+        }),
+        combinedMechanicNote,
+      );
+      // Controls that cannot change the outcome for the current shape are
+      // disabled instead of pretending to do something.
+      combinedDisplaySelect.disabled = combinedModeSelect.value !== 'choice';
+      combinedGradingSelect.disabled =
+        combinedModeSelect.value !== 'text' || countPromptBlanks(prompt.value) < 2;
+      refreshCombinedMechanics();
     }
 
     if (!SIMPLIFIED_TYPES.has(type)) {
@@ -1073,6 +1467,49 @@ export function openQuestionEditor(
         ]),
       );
     }
+    if (type === 'combined') {
+      const mode = combinedModeSelect.value as CombinedAnswerMode;
+      if (mode === 'choice') {
+        answersSection.append(optionSection());
+      } else if (mode === 'text') {
+        answersSection.append(
+          el('div', {}, [
+            el('div', { class: 'admin-subhead-row' }, [
+              el('h3', { class: 'admin-subhead', text: 'Jawaban tiap rumpang' }),
+              addAnswer,
+            ]),
+            el('p', {
+              class: 'form-hint',
+              text: 'Satu jawaban untuk setiap __ pada pertanyaan. Urutan baris tidak memengaruhi penilaian.',
+            }),
+            answersBox,
+          ]),
+        );
+      } else if (mode === 'order') {
+        answersSection.append(
+          el('div', {}, [
+            field(
+              'Kalimat yang benar',
+              sentenceInput,
+              'Sistem memecah kalimat menjadi kata lalu mengacaknya. Pemain menyusun ulang kalimatnya.',
+            ),
+            distractorEditor(),
+          ]),
+        );
+      } else if (mode === 'speak' || mode === 'translate') {
+        answersSection.append(textAnswerSection());
+      } else {
+        answersSection.append(
+          el('div', {}, [
+            el('div', { class: 'admin-subhead-row' }, [
+              el('h3', { class: 'admin-subhead', text: 'Pasangan' }),
+              addPair,
+            ]),
+            pairsBox,
+          ]),
+        );
+      }
+    }
     if (TEXT_TYPES.has(type)) answersSection.append(textAnswerSection());
     if (type === 'speaking') {
       answersSection.append(
@@ -1095,7 +1532,8 @@ export function openQuestionEditor(
       type === 'conversation' ||
       type === 'listening' ||
       type === 'word_bank' ||
-      type === 'sentence_builder'
+      type === 'sentence_builder' ||
+      type === 'combined'
     ) {
       bodyFields.insertBefore(materi, promptField);
     } else {
@@ -1140,7 +1578,13 @@ export function openQuestionEditor(
   bodyFields.append(promptField, materi, answersSection);
 
   typeSelect.addEventListener('change', () => renderDynamic());
+  combinedModeSelect.addEventListener('change', () => renderDynamic(true));
+  combinedElementsBox.addEventListener('input', refreshCombinedMechanics);
+  combinedElementsBox.addEventListener('change', refreshCombinedMechanics);
   renderDynamic(true);
+  // The dialog form exists one microtask later, so the summary is refreshed
+  // once it is mounted instead of staying empty on first open.
+  queueMicrotask(() => refreshCombinedMechanics());
 
   function snapshotOf(form: HTMLFormElement): Snapshot {
     const type = typeSelect.value;
@@ -1181,6 +1625,29 @@ export function openQuestionEditor(
         line: row.querySelector<HTMLInputElement>('[name=dialogLine]')?.value.trim() ?? '',
       }))
       .filter((dialog) => dialog.line);
+    const combinedElements = Array.from(
+      form.querySelectorAll<HTMLElement>('.admin-combined-row'),
+    ).map((row) => {
+      const read = (name: string) =>
+        row.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name=${name}]`)?.value.trim() ??
+        '';
+      return {
+        kind: (row.querySelector<HTMLSelectElement>('[name=elementKind]')?.value ??
+          'text') as CombinedElementKind,
+        text: read('elementText'),
+        title: read('elementTitle'),
+        body: read('elementBody'),
+        speaker: read('elementSpeaker'),
+        lines: read('elementLines'),
+      };
+    });
+    const distractors = Array.from(
+      form.querySelectorAll<HTMLElement>('.admin-distractor-row'),
+    )
+      .map(
+        (row) => row.querySelector<HTMLInputElement>('[name=distractorValue]')?.value.trim() ?? '',
+      )
+      .filter(Boolean);
 
     return {
       type,
@@ -1204,24 +1671,47 @@ export function openQuestionEditor(
       hasAudio: Boolean(audio.file() || audio.url()),
       transcript: audio.transcript(),
       sceneText: scene.value.trim(),
+      combinedMode: combinedModeSelect.value as CombinedAnswerMode,
+      combinedGrading: combinedGradingSelect.value as CombinedGrading,
+      combinedDisplay: combinedDisplaySelect.value === 'choices' ? 'choices' : 'bank',
+      combinedElements,
+      distractors,
     };
   }
 
   function previewOptions(snapshot: Snapshot): Array<{ id: string; label: string }> {
+    if (snapshot.type === 'combined') {
+      if (snapshot.combinedMode === 'order') {
+        return [...splitSentenceTokens(snapshot.sentence), ...snapshot.distractors].map(
+          (label, index) => ({ id: `token-${index}`, label }),
+        );
+      }
+      if (snapshot.combinedMode === 'choice') {
+        return snapshot.options.map((option, index) => ({
+          id: `option-${index}`,
+          label: option.label,
+        }));
+      }
+      return [];
+    }
     if (snapshot.type === 'word_bank') {
       return snapshot.words.map((label, index) => ({ id: `word-${index}`, label }));
     }
     if (snapshot.type === 'sentence_builder') {
-      return splitSentenceTokens(snapshot.sentence).map((label, index) => ({
-        id: `token-${index}`,
-        label,
-      }));
+      return [...splitSentenceTokens(snapshot.sentence), ...snapshot.distractors].map(
+        (label, index) => ({ id: `token-${index}`, label }),
+      );
     }
     return snapshot.options.map((option, index) => ({ id: `option-${index}`, label: option.label }));
   }
 
   function previewQuestion(snapshot: Snapshot): LessonQuestion {
-    const sceneValue = sceneFor(snapshot, legacyScene) as unknown as LessonScene;
+    const sceneValue = (snapshot.type === 'combined'
+      ? combinedScene(snapshot)
+      : sceneFor(snapshot, legacyScene)) as unknown as LessonScene;
+    const pairQuestion =
+      snapshot.type === 'matching_pairs' ||
+      (snapshot.type === 'combined' && snapshot.combinedMode === 'match');
     const previewAudio = audio.previewUrl();
     const genericMedia = snapshot.media.map((entry) => ({
       kind: entry.kind as 'image' | 'audio' | 'video',
@@ -1260,20 +1750,18 @@ export function openQuestionEditor(
       hint: null,
       points: snapshot.points,
       options: previewOptions(snapshot),
-      leftItems:
-        snapshot.type === 'matching_pairs'
-          ? previewPairs.map((pair) => ({ id: pair.leftId, label: pair.left }))
-          : [],
-      rightItems:
-        snapshot.type === 'matching_pairs'
-          ? previewPairs.map((pair) => ({ id: pair.rightId, label: pair.right }))
-          : [],
-      pairs:
-        snapshot.type === 'matching_pairs'
-          ? previewPairs.map((pair) => ({ leftId: pair.leftId, rightId: pair.rightId }))
-          : [],
+      leftItems: pairQuestion
+        ? previewPairs.map((pair) => ({ id: pair.leftId, label: pair.left }))
+        : [],
+      rightItems: pairQuestion
+        ? previewPairs.map((pair) => ({ id: pair.rightId, label: pair.right }))
+        : [],
+      pairs: pairQuestion
+        ? previewPairs.map((pair) => ({ leftId: pair.leftId, rightId: pair.rightId }))
+        : [],
       media,
       scene: sceneValue,
+      combined: parseCombinedConfig(sceneValue),
     };
   }
 
@@ -1311,7 +1799,9 @@ export function openQuestionEditor(
                   attrs: { src: media.url, alt: media.alt || 'Ilustrasi soal' },
                 }),
               )),
-        ...(snapshot.type === 'listening' || snapshot.type === 'sentence_builder'
+        ...(view.ownsMedia ||
+        snapshot.type === 'listening' ||
+        snapshot.type === 'sentence_builder'
           ? []
           : question.media
               .filter((media) => media.kind === 'audio' && media.url)
@@ -1431,6 +1921,8 @@ export function openQuestionEditor(
 
       let options = snapshot.options;
       let answers = snapshot.answers;
+      let pairs = snapshot.pairs;
+      let sceneValue = sceneFor(snapshot, legacyScene);
       if (type === 'word_bank') {
         options = snapshot.words.map((label, index) => ({
           label,
@@ -1439,15 +1931,40 @@ export function openQuestionEditor(
         }));
         answers = [{ answer: snapshot.wordAnswer, isCaseSensitive: false }];
       } else if (type === 'sentence_builder') {
-        options = splitSentenceTokens(snapshot.sentence).map((label, index) => ({
-          label,
-          isCorrect: false,
-          sortOrder: index,
-        }));
+        options = [...splitSentenceTokens(snapshot.sentence), ...snapshot.distractors].map(
+          (label, index) => ({ label, isCorrect: false, sortOrder: index }),
+        );
         answers = [{ answer: snapshot.sentence, isCaseSensitive: false }];
+        sceneValue = {
+          ...(sceneValue as Record<string, unknown>),
+          distractors: snapshot.distractors,
+        } as unknown as Json;
+      } else if (type === 'combined') {
+        sceneValue = combinedScene(snapshot);
+        if (snapshot.combinedMode === 'choice') {
+          options = snapshot.options;
+          answers = [];
+          pairs = [];
+        } else if (
+          snapshot.combinedMode === 'text' ||
+          snapshot.combinedMode === 'speak' ||
+          snapshot.combinedMode === 'translate'
+        ) {
+          options = [];
+          answers = snapshot.answers;
+          pairs = [];
+        } else if (snapshot.combinedMode === 'order') {
+          options = [...splitSentenceTokens(snapshot.sentence), ...snapshot.distractors].map(
+            (label, index) => ({ label, isCorrect: false, sortOrder: index }),
+          );
+          answers = [{ answer: snapshot.sentence, isCaseSensitive: false }];
+          pairs = [];
+        } else {
+          options = [];
+          answers = [];
+          pairs = snapshot.pairs;
+        }
       }
-
-      const sceneValue = sceneFor(snapshot, legacyScene);
       const shared = {
         ...(item?.id ? { id: item.id } : {}),
         subjectId,
@@ -1462,7 +1979,7 @@ export function openQuestionEditor(
         points: snapshot.points,
         options,
         answers,
-        pairs: snapshot.pairs,
+        pairs,
         media,
         scene: sceneValue,
       };

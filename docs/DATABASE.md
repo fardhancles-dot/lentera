@@ -177,7 +177,8 @@ membaca `questions` sebagai pemain dan gagal dengan `permission denied`. Migrati
 | `complete_onboarding(...)` | Atomik: profil + target/zona waktu + flag onboarding. |
 | `bootstrap_developer(email)`, `promote_developer(email)` | Hanya SQL Editor. |
 | `normalize_answer_text(text)` | Normalisasi spasi/kapital untuk penilaian teks. |
-| `grade_question(question_id, answer)` | Penilaian server berdasarkan tipe soal. |
+| `grade_question(question_id, answer)` | Penilaian server berdasarkan tipe soal (boolean). |
+| `grade_question_fraction(question_id, answer)` | Skor 0–1 per soal; Soal Kombinasi berbobot memakai pecahan ini untuk poin parsial. |
 | `start_lesson(node_id)` | Validasi akses/unlock, buat attempt, kirim soal tanpa kunci. |
 | `submit_attempt_answer(attempt, question, answer)` | Nilai, simpan sekali, kembalikan feedback. |
 | `complete_lesson_attempt(attempt)` | Hitung hasil, tulis progres, XP, Koin tepat sekali. |

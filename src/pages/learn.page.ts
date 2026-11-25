@@ -10,16 +10,9 @@ import {
 import { pageHeader, renderAppLayout } from '../layouts/appLayout';
 import { curriculumService, type SubjectCard } from '../services/curriculum.service';
 import { sessionStore } from '../stores/session.store';
-import { el, formatNumber } from '../utils/dom';
+import { el } from '../utils/dom';
 
 const meta = { title: 'Belajar' };
-
-function summaryStat(value: number, label: string): HTMLElement {
-  return el('div', { class: 'stat' }, [
-    el('span', { class: 'stat__value', text: formatNumber(value) }),
-    el('span', { class: 'stat__label', text: label }),
-  ]);
-}
 
 function subjectCard(subject: SubjectCard): HTMLElement {
   const isDevelopment = subject.status === 'development';
@@ -75,7 +68,6 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
   const user = sessionStore.getState().user;
   if (!user) return;
 
-  const summarySlot = el('div');
   const listSlot = el('div', { class: 'loading-screen' }, [
     el('span', { class: 'spinner' }),
     el('p', { text: 'Memuat mata pelajaran…' }),
@@ -88,7 +80,6 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
       subtitle:
         'Pilih mata pelajaran, naiki level, dan ikuti alur lesson yang tersusun dari bank soal di database.',
     }),
-    summarySlot,
     listSlot,
   ]);
 
@@ -97,7 +88,6 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
   const load = () => {
     listSlot.className = 'loading-screen';
     listSlot.replaceChildren(el('span', { class: 'spinner' }), el('p', { text: 'Memuat mata pelajaran…' }));
-    summarySlot.replaceChildren();
 
     void (async () => {
       try {
@@ -169,22 +159,6 @@ function render(ctx: Parameters<PageModule['render']>[0]): void {
           const visible = subjects.filter(
             (subject) => normalizeSubjectCategory(subject.learn_category) === activeCategory,
           );
-          const visibleActive = visible.filter((subject) => subject.status === 'active');
-
-          summarySlot.replaceChildren(
-            el('div', { class: 'learn-summary' }, [
-              summaryStat(visibleActive.length, 'Mapel aktif'),
-              summaryStat(
-                visibleActive.reduce((sum, subject) => sum + subject.level_count, 0),
-                'Level',
-              ),
-              summaryStat(
-                visibleActive.reduce((sum, subject) => sum + subject.question_count, 0),
-                'Soal',
-              ),
-            ]),
-          );
-
           if (visible.length === 0) {
             gridSlot.replaceChildren(
               el('div', { class: 'card empty-state' }, [

@@ -1816,3 +1816,18 @@
     justify-content: center;
   }
 }
+
+/* Soal Kombinasi element builder */
+.admin-repeater__row.admin-combined-row {
+  grid-template-columns: minmax(110px, 150px) minmax(0, 1fr) auto auto;
+  align-items: start;
+}
+
+.admin-combined-row__fields {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-repeater__row.admin-distractor-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}

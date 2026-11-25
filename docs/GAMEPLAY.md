@@ -128,7 +128,7 @@ Perilaku yang sudah berjalan:
 | --- | --- | --- | --- |
 | 1 | Multiple Choice | Pilih satu dari 2–4 opsi. | **Implemented · Tested (SQL)** |
 | 2 | Word Bank | Susun jawaban dari kata yang disediakan dengan mengetuk kata. | **Implemented · Tested (SQL)** |
-| 3 | Sentence Builder | Acak kata, susun urutan kalimat. | **Implemented · Tested (SQL)** |
+| 3 | Sentence Builder | Acak kata, susun urutan kalimat; kata pengecoh opsional tidak dihitung benar. | **Implemented · Tested (SQL)** |
 | 4 | Listening Challenge | Putar audio, ulangi, versi lambat, volume, lalu pilih jawaban. | **Implemented · Tested (SQL)** · audio = media atau TTS browser |
 | 5 | Speaking Challenge | Rekaman mikrofon + Speech Recognition + alternatif menulis. | **Implemented · Tested (SQL)** · tanpa skor pengucapan palsu |
 | 6 | Typing Challenge | Input teks, validasi ejaan/format. | **Implemented · Tested (SQL)** |
@@ -146,6 +146,7 @@ Perilaku yang sudah berjalan:
 | 18 | Unit Review | Campuran soal satu unit, maksimal 12 soal. | **Implemented · Tested (SQL)** + unit chooser |
 | 19 | Legendary Challenge | Soal dari lesson legendary, XP hingga 30. | **Implemented · Tested (SQL)** |
 | 20 | Friends Quest | Target XP gabungan, kontribusi tiap anggota, klaim hadiah sekali. | **Implemented · Tested (SQL + Supabase API)** — co-op kode undangan; UI belum diuji browser |
+| 21 | Soal Kombinasi | Satu nomor soal menggabungkan elemen teks/cerita/percakapan/gambar/audio dengan satu bentuk jawaban (pilih, ketik, susun, cocokkan). | **Implemented · Tested (SQL)** — satu soal = satu penilaian |
 
 Catatan implementasi: lima mini-game baru berada di `src/game/minigames/` dan dipilih
 lewat registry `createMiniGame`. Halaman lesson tidak lagi memilih renderer berdasarkan

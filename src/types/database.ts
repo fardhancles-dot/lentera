@@ -41,7 +41,8 @@ export type QuestionType =
   | 'fill_blank'
   | 'translation'
   | 'conversation'
-  | 'story';
+  | 'story'
+  | 'combined';
 
 // Supabase's generic schema requires plain object types (not interfaces), so
 // these rows are declared with `type` aliases.

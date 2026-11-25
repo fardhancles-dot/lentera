@@ -70,23 +70,171 @@ function openUpload(onDone: () => void): void {
   });
 }
 
+function fileName(item: AdminMediaItem): string {
+  return item.storagePath.split('/').pop() ?? item.storagePath;
+}
+
+function mediaPreview(item: AdminMediaItem): HTMLElement {
+  return item.kind === 'image'
+    ? el('img', {
+        class: 'admin-media-grid__preview',
+        attrs: { src: item.url, alt: item.altText, loading: 'lazy' },
+      })
+    : el('div', {
+        class: 'admin-media-grid__preview admin-media-grid__preview--file',
+        text: item.kind.toUpperCase(),
+      });
+}
+
+/** Confirmation that shows the exact files and their previews before delete. */
+function confirmDeleteMedia(items: AdminMediaItem[], onDone: () => void): void {
+  const reason = input('deleteMediaReason', '', 'text', {
+    maxlength: '160',
+    placeholder: 'Alasan penghapusan (3–160 karakter)',
+  });
+  const previews = el(
+    'div',
+    { class: 'admin-media-grid' },
+    items.map((item) =>
+      el('div', { class: 'admin-media-card' }, [
+        mediaPreview(item),
+        el('div', { class: 'admin-media-card__body' }, [
+          el('strong', { text: fileName(item) }),
+          el('span', { class: 'admin-sub', text: item.altText || item.mimeType }),
+        ]),
+      ]),
+    ),
+  );
+
+  openDialog({
+    title: items.length === 1 ? 'Hapus media' : `Hapus ${items.length} media`,
+    subtitle:
+      'File dihapus dari storage hanya bila tidak dipakai soal atau konten lain. Media yang masih dipakai akan dilewati.',
+    content: el('div', {}, [
+      el('p', {
+        class: 'admin-dialog__message',
+        text: `${items.length} media berikut akan dihapus permanen:`,
+      }),
+      previews,
+      field('Alasan', reason, 'Alasan dicatat pada audit log.'),
+    ]),
+    submitLabel: 'Hapus',
+    onSubmit: async () => {
+      const value = reason.value.trim();
+      if (value.length < 3) throw new Error('Alasan minimal 3 karakter.');
+      const result = await adminService.deleteMedia(
+        items.map((item) => item.id),
+        value,
+      );
+      const skipped = result.skipped.length;
+      if (result.deleted === 0 && skipped > 0) {
+        showToast('Media tidak dihapus karena masih dipakai oleh konten lain.', 'error');
+      } else if (skipped > 0) {
+        showToast(
+          `${result.deleted} media dihapus, ${skipped} dilewati karena masih dipakai.`,
+          'success',
+        );
+      } else {
+        showToast(`${result.deleted} media dihapus.`, 'success');
+      }
+      onDone();
+    },
+  });
+}
+
 export async function renderMedia(ctx: AdminSectionContext): Promise<void> {
   const slot = el('div', {});
+  const selection = el('div', { class: 'admin-filters' });
+  const selected = new Set<string>();
+  const checkboxes = new Map<string, HTMLInputElement>();
+  let pageItems: AdminMediaItem[] = [];
   let search = '';
   let kind = '';
   let page = 1;
 
+  const deleteItems = (items: AdminMediaItem[]): void => {
+    if (items.length === 0) return;
+    confirmDeleteMedia(items, () => void load());
+  };
+
+  const refreshSelection = (): void => {
+    const count = selected.size;
+    const allSelected =
+      pageItems.length > 0 && pageItems.every((item) => selected.has(item.id));
+    const selectAll = el('input', {
+      attrs: { type: 'checkbox', 'aria-label': 'Pilih semua media di halaman ini' },
+    }) as HTMLInputElement;
+    selectAll.checked = allSelected;
+    selectAll.disabled = pageItems.length === 0;
+    selectAll.addEventListener('change', () => {
+      for (const item of pageItems) {
+        if (selectAll.checked) selected.add(item.id);
+        else selected.delete(item.id);
+        const box = checkboxes.get(item.id);
+        if (box) box.checked = selectAll.checked;
+      }
+      refreshSelection();
+    });
+
+    const remove = button(
+      `Hapus terpilih${count > 0 ? ` (${count})` : ''}`,
+      'close',
+      () => deleteItems(pageItems.filter((item) => selected.has(item.id))),
+      'danger',
+    );
+    remove.disabled = count === 0;
+
+    selection.replaceChildren(
+      el('label', { class: 'admin-row-actions' }, [
+        selectAll,
+        el('span', { text: 'Pilih semua di halaman ini' }),
+      ]),
+      el('span', { class: 'badge badge--muted', text: `${count} media dipilih` }),
+      remove,
+    );
+    if (count > 0) {
+      selection.append(
+        button('Batal pilih', 'close', () => {
+          selected.clear();
+          for (const box of checkboxes.values()) box.checked = false;
+          refreshSelection();
+        }),
+      );
+    }
+  };
+
   const load = async (): Promise<void> => {
     slot.replaceChildren(loading('Memuat media…'));
+    selected.clear();
+    checkboxes.clear();
+    pageItems = [];
+    refreshSelection();
     try {
       const result = await adminService.listMedia(search, kind, page, 24);
       if (result.items.length === 0) {
         slot.replaceChildren(el('p', { class: 'form-hint', text: 'Belum ada media yang cocok.' }));
       } else {
         slot.replaceChildren(
-          el('div', { class: 'admin-media-grid' }, result.items.map((item) => mediaCard(item, () => void load()))),
+          el(
+            'div',
+            { class: 'admin-media-grid' },
+            result.items.map((item) => {
+              const box = el('input', {
+                attrs: { type: 'checkbox', 'aria-label': `Pilih media ${fileName(item)}` },
+              }) as HTMLInputElement;
+              box.addEventListener('change', () => {
+                if (box.checked) selected.add(item.id);
+                else selected.delete(item.id);
+                refreshSelection();
+              });
+              checkboxes.set(item.id, box);
+              return mediaCard(item, box, () => deleteItems([item]), () => void load());
+            }),
+          ),
         );
       }
+      pageItems = result.items;
+      refreshSelection();
       const pages = Math.max(1, Math.ceil(result.total / result.pageSize));
       slot.append(
         el('div', { class: 'admin-pagination' }, [
@@ -136,6 +284,7 @@ export async function renderMedia(ctx: AdminSectionContext): Promise<void> {
   ctx.root.replaceChildren(
     panel('Media library', 'Aset konten CMS. Aset game yang di-bundle tetap dikelola source code.', [
       el('div', { class: 'admin-filters' }, [searchInput, kindSelect]),
+      selection,
       slot,
     ], [
       button('Unggah media', 'plus', () => openUpload(() => void load()), 'primary', false),
@@ -235,18 +384,21 @@ export function pickMedia(
   void load('');
 }
 
-function mediaCard(item: AdminMediaItem, onDone: () => void): HTMLElement {
-  const preview = item.kind === 'image'
-    ? el('img', { class: 'admin-media-grid__preview', attrs: { src: item.url, alt: item.altText, loading: 'lazy' } })
-    : el('div', { class: 'admin-media-grid__preview admin-media-grid__preview--file', text: item.kind.toUpperCase() });
+function mediaCard(
+  item: AdminMediaItem,
+  checkbox: HTMLInputElement,
+  onDelete: () => void,
+  onRefresh: () => void,
+): HTMLElement {
   return el('article', { class: 'admin-media-card' }, [
-    preview,
+    mediaPreview(item),
     el('div', { class: 'admin-media-card__body' }, [
       el('div', { class: 'admin-row-actions' }, [
+        checkbox,
         badge(item.kind, item.status === 'active' ? 'ok' : 'muted'),
         item.width && item.height ? el('span', { class: 'admin-sub', text: `${item.width}×${item.height}` }) : null,
       ]),
-      el('strong', { text: item.storagePath.split('/').pop() ?? item.storagePath }),
+      el('strong', { text: fileName(item) }),
       el('span', { class: 'admin-sub', text: `${bytes(item.sizeBytes)} · ${item.mimeType}` }),
       el('span', { class: 'admin-sub', text: item.altText || 'Tanpa alt text' }),
       el('span', { class: 'admin-sub', text: formatDate(item.createdAt, true) }),
@@ -258,9 +410,10 @@ function mediaCard(item: AdminMediaItem, onDone: () => void): HTMLElement {
             if (!reason) return;
             await adminService.archiveMedia(item.id, reason);
             showToast('Media diarsipkan.', 'success');
-            onDone();
+            onRefresh();
           })().catch((error: unknown) => showToast(error instanceof Error ? error.message : 'Media gagal diarsipkan.', 'error'));
         }, 'danger'),
+        button('Hapus', 'close', onDelete, 'danger'),
       ]),
     ]),
   ]);

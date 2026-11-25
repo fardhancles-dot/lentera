@@ -1,4 +1,5 @@
 import { el } from '../../utils/dom';
+import { joinSentenceTokens } from '../../utils/questionText';
 import { seededShuffle } from './shuffle';
 import type { MiniGameProps, MiniGameView } from './types';
 
@@ -11,6 +12,9 @@ export function createSentenceBuilder({ question, onChange }: MiniGameProps): Mi
   );
   const selected: string[] = [];
   const trayButtons = new Map<string, HTMLButtonElement>();
+  // A single-word answer is stored as its letters, so they must be joined
+  // without spaces to match the saved answer.
+  const tokenMode = question.scene.tokenMode === 'letters' ? 'letters' : 'words';
   let disabled = false;
 
   const audioMedia = question.media.find((media) => media.kind === 'audio' && media.url);
@@ -166,7 +170,7 @@ export function createSentenceBuilder({ question, onChange }: MiniGameProps): Mi
       el('div', { class: 'play-reset-row' }, [reset]),
     ]),
     getAnswer: () =>
-      complete() ? { text: selected.map(tokenLabel).join(' ') } : null,
+      complete() ? { text: joinSentenceTokens(selected.map(tokenLabel), tokenMode) } : null,
     focus: () => trayButtons.get(tokens[0]?.id ?? '')?.focus({ preventScroll: true }),
     setDisabled: (value) => {
       disabled = value;

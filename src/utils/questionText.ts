@@ -10,6 +10,34 @@ export function splitSentenceTokens(sentence: string): string[] {
     .filter((token) => token.length > 0);
 }
 
+export type SentenceBuilderTokenMode = 'words' | 'letters';
+
+export interface SentenceBuilderTokens {
+  tokens: string[];
+  mode: SentenceBuilderTokenMode;
+}
+
+/**
+ * Tokens used by Susun Kata. A multi-word answer is split on whitespace as
+ * before. A single word has no word order to arrange, so it is split into its
+ * letters (punctuation dropped) and the player rearranges the letters instead.
+ */
+export function sentenceBuilderTokens(sentence: string): SentenceBuilderTokens {
+  const words = splitSentenceTokens(sentence);
+  if (words.length !== 1) return { tokens: words, mode: 'words' };
+  const letters = Array.from(words[0]!.replace(/[^\p{L}\p{N}]/gu, ''));
+  if (letters.length === 0) return { tokens: words, mode: 'words' };
+  return { tokens: letters, mode: 'letters' };
+}
+
+/** Joins the arranged tokens back into the answer text that the server grades. */
+export function joinSentenceTokens(
+  tokens: readonly string[],
+  mode: SentenceBuilderTokenMode,
+): string {
+  return tokens.join(mode === 'letters' ? '' : ' ');
+}
+
 /**
  * Normalises a word-ordering answer. Case, punctuation and repeated spaces are
  * ignored, word order is not. Mirrors public.normalize_sentence_text() in the

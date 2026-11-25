@@ -44,6 +44,8 @@ export interface LessonScene {
   screens: LessonSceneScreen[];
   /** NPC reaction per option, aligned with the option order. */
   responses: string[];
+  /** Susun Kata single-word answers are arranged letter by letter. */
+  tokenMode?: 'words' | 'letters';
 }
 
 export interface LessonQuestion {
@@ -230,6 +232,7 @@ function parseScene(value: unknown): LessonScene {
     ...(asString(npc.name)
       ? { npc: { name: asString(npc.name), role: asString(npc.role) || undefined } }
       : {}),
+    ...(asString(record.tokenMode) === 'letters' ? { tokenMode: 'letters' as const } : {}),
     screens,
     responses,
   };

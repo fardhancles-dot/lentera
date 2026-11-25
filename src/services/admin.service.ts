@@ -45,6 +45,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   unit_not_found: 'Unit tidak ditemukan.',
   lesson_not_found: 'Lesson tidak ditemukan.',
   question_not_found: 'Soal tidak ditemukan.',
+  question_ids_required: 'Pilih minimal satu soal untuk dihapus.',
+  question_ids_too_many: 'Maksimal 100 soal dapat dihapus sekaligus.',
   subject_category_invalid:
     'Kategori mata pelajaran harus Mapel Umum, Bahasa Daerah, Kursus Bahasa, atau Kejuruan.',
   question_prompt_required: 'Pertanyaan wajib diisi.',
@@ -57,7 +59,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   question_scene_screens_required: 'Soal percakapan/cerita membutuhkan minimal satu layar scene.',
   question_blank_required: 'Soal isian harus memuat __ pada pertanyaan.',
   question_tokens_required:
-    'Word bank dan susun kalimat membutuhkan minimal dua kata yang bisa disusun.',
+    'Word bank membutuhkan minimal dua kata yang bisa disusun.',
   question_tokens_invalid: 'Ada kata kosong pada daftar kata tersedia.',
   slug_invalid: 'Slug hanya boleh huruf kecil, angka, dan tanda hubung.',
   title_invalid: 'Judul wajib diisi.',
@@ -80,6 +82,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   media_type_invalid: 'Tipe file tidak sesuai jenis media.',
   media_size_invalid: 'Ukuran media maksimal 20 MB.',
   media_path_required: 'File media belum diunggah.',
+  media_not_found: 'Media tidak ditemukan. Muat ulang daftar media.',
+  media_ids_required: 'Pilih minimal satu media untuk dihapus.',
+  media_ids_too_many: 'Maksimal 100 media dapat dihapus sekaligus.',
   site_name_required: 'Nama website wajib diisi.',
   color_invalid: 'Warna harus format #RRGGBB.',
   page_status_invalid: 'Status halaman tidak valid.',
@@ -800,6 +805,17 @@ export const adminService = {
     run(() => adminRepository.setQuestionActive(questionId, active, reason), (value) =>
       record(value),
     ),
+  deleteQuestions: (questionIds: string[], reason: string) =>
+    run(
+      () => adminRepository.deleteQuestions(questionIds, reason),
+      (value) => {
+        const data = record(value);
+        return {
+          deleted: num(data.deleted),
+          levelsRemoved: num(data.levelsRemoved),
+        };
+      },
+    ),
 
   getSiteSettings: () => run(() => adminRepository.getSiteSettings(), parseSiteSettings),
   saveSiteSettings: (payload: Json, reason: string) =>
@@ -834,6 +850,37 @@ export const adminService = {
     ),
   archiveMedia: (mediaId: string, reason: string) =>
     run(() => adminRepository.archiveMedia(mediaId, reason), (value) => record(value)),
+  deleteMedia: (mediaIds: string[], reason: string) =>
+    run(
+      async () => {
+        const row = record(await adminRepository.deleteMedia(mediaIds, reason));
+        const paths = array(row.storagePaths).filter(
+          (path): path is string => typeof path === 'string' && path.length > 0,
+        );
+        if (paths.length > 0) {
+          // Metadata is already gone; a storage hiccup must not crash the UI.
+          await adminRepository
+            .removeMediaFiles(paths)
+            .catch((error: unknown) => console.warn('[admin] media file removal failed', error));
+        }
+        return row as Json;
+      },
+      (value) => {
+        const data = record(value);
+        return {
+          deleted: num(data.deleted),
+          skipped: array(data.skipped).map((item) => {
+            const entry = record(item);
+            return {
+              id: str(entry.id),
+              name: str(entry.name),
+              altText: str(entry.altText),
+              reason: str(entry.reason, 'Masih dipakai oleh konten lain.'),
+            };
+          }),
+        };
+      },
+    ),
   uploadMedia: (file: File, altText: string, width: number | null, height: number | null) =>
     run(() => adminRepository.uploadMedia(file, altText, width, height), parseMedia),
 

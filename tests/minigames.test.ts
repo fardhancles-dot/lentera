@@ -3,6 +3,7 @@ import {
   joinBlankAnswers,
   parseBlankPrompt,
 } from '../src/game/minigames/blankPrompt';
+import { parseLessonQuestions } from '../src/services/lesson.service';
 
 describe('parseBlankPrompt', () => {
   it('reports no inline blank when the prompt has no marker', () => {
@@ -35,6 +36,33 @@ describe('parseBlankPrompt', () => {
     const result = parseBlankPrompt('__ + __ = __');
     expect(result.blankCount).toBe(3);
     expect(result.parts).toHaveLength(4);
+  });
+});
+
+describe('parseLessonQuestions scene', () => {
+  const question = (scene: Record<string, unknown>) => [
+    {
+      id: 'q1',
+      type: 'sentence_builder',
+      prompt: 'Susun kata.',
+      scene,
+      options: [{ id: 'o1', label: 'I' }],
+    },
+  ];
+
+  it('keeps the letter mode of a one-word Susun Kata answer', () => {
+    const [parsed] = parseLessonQuestions(question({ tokenMode: 'letters' }));
+    expect(parsed?.scene.tokenMode).toBe('letters');
+  });
+
+  it('defaults to word mode when the scene has no token mode', () => {
+    const [parsed] = parseLessonQuestions(question({}));
+    expect(parsed?.scene.tokenMode).toBeUndefined();
+  });
+
+  it('keeps the letter mode of a Susun Kata answer inside Soal Kombinasi', () => {
+    const [parsed] = parseLessonQuestions(question({ tokenMode: 'letters', kind: 'combined' }));
+    expect(parsed?.scene.tokenMode).toBe('letters');
   });
 });
 

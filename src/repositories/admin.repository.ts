@@ -120,6 +120,8 @@ export const adminRepository = {
       p_active: active,
       p_reason: reason,
     }),
+  deleteQuestions: (questionIds: string[], reason: string) =>
+    call('admin_delete_questions', { p_question_ids: questionIds, p_reason: reason }),
 
   getSiteSettings: () => call('admin_get_site_settings'),
   saveSiteSettings: (payload: Json, reason: string) =>
@@ -157,6 +159,17 @@ export const adminRepository = {
     }),
   archiveMedia: (mediaId: string, reason: string) =>
     call('admin_archive_media', { p_media_id: mediaId, p_reason: reason }),
+  deleteMedia: (mediaIds: string[], reason: string) =>
+    call('admin_delete_media', { p_media_ids: mediaIds, p_reason: reason }),
+
+  async removeMediaFiles(paths: string[]): Promise<void> {
+    const bucket = client().storage.from('content-media');
+    // Supabase storage accepts a batch; keep requests small for large deletes.
+    for (let index = 0; index < paths.length; index += 50) {
+      const { error } = await bucket.remove(paths.slice(index, index + 50));
+      if (error) raise(error);
+    }
+  },
 
   listBackgroundMusic: () => call('admin_list_background_music'),
   setBackgroundMusicActive: (id: string, active: boolean, reason: string) =>

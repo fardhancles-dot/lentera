@@ -116,6 +116,10 @@ try {
   await run('supabase/migrations/20261121110000_subject_overview_perf.sql');
   await run('supabase/migrations/20261123100000_matching_pairs_payload.sql');
   await run('supabase/migrations/20261124100000_diamond_economy.sql');
+  await run('supabase/migrations/20261125100000_combined_question_type.sql');
+  await run('supabase/migrations/20261125101000_combined_questions.sql');
+  await run('supabase/migrations/20261125110000_sentence_builder_single_word.sql');
+  await run('supabase/migrations/20261125120000_admin_delete_questions_media.sql');
 
   // Diamond economy: the server owns the rate, the balance, and the ledgers.
   const diamondUserRow = await db.query(
@@ -3459,6 +3463,89 @@ try {
     [autoQuestion.id],
   );
 
+  // Hard delete removes the selected questions, their dedicated levels, and
+  // the empty lessons created for those levels. Unselected questions stay.
+  const deleteTargetA = await db.query(
+    `select public.admin_create_question_level($1::jsonb, 'Siapkan soal hapus A') as payload`,
+    [JSON.stringify({
+      subjectId: subjectRow.id, slug: 'soal-hapus-uji-a', type: 'multiple_choice',
+      prompt: 'Soal yang akan dihapus A?', points: 10,
+      options: [
+        { label: 'Benar', isCorrect: true, sortOrder: 0 },
+        { label: 'Salah', isCorrect: false, sortOrder: 1 },
+      ],
+      answers: [], pairs: [], media: [], scene: {},
+    })],
+  );
+  const deleteTargetB = await db.query(
+    `select public.admin_create_question_level($1::jsonb, 'Siapkan soal hapus B') as payload`,
+    [JSON.stringify({
+      subjectId: subjectRow.id, slug: 'soal-hapus-uji-b', type: 'multiple_choice',
+      prompt: 'Soal yang akan dihapus B?', points: 10,
+      options: [
+        { label: 'Benar', isCorrect: true, sortOrder: 0 },
+        { label: 'Salah', isCorrect: false, sortOrder: 1 },
+      ],
+      answers: [], pairs: [], media: [], scene: {},
+    })],
+  );
+  const deleteIdA = deleteTargetA.rows[0].payload.id;
+  const deleteIdB = deleteTargetB.rows[0].payload.id;
+  const deleteNodeA = deleteTargetA.rows[0].payload.nodeId;
+  const deleteLessonA = deleteTargetA.rows[0].payload.lessonId;
+
+  await asUser(user2);
+  await expectError(
+    'players cannot delete questions',
+    'select public.admin_delete_questions(array[$1::uuid], $2)',
+    [deleteIdA, 'Uji izin hapus soal'],
+    'admin_permission_denied',
+  );
+  await asUser(user1);
+
+  const bulkQuestionDelete = await db.query(
+    `select public.admin_delete_questions(
+       array(select jsonb_array_elements_text($1::jsonb))::uuid[], $2
+     ) as payload`,
+    [JSON.stringify([deleteIdA, deleteIdB]), 'Hapus dua soal uji'],
+  );
+  const bulkQuestionDeletePayload = bulkQuestionDelete.rows[0].payload;
+  check(
+    bulkQuestionDeletePayload.deleted === 2 && bulkQuestionDeletePayload.levelsRemoved === 2,
+    'admin bulk deletes questions with their dedicated levels',
+    JSON.stringify(bulkQuestionDeletePayload),
+  );
+  await db.exec('reset role');
+  const deletedQuestionsLeft = await db.query(
+    `select count(*)::int as count from public.questions
+     where id = any(array(select jsonb_array_elements_text($1::jsonb))::uuid[])`,
+    [JSON.stringify([deleteIdA, deleteIdB])],
+  );
+  const deletedLevelLeft = await db.query(
+    'select count(*)::int as count from public.learning_nodes where id = $1',
+    [deleteNodeA],
+  );
+  const deletedLessonLeft = await db.query(
+    'select count(*)::int as count from public.lessons where id = $1',
+    [deleteLessonA],
+  );
+  check(
+    deletedQuestionsLeft.rows[0].count === 0 &&
+      deletedLevelLeft.rows[0].count === 0 &&
+      deletedLessonLeft.rows[0].count === 0,
+    'deleted questions disappear from the bank, map, and lesson list',
+  );
+  const keptQuestion = await db.query(
+    'select count(*)::int as count from public.questions where id = $1',
+    [autoQuestion.id],
+  );
+  check(
+    keptQuestion.rows[0].count === 1,
+    'bulk delete never removes a question that was not selected',
+  );
+  await db.exec('set role authenticated');
+  await asUser(user1);
+
   const curriculums = await db.query('select public.admin_list_curriculum() as payload');
   const curriculumSubject = curriculums.rows[0].payload.find((row) => row.slug === 'mapel-uji-admin');
   check(
@@ -3940,6 +4027,96 @@ try {
     'media_type_forbidden',
   );
 
+  // Media used by a question is skipped until the question is deleted. Files
+  // that are no longer referenced are removed with their storage paths.
+  const mediaAsset = media.rows[0].payload;
+  const mediaQuestion = await db.query(
+    `select public.admin_save_question($1::jsonb, 'Uji media dipakai soal') as payload`,
+    [JSON.stringify({
+      lessonId: lessonRow.id, slug: 'soal-media-uji', type: 'picture_identification',
+      prompt: 'Pilih gambar uji.', points: 10,
+      options: [
+        { label: 'Gambar uji', isCorrect: true, sortOrder: 0 },
+        { label: 'Bukan gambar uji', isCorrect: false, sortOrder: 1 },
+      ],
+      answers: [], pairs: [],
+      media: [{ kind: 'image', url: mediaAsset.url, alt: 'Gambar uji' }],
+      scene: {},
+    })],
+  );
+  const mediaQuestionId = mediaQuestion.rows[0].payload.id;
+
+  await asUser(user2);
+  await expectError(
+    'players cannot delete media',
+    'select public.admin_delete_media(array[$1::uuid], $2)',
+    [mediaAsset.id, 'Uji izin hapus media'],
+    'admin_permission_denied',
+  );
+  await asUser(user1);
+
+  const skippedMedia = await db.query(
+    'select public.admin_delete_media(array[$1::uuid], $2) as payload',
+    [mediaAsset.id, 'Coba hapus media terpakai'],
+  );
+  check(
+    skippedMedia.rows[0].payload.deleted === 0 &&
+      skippedMedia.rows[0].payload.skipped.length === 1,
+    'media used by a question is skipped instead of deleted',
+    JSON.stringify(skippedMedia.rows[0].payload),
+  );
+
+  await db.query(
+    "select public.admin_delete_questions(array[$1::uuid], 'Hapus soal sebelum media') as payload",
+    [mediaQuestionId],
+  );
+  const removedMedia = await db.query(
+    'select public.admin_delete_media(array[$1::uuid], $2) as payload',
+    [mediaAsset.id, 'Hapus media tak terpakai'],
+  );
+  check(
+    removedMedia.rows[0].payload.deleted === 1 &&
+      removedMedia.rows[0].payload.storagePaths.includes('test/uji.png'),
+    'unused media is deleted with its storage path',
+    JSON.stringify(removedMedia.rows[0].payload),
+  );
+  await db.exec('reset role');
+  const mediaRowLeft = await db.query(
+    'select count(*)::int as count from public.media_assets where id = $1',
+    [mediaAsset.id],
+  );
+  check(mediaRowLeft.rows[0].count === 0, 'deleted media metadata is gone from the database');
+  await db.exec('set role authenticated');
+  await asUser(user1);
+
+  const mediaA = await db.query(
+    `select public.admin_register_media(
+       'test/hapus-a.png', 'https://example.com/hapus-a.png', 'image', 'image/png',
+       512, 'Hapus A', 100, 100
+     ) as payload`,
+  );
+  const mediaB = await db.query(
+    `select public.admin_register_media(
+       'test/hapus-b.png', 'https://example.com/hapus-b.png', 'image', 'image/png',
+       512, 'Hapus B', 100, 100
+     ) as payload`,
+  );
+  const bulkMediaDelete = await db.query(
+    `select public.admin_delete_media(
+       array(select jsonb_array_elements_text($1::jsonb))::uuid[], $2
+     ) as payload`,
+    [
+      JSON.stringify([mediaA.rows[0].payload.id, mediaB.rows[0].payload.id]),
+      'Hapus dua media uji',
+    ],
+  );
+  check(
+    bulkMediaDelete.rows[0].payload.deleted === 2 &&
+      bulkMediaDelete.rows[0].payload.storagePaths.length === 2,
+    'admin bulk deletes unused media with their storage paths',
+    JSON.stringify(bulkMediaDelete.rows[0].payload),
+  );
+
   const health = await db.query('select public.admin_content_health() as payload');
   check(
     Array.isArray(health.rows[0].payload.publishedLessonsWithoutQuestions),
@@ -4065,6 +4242,109 @@ try {
     'sentence builder keeps duplicate words as separate tokens',
     JSON.stringify(builderPayload.options),
   );
+
+  // A single-word answer is stored one letter per option, and the arranged
+  // letters are joined without spaces so they match the saved answer.
+  const builderSingleWord = await db.query(
+    `select public.admin_save_question($1::jsonb, 'Uji susun kata satu kata') as payload`,
+    [JSON.stringify({
+      lessonId: lessonRow.id, slug: 'soal-susun-kata-satu-kata', type: 'sentence_builder',
+      prompt: 'Susunlah huruf-huruf berikut menjadi kata yang benar.', points: 10,
+      options: [...'KOMPUTER'].map((label, index) => ({
+        label, isCorrect: false, sortOrder: index,
+      })),
+      answers: [{ answer: 'KOMPUTER', isCaseSensitive: false }],
+      pairs: [], media: [], scene: { tokenMode: 'letters' },
+    })],
+  );
+  const builderSinglePayload = builderSingleWord.rows[0].payload;
+  check(
+    builderSinglePayload.options.length === 8,
+    'sentence builder saves a one-word answer as letter tokens',
+    JSON.stringify(builderSinglePayload.options),
+  );
+
+  const combinedSingleWord = await db.query(
+    `select public.admin_save_question($1::jsonb, 'Uji kombinasi susun kata satu kata') as payload`,
+    [JSON.stringify({
+      lessonId: lessonRow.id, slug: 'soal-kombinasi-susun-kata-satu-kata', type: 'combined',
+      prompt: 'Susunlah huruf menjadi nama mata pelajaran.', points: 10,
+      options: [...'MATEMATIKA'].map((label, index) => ({
+        label, isCorrect: false, sortOrder: index,
+      })),
+      answers: [{ answer: 'MATEMATIKA', isCaseSensitive: false }],
+      pairs: [], media: [],
+      scene: {
+        kind: 'combined',
+        elements: [{ kind: 'text', text: 'Pelajari angka dan hitungan.' }],
+        mechanics: ['sentence_builder', 'word_bank'],
+        answer: { mode: 'order', grading: 'all', display: 'bank', partLabels: [] },
+        tokenMode: 'letters',
+      },
+    })],
+  );
+  const combinedPayload = combinedSingleWord.rows[0].payload;
+  check(
+    combinedPayload.options.length === 10,
+    'combined order mode saves a one-word answer as letter tokens',
+    JSON.stringify(combinedPayload.options),
+  );
+
+  const combinedWords = await db.query(
+    `select public.admin_save_question($1::jsonb, 'Uji kombinasi susun kata') as payload`,
+    [JSON.stringify({
+      lessonId: lessonRow.id, slug: 'soal-kombinasi-susun-kata', type: 'combined',
+      prompt: 'Susunlah kata menjadi kalimat yang benar.', points: 10,
+      options: ['IBU', 'MEMASAK', 'NASI'].map((label, index) => ({
+        label, isCorrect: false, sortOrder: index,
+      })),
+      answers: [{ answer: 'IBU MEMASAK NASI', isCaseSensitive: false }],
+      pairs: [], media: [],
+      scene: {
+        kind: 'combined',
+        elements: [{ kind: 'text', text: 'Kegiatan di dapur.' }],
+        mechanics: ['sentence_builder', 'word_bank'],
+        answer: { mode: 'order', grading: 'all', display: 'bank', partLabels: [] },
+      },
+    })],
+  );
+  const combinedWordsPayload = combinedWords.rows[0].payload;
+  check(
+    combinedWordsPayload.options.length === 3,
+    'combined order mode keeps multi-word answers as word tokens',
+    JSON.stringify(combinedWordsPayload.options),
+  );
+
+  await db.exec('reset role');
+  const gradeFor = async (id, answer) => {
+    const result = await db.query('select public.grade_question($1, $2::jsonb) as correct', [
+      id,
+      JSON.stringify({ text: answer }),
+    ]);
+    return result.rows[0].correct;
+  };
+  check(
+    await gradeFor(builderPayload.id, 'Saya suka suka makan'),
+    'multi-word sentence builder still grades the arranged words',
+  );
+  check(
+    await gradeFor(builderSinglePayload.id, 'KOMPUTER'),
+    'one-word sentence builder grades the assembled letters',
+  );
+  check(
+    !(await gradeFor(builderSinglePayload.id, 'KOPMUTER')),
+    'one-word sentence builder rejects the wrong letter order',
+  );
+  check(
+    await gradeFor(combinedPayload.id, 'MATEMATIKA'),
+    'combined order mode grades the assembled letters',
+  );
+  check(
+    await gradeFor(combinedWordsPayload.id, 'IBU MEMASAK NASI'),
+    'combined order mode still grades multi-word answers',
+  );
+  await db.exec('set role authenticated');
+  await asUser(adminUserId);
 
   // New listening questions are audio plus multiple choice; older text-answer
   // rows must still save unchanged.

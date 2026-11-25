@@ -3,7 +3,11 @@ import { showToast } from '../../components/toast';
 import { createMiniGame } from '../../game/minigames';
 import type { LessonQuestion, LessonScene } from '../../services/lesson.service';
 import { adminService } from '../../services/admin.service';
-import type { AdminQuestion, CurriculumSubject } from '../../types/admin';
+import type {
+  AdminQuestion,
+  AdminQuestionListItem,
+  CurriculumSubject,
+} from '../../types/admin';
 import type { Json, QuestionType } from '../../types/database';
 import { el } from '../../utils/dom';
 import {
@@ -20,7 +24,10 @@ import {
   type CombinedElementKind,
   type CombinedGrading,
 } from '../../utils/combinedQuestion';
-import { normalizeSentenceAnswer, splitSentenceTokens } from '../../utils/questionText';
+import {
+  normalizeSentenceAnswer,
+  sentenceBuilderTokens,
+} from '../../utils/questionText';
 import { pickMedia } from './media';
 import type { AdminSectionContext } from './ui';
 import {
@@ -765,11 +772,8 @@ function problemsOf(snapshot: Snapshot): string[] {
     }
   }
   if (type === 'sentence_builder') {
-    const tokens = splitSentenceTokens(snapshot.sentence);
-    if (!snapshot.sentence) {
+    if (sentenceBuilderTokens(snapshot.sentence).tokens.length === 0) {
       issues.push('Kalimat yang benar wajib diisi.');
-    } else if (tokens.length < 2) {
-      issues.push('Kalimat minimal terdiri dari dua kata agar bisa disusun.');
     }
   }
   if (type === 'fill_blank' && !snapshot.prompt.includes('__')) {
@@ -817,9 +821,8 @@ function problemsOf(snapshot: Snapshot): string[] {
       if (snapshot.answers.length === 0) issues.push('Isi minimal satu jawaban teks yang diterima.');
     }
     if (snapshot.combinedMode === 'order') {
-      if (!snapshot.sentence) issues.push('Kalimat yang benar wajib diisi.');
-      else if (splitSentenceTokens(snapshot.sentence).length < 2) {
-        issues.push('Kalimat minimal terdiri dari dua kata agar bisa disusun.');
+      if (sentenceBuilderTokens(snapshot.sentence).tokens.length === 0) {
+        issues.push('Kalimat yang benar wajib diisi.');
       }
     }
     if (snapshot.combinedMode === 'match' && snapshot.pairs.length < 2) {
@@ -961,7 +964,20 @@ function combinedScene(snapshot: Snapshot): Json {
     elements,
     mechanics,
     answer: config.answer,
+    // A single-word Susun Kata answer is arranged letter by letter.
+    ...(snapshot.combinedMode === 'order' &&
+    sentenceBuilderTokens(snapshot.sentence).mode === 'letters'
+      ? { tokenMode: 'letters' }
+      : {}),
   } as unknown as Json;
+}
+
+/** Marks a Susun Kata scene as letter based when the answer is one word. */
+function withBuilderTokenMode(scene: Json, sentence: string): Json {
+  const record = { ...(scene as Record<string, unknown>) };
+  if (sentenceBuilderTokens(sentence).mode === 'letters') record.tokenMode = 'letters';
+  else delete record.tokenMode;
+  return record as unknown as Json;
 }
 
 export function openQuestionEditor(
@@ -1185,7 +1201,7 @@ export function openQuestionEditor(
   const addDialog = button('Tambah dialog', 'plus', () => dialogBox.append(dialogRow()));
 
   const paintTokens = (shuffle = false): void => {
-    const tokens = splitSentenceTokens(sentenceInput.value);
+    const tokens = sentenceBuilderTokens(sentenceInput.value).tokens;
     if (shuffle) {
       for (let index = tokens.length - 1; index > 0; index -= 1) {
         const swap = Math.floor(Math.random() * (index + 1));
@@ -1247,7 +1263,7 @@ export function openQuestionEditor(
         button('Buat otomatis', 'refresh', () => {
           const used = new Set(
             [
-              ...splitSentenceTokens(sentenceInput.value),
+              ...sentenceBuilderTokens(sentenceInput.value).tokens,
               ...Array.from(
                 distractorBox.querySelectorAll<HTMLInputElement>('[name=distractorValue]'),
               ).map((entry) => entry.value),
@@ -1389,7 +1405,7 @@ export function openQuestionEditor(
         field(
           'Kalimat yang benar',
           sentenceInput,
-          'Sistem otomatis memecah kalimat menjadi kata dan mengacak urutannya. Kamu tidak perlu menulis kata acak satu per satu.',
+          'Sistem otomatis memecah kalimat menjadi kata dan mengacak urutannya. Bila jawaban hanya satu kata, huruf-hurufnya yang diacak. Kamu tidak perlu menulis kata acak satu per satu.',
         ),
         distractorEditor(),
         el('div', { class: 'admin-subhead-row' }, [
@@ -1491,7 +1507,7 @@ export function openQuestionEditor(
             field(
               'Kalimat yang benar',
               sentenceInput,
-              'Sistem memecah kalimat menjadi kata lalu mengacaknya. Pemain menyusun ulang kalimatnya.',
+              'Sistem memecah kalimat menjadi kata lalu mengacaknya. Bila jawaban hanya satu kata, huruf-hurufnya yang diacak.',
             ),
             distractorEditor(),
           ]),
@@ -1682,9 +1698,10 @@ export function openQuestionEditor(
   function previewOptions(snapshot: Snapshot): Array<{ id: string; label: string }> {
     if (snapshot.type === 'combined') {
       if (snapshot.combinedMode === 'order') {
-        return [...splitSentenceTokens(snapshot.sentence), ...snapshot.distractors].map(
-          (label, index) => ({ id: `token-${index}`, label }),
-        );
+        return [
+          ...sentenceBuilderTokens(snapshot.sentence).tokens,
+          ...snapshot.distractors,
+        ].map((label, index) => ({ id: `token-${index}`, label }));
       }
       if (snapshot.combinedMode === 'choice') {
         return snapshot.options.map((option, index) => ({
@@ -1698,9 +1715,10 @@ export function openQuestionEditor(
       return snapshot.words.map((label, index) => ({ id: `word-${index}`, label }));
     }
     if (snapshot.type === 'sentence_builder') {
-      return [...splitSentenceTokens(snapshot.sentence), ...snapshot.distractors].map(
-        (label, index) => ({ id: `token-${index}`, label }),
-      );
+      return [
+        ...sentenceBuilderTokens(snapshot.sentence).tokens,
+        ...snapshot.distractors,
+      ].map((label, index) => ({ id: `token-${index}`, label }));
     }
     return snapshot.options.map((option, index) => ({ id: `option-${index}`, label: option.label }));
   }
@@ -1708,7 +1726,9 @@ export function openQuestionEditor(
   function previewQuestion(snapshot: Snapshot): LessonQuestion {
     const sceneValue = (snapshot.type === 'combined'
       ? combinedScene(snapshot)
-      : sceneFor(snapshot, legacyScene)) as unknown as LessonScene;
+      : snapshot.type === 'sentence_builder'
+        ? withBuilderTokenMode(sceneFor(snapshot, legacyScene), snapshot.sentence)
+        : sceneFor(snapshot, legacyScene)) as unknown as LessonScene;
     const pairQuestion =
       snapshot.type === 'matching_pairs' ||
       (snapshot.type === 'combined' && snapshot.combinedMode === 'match');
@@ -1931,12 +1951,13 @@ export function openQuestionEditor(
         }));
         answers = [{ answer: snapshot.wordAnswer, isCaseSensitive: false }];
       } else if (type === 'sentence_builder') {
-        options = [...splitSentenceTokens(snapshot.sentence), ...snapshot.distractors].map(
-          (label, index) => ({ label, isCorrect: false, sortOrder: index }),
-        );
+        options = [
+          ...sentenceBuilderTokens(snapshot.sentence).tokens,
+          ...snapshot.distractors,
+        ].map((label, index) => ({ label, isCorrect: false, sortOrder: index }));
         answers = [{ answer: snapshot.sentence, isCaseSensitive: false }];
         sceneValue = {
-          ...(sceneValue as Record<string, unknown>),
+          ...(withBuilderTokenMode(sceneValue, snapshot.sentence) as Record<string, unknown>),
           distractors: snapshot.distractors,
         } as unknown as Json;
       } else if (type === 'combined') {
@@ -1954,9 +1975,10 @@ export function openQuestionEditor(
           answers = snapshot.answers;
           pairs = [];
         } else if (snapshot.combinedMode === 'order') {
-          options = [...splitSentenceTokens(snapshot.sentence), ...snapshot.distractors].map(
-            (label, index) => ({ label, isCorrect: false, sortOrder: index }),
-          );
+          options = [
+            ...sentenceBuilderTokens(snapshot.sentence).tokens,
+            ...snapshot.distractors,
+          ].map((label, index) => ({ label, isCorrect: false, sortOrder: index }));
           answers = [{ answer: snapshot.sentence, isCaseSensitive: false }];
           pairs = [];
         } else {
@@ -2020,6 +2042,10 @@ export async function renderQuestions(ctx: AdminSectionContext): Promise<void> {
     const subjects = curriculum.filter((subject) => subject.status !== 'inactive');
     const slot = el('div', {});
     const summary = el('div', { class: 'admin-filters' });
+    const selection = el('div', { class: 'admin-filters' });
+    const selected = new Set<string>();
+    const checkboxes = new Map<string, HTMLInputElement>();
+    let pageItems: AdminQuestionListItem[] = [];
     const state = { subjectId: subjects[0]?.id ?? '', type: '', status: '', search: '', page: 1 };
 
     const subjectSelect = select(
@@ -2052,8 +2078,101 @@ export async function renderQuestions(ctx: AdminSectionContext): Promise<void> {
       );
     };
 
+    const deleteSelected = async (): Promise<void> => {
+      const ids = [...selected];
+      if (ids.length === 0) return;
+      const reason = await askReason(
+        'Hapus soal terpilih',
+        `${ids.length} soal akan dihapus permanen beserta jawaban dan riwayat pengerjaannya. Level yang tidak memiliki soal lain juga dihapus dari peta.`,
+        `Hapus ${ids.length} soal`,
+      );
+      if (!reason) return;
+      try {
+        const result = await adminService.deleteQuestions(ids, reason);
+        showToast(
+          `${result.deleted} soal dihapus${
+            result.levelsRemoved > 0 ? ` dan ${result.levelsRemoved} level dibersihkan` : ''
+          }.`,
+          'success',
+        );
+        await reloadAll();
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : 'Soal gagal dihapus.', 'error');
+      }
+    };
+
+    const refreshSelection = (): void => {
+      const count = selected.size;
+      const allSelected =
+        pageItems.length > 0 && pageItems.every((item) => selected.has(item.id));
+      const selectAll = el('input', {
+        attrs: { type: 'checkbox', 'aria-label': 'Pilih semua soal di halaman ini' },
+      }) as HTMLInputElement;
+      selectAll.checked = allSelected;
+      selectAll.disabled = pageItems.length === 0;
+      selectAll.addEventListener('change', () => {
+        for (const item of pageItems) {
+          if (selectAll.checked) selected.add(item.id);
+          else selected.delete(item.id);
+          const box = checkboxes.get(item.id);
+          if (box) box.checked = selectAll.checked;
+        }
+        refreshSelection();
+      });
+
+      const remove = button(
+        `Hapus terpilih${count > 0 ? ` (${count})` : ''}`,
+        'close',
+        () => void deleteSelected(),
+        'danger',
+      );
+      remove.disabled = count === 0;
+
+      selection.replaceChildren(
+        el('label', { class: 'admin-row-actions' }, [
+          selectAll,
+          el('span', { text: 'Pilih semua di halaman ini' }),
+        ]),
+        el('span', { class: 'badge badge--muted', text: `${count} soal dipilih` }),
+        remove,
+      );
+      if (count > 0) {
+        selection.append(
+          button('Batal pilih', 'close', () => {
+            selected.clear();
+            for (const box of checkboxes.values()) box.checked = false;
+            refreshSelection();
+          }),
+        );
+      }
+    };
+
+    const deleteOne = async (question: AdminQuestionListItem): Promise<void> => {
+      const levelText =
+        question.levelNumber !== null
+          ? ` Level ${question.levelNumber} ikut dihapus bila tidak berisi soal lain.`
+          : '';
+      const reason = await askReason(
+        'Hapus soal',
+        `Soal “${question.prompt.slice(0, 80)}” akan dihapus permanen beserta jawaban dan riwayat pengerjaannya.${levelText}`,
+        'Hapus',
+      );
+      if (!reason) return;
+      try {
+        await adminService.deleteQuestions([question.id], reason);
+        showToast('Soal dihapus.', 'success');
+        await reloadAll();
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : 'Soal gagal dihapus.', 'error');
+      }
+    };
+
     const load = async (): Promise<void> => {
       slot.replaceChildren(loading('Memuat soal…'));
+      selected.clear();
+      checkboxes.clear();
+      pageItems = [];
+      refreshSelection();
       try {
         const result = await adminService.listQuestions(
           null,
@@ -2069,8 +2188,21 @@ export async function renderQuestions(ctx: AdminSectionContext): Promise<void> {
         } else {
           slot.replaceChildren(
             table(
-              ['Level', 'Pertanyaan', 'Tipe', 'Status', 'Aksi'],
-              result.items.map((question) => [
+              ['Pilih', 'Level', 'Pertanyaan', 'Tipe', 'Status', 'Aksi'],
+              result.items.map((question) => {
+                const box = el('input', {
+                  attrs: {
+                    type: 'checkbox',
+                    'aria-label': `Pilih soal ${question.prompt.slice(0, 60)}`,
+                  },
+                }) as HTMLInputElement;
+                box.addEventListener('change', () => {
+                  if (box.checked) selected.add(question.id);
+                  else selected.delete(question.id);
+                  refreshSelection();
+                });
+                checkboxes.set(question.id, box);
+                return [box,
                 question.levelNumber
                   ? el('span', {}, [
                       badge(`Level ${question.levelNumber}`, question.levelActive ? 'ok' : 'muted'),
@@ -2115,11 +2247,15 @@ export async function renderQuestions(ctx: AdminSectionContext): Promise<void> {
                     })().catch((error: unknown) =>
                       showToast(error instanceof Error ? error.message : 'Status gagal diubah.', 'error'));
                   }, question.isActive ? 'danger' : 'secondary'),
+                  button('Hapus', 'close', () => void deleteOne(question), 'danger'),
                 ]),
-              ]),
+              ];
+              }),
             ),
           );
         }
+        pageItems = result.items;
+        refreshSelection();
         const pages = Math.max(1, Math.ceil(result.total / result.pageSize));
         slot.append(
           el('div', { class: 'admin-pagination' }, [
@@ -2176,6 +2312,7 @@ export async function renderQuestions(ctx: AdminSectionContext): Promise<void> {
         [
           el('div', { class: 'admin-filters' }, [subjectSelect, typeSelect, statusSelect, search]),
           summary,
+          selection,
           el('p', {
             class: 'form-hint',
             text: 'Soal berlabel Latihan tetap tersimpan di bank, tetapi hanya soal yang terhubung ke level yang dihitung di peta dan game.',

@@ -5,7 +5,7 @@ petualangan: peta belajar, lesson interaktif, mini-game, XP, Koin, streak, quest
 Developer Dashboard.
 
 Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand terpusat di
-`src/config/brand.ts` dan dapat ditimpa lewat environment variable.
+`frontend/src/config/brand.ts` dan dapat ditimpa lewat environment variable.
 
 > **Status proyek: Tahap 1–8 selesai.**
 > Lesson, latihan, dan **20 dari 20 mini-game** punya mekanik bermain nyata. Dua belas tipe
@@ -37,7 +37,7 @@ Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand ter
 | Landing page + maskot interaktif | **Implemented · Verified** | Kiko digambar vector dengan Phaser, idle/blink/celebrate. |
 | Peta petualangan Phaser + animasi Kiko | **Implemented · Tested (unit + build + browser berakun)** | `createKiko` dengan 13 state animasi dipakai ulang oleh maskot dan peta; peta di `/learn/:subject` punya status selesai/sedang dikerjakan/siap/terkunci/pratinjau, pemilih area DOM yang aksesibel, penanda posisi, palet berbeda per area, layout wide/compact dengan koordinat terpisah, dan dukungan `prefers-reduced-motion`. |
 | Sistem audio | **Implemented · Tested (unit + browser smoke); pemutaran belum diverifikasi telinga** | Musik dan SFX disintesis Web Audio, volume mengikuti pengaturan pemain, mute lokal di topbar, autoplay-safe. |
-| Pipeline aset | **Implemented · Tested (unit)** | `src/game/assets/manifest.ts` + loader Phaser, lisensi tercatat di `docs/ASSETS.md`. |
+| Pipeline aset | **Implemented · Tested (unit)** | `frontend/src/game/assets/manifest.ts` + loader Phaser, lisensi tercatat di `docs/ASSETS.md`. |
 | Register / login / logout | **Implemented · E2E verified** | Login API, payload lesson, grading, dan Practice Hub diuji ke project Supabase nyata. |
 | Registrasi tanpa verifikasi email & lupa password | **Implemented · E2E + API + real-email verified** | Registrasi dengan password minimal 6 karakter langsung mendapat sesi (Confirm email dimatikan di project). Reset password memakai OTP 6 angka resmi Supabase: kode benar/salah, pemakaian ulang, password baru 6 karakter, dan login ulang diuji lewat API; alur tautan reset diuji E2E. SMTP produksi Brevo terpasang: email reset sungguhan terkirim ke Gmail, kode 6 angka diterima, password baru bisa dipakai login, dan kode yang sama ditolak saat dipakai ulang. |
 | Onboarding profil | **Implemented · E2E (via helper akun uji)** | Username, avatar, nama, target harian, zona waktu. Atomik via RPC. |
@@ -116,57 +116,54 @@ Deployment ganda Vercel + GitHub Pages: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.m
 
 ```text
 .
-├── public/
-│   └── favicon.svg
-├── src/
-│   ├── app/
-│   │   └── router.ts            # history router + guard akses + cleanup halaman
-│   ├── components/              # ikon SVG, avatar, form, toast, brand art
-│   ├── config/                  # brand, env, katalog avatar
-│   ├── game/
-│   │   ├── characters/          # factory Kiko + 13 state animasi
-│   │   ├── adventure/           # layout peta + mount helper Phaser (lazy loaded)
-│   │   ├── scenes/              # scene Phaser peta petualangan
-│   │   ├── mascot/              # stage maskot landing (memakai createKiko)
-│   │   ├── audio/               # text-to-speech untuk model audio
-│   │   ├── practice/            # helper tampilan timer & combo
-│   │   └── minigames/           # renderer DOM per tipe soal + registry
-│   ├── layouts/                 # auth layout, app shell
-│   ├── pages/                   # auth, onboarding, beranda, belajar, lesson, latihan, profil
-│   ├── repositories/            # akses data Supabase
-│   ├── services/                # aturan bisnis, lesson engine client, pemetaan error
-│   ├── stores/                  # session, player, dan rewards store observable
-│   ├── styles/                  # tokens, base, components, layout, pages, practice, social
-│   ├── types/                   # tipe database & sesi
-│   ├── utils/                   # DOM, validasi
-│   └── main.ts
-├── supabase/
-│   └── migrations/
-│       ├── 20261108090000_identity.sql
-│       ├── 20261108100000_curriculum.sql
-│       ├── 20261108105000_curriculum_overview.sql
-│       ├── 20261108107000_question_pairs.sql
-│       ├── 20261108109000_question_scenes.sql
-│       ├── 20261108110000_curriculum_seed.sql
-│       ├── 20261108120000_lesson_engine.sql
-│       ├── 20261109100000_practice_engine.sql
-│       ├── 20261110100000_friends_quest.sql
-│       ├── 20261110120000_progression_economy.sql
-│       ├── 20261110130000_tahap5_rewards.sql
-│       ├── 20261110140000_mastery_review_rewards.sql
-│       ├── 20261110150000_subject_overview_owner.sql
-│       └── 20261111100000_social_league.sql
-├── scripts/                     # generator + validasi seed kurikulum, SQL smoke test
-├── tests/                       # unit test Vitest
+├── frontend/
+│   ├── index.html
+│   ├── vite.config.ts
+│   ├── public/
+│   │   └── favicon.svg + assets/pictures/
+│   └── src/
+│       ├── app/                 # history router + guard akses + cleanup halaman
+│       ├── components/          # ikon SVG, avatar, form, toast, brand art
+│       ├── config/              # brand, env, katalog avatar
+│       ├── game/
+│       │   ├── characters/      # factory Kiko + 13 state animasi
+│       │   ├── adventure/       # layout peta + mount helper Phaser (lazy loaded)
+│       │   ├── scenes/          # scene Phaser peta petualangan
+│       │   ├── mascot/          # stage maskot landing (memakai createKiko)
+│       │   ├── audio/           # text-to-speech untuk model audio
+│       │   ├── practice/        # helper tampilan timer & combo
+│       │   └── minigames/       # renderer DOM per tipe soal + registry
+│       ├── layouts/             # auth layout, app shell
+│       ├── pages/               # auth, onboarding, beranda, belajar, lesson, latihan, profil
+│       ├── repositories/        # akses data Supabase
+│       ├── services/            # aturan bisnis, lesson engine client, pemetaan error
+│       ├── stores/              # session, player, dan rewards store observable
+│       ├── styles/              # tokens, base, components, layout, pages, practice, social
+│       ├── types/               # tipe database & sesi
+│       ├── utils/               # DOM, validasi
+│       └── main.ts
+├── backend/
+│   └── supabase/
+│       ├── migrations/          # seluruh migration database
+│       ├── seed/                # sumber + generator seed kurikulum
+│       └── .temp/               # cache Supabase CLI (di-ignore)
+├── tests/
+│   ├── unit/                    # unit test Vitest
+│   └── e2e/                     # smoke test Playwright
+├── scripts/                     # verifikasi Supabase, admin, dan smoke test SQL
 ├── docs/                        # dokumentasi teknis + laporan audit
-├── index.html
-├── vite.config.ts
+├── package.json
 ├── tsconfig.json
-└── vercel.json
+├── vitest.config.ts
+├── playwright.config.ts
+├── vercel.json
+└── .github/workflows/           # deploy GitHub Pages
 ```
 
-Folder `features/`, `game/scenes/`, dan `supabase/functions/` akan ditambahkan ketika tahap
-terkait dikerjakan — bukan folder kosong yang dibuat lebih awal.
+Build tetap menghasilkan `dist/` di root, sehingga konfigurasi Vercel dan GitHub Pages tidak
+berubah. `.env` juga tetap di root: Vite membacanya lewat `envDir` dan skrip Node memakai
+`--env-file=.env`. Perintah Supabase CLI dijalankan dari `backend/` (skrip
+`npm run setup:supabase` sudah mengarahkan sendiri).
 
 ---
 

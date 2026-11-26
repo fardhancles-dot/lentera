@@ -63,7 +63,7 @@ browser masih terpisah.
 - Layout responsif: sidebar desktop, topbar, bottom nav mobile, split layout auth.
 - Router history API dengan guard `public`/`guest`/`authenticated`/`onboarded`, lazy page,
   pembatalan render, cleanup, intercept link internal, halaman 404 dan error.
-- Branding terpusat di `src/config/brand.ts` + favicon orisinal.
+- Branding terpusat di `frontend/src/config/brand.ts` + favicon orisinal.
 - Maskot Kiko digambar vector dengan Phaser (idle, blink, wave, celebrate) dan dimuat lazy.
 - Ikon SVG orisinal, tanpa emoji.
 
@@ -232,7 +232,7 @@ Practice, Unit Review, Legendary Challenge).
 | 1 | Banner `/learn` menulis "105 soal awal" padahal saat audit database punya 147 soal dan 36 lesson. | Klaim tidak akurat. | Diganti angka dinamis dari query. |
 | 2 | Peta pembangunan di beranda menulis "22 lesson, 105 soal" dan menandai Tahap 3 selesai, Tahap 4 "berikutnya". | Menyesatkan; gameplay sudah dapat dimainkan. | Roadmap diperbarui. |
 | 3 | README/GAMEPLAY/TESTING/DATABASE/ARCHITECTURE menyatakan belum ada kurikulum dan lesson. | Melanggar aturan "jangan klaim palsu" dan menyesatkan sesi berikutnya. | Diperbarui pada sesi ini. |
-| 4 | Tipe soal yang belum punya layar kini jatuh ke layar `unsupported`, bukan input teks. | Pemain tidak bisa mengira mekanik yang salah sebagai fitur jadi. | Layar jujur + tombol lewati; renderer baru didaftarkan di `src/game/minigames/index.ts`. |
+| 4 | Tipe soal yang belum punya layar kini jatuh ke layar `unsupported`, bukan input teks. | Pemain tidak bisa mengira mekanik yang salah sebagai fitur jadi. | Layar jujur + tombol lewati; renderer baru didaftarkan di `frontend/src/game/minigames/index.ts`. |
 | 5 | `subject_overview` menghasilkan satu baris per course; katalog memakai `courses[0]`. | Mapel dengan >1 course akan tampil ganda / course lain tak terjangkau. | Perlu redesign katalog saat course ganda ditambahkan. |
 | 6 | Riwayat attempt belum ditampilkan. | Data ada tetapi tidak berguna bagi pemain. | Tambahkan di Tahap 5 (statistik). |
 | 7 | `buildPathNode` punya format indentasi rusak (bukan bug perilaku). | Keterbacaan. | Dirapikan saat menyentuh file tersebut. |
@@ -330,14 +330,14 @@ STARTED** belum, **NEEDS FIX** ada tetapi bermasalah.
 
 - Migration: `20261108109000_question_scenes.sql`, `20261109100000_practice_engine.sql`;
   `20261108120000_lesson_engine.sql` mengirim `scene` pada payload.
-- Konten: `scripts/content/stage4.ts`, `types.ts`, `helpers.ts`, `index.ts`, generator,
+- Konten: `backend/supabase/seed/content/stage4.ts`, `types.ts`, `helpers.ts`, `index.ts`, generator,
   seed diregenerasi.
 - Renderer: `listening.ts`, `speaking.ts`, `translation.ts`, `conversation.ts`, `story.ts`,
-  `index.ts`, `src/game/audio/speech.ts`.
+  `index.ts`, `frontend/src/game/audio/speech.ts`.
 - Latihan: `practice.repository.ts`, `practice.service.ts`, `practice.page.ts`,
-  `practice-play.page.ts`, `src/game/practice/scoring.ts`, `src/styles/practice.css`.
+  `practice-play.page.ts`, `frontend/src/game/practice/scoring.ts`, `frontend/src/styles/practice.css`.
 - Navigasi: route `/practice` dan `/practice/play`, item nav “Latihan”.
-- Test: `scripts/test-sql.mjs` (106 check), `tests/practice.test.ts`.
+- Test: `scripts/test-sql.mjs` (106 check), `tests/unit/practice.test.ts`.
 
 ### Bukti eksekusi sesi 6
 

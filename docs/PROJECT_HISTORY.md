@@ -19,7 +19,7 @@ dengan kode dan database aktual.
 - Layout responsif: sidebar desktop, topbar, bottom nav mobile, split layout auth.
 - Router history API dengan guard `public`/`guest`/`authenticated`/`onboarded`, lazy page,
   pembatalan render, cleanup, intercept link internal, dan halaman 404.
-- Branding terpusat (`src/config/brand.ts`) + favicon orisinal.
+- Branding terpusat (`frontend/src/config/brand.ts`) + favicon orisinal.
 - Maskot **Kiko** digambar vector di Phaser: idle, blink, wave, lantern sway, celebrate.
   Dimuat lazy sehingga Phaser tidak masuk bundle awal.
 - Avatar pemain orisinal: Tunas, Bara, Ombak, Bintang, Beri.
@@ -127,7 +127,7 @@ Catatan ini direkonstruksi dari kode saat audit sesi 3 karena dokumentasi belum 
 - Migration `20261108105000_curriculum_overview.sql`: view `subject_overview` untuk katalog.
 - Migration `20261108110000_curriculum_seed.sql` (generated): 10 mapel, 22 level,
   22 unit, 36 lesson, 147 soal, 448 opsi, 39 jawaban isian.
-- Generator konten di `scripts/content/**/*.ts` + validator; UUID deterministik dan
+- Generator konten di `backend/supabase/seed/content/**/*.ts` + validator; UUID deterministik dan
   `on conflict do update` agar seed idempoten.
 - 7 mapel inti aktif dengan 3 level dan 21 soal masing-masing. Bahasa Sambas aktif dengan
   struktur level/unit/lesson tetapi bank soal kosong sesuai keputusan pemilik konten.
@@ -214,11 +214,11 @@ Tidak ada fitur baru yang diklaim selesai pada sesi ini.
 
 ### Hasil
 
-- `scripts/content/types.ts`: tipe `SeedNodeType` dan properti opsional `nodeType` pada
+- `backend/supabase/seed/content/types.ts`: tipe `SeedNodeType` dan properti opsional `nodeType` pada
   lesson, sehingga jenis node dapat berbeda dari jenis lesson.
-- `scripts/content/helpers.ts`: helper `nodeLesson()` untuk memasang override node.
-- `scripts/generate-curriculum-sql.ts`: generator memakai `nodeType ?? kind`.
-- `scripts/content/extensions.ts` (baru): 21 lesson baru, 63 soal baru.
+- `backend/supabase/seed/content/helpers.ts`: helper `nodeLesson()` untuk memasang override node.
+- `backend/supabase/seed/generate.ts`: generator memakai `nodeType ?? kind`.
+- `backend/supabase/seed/content/extensions.ts` (baru): 21 lesson baru, 63 soal baru.
   - Setiap mapel inti mendapat 1 practice (3 soal) dan 1 checkpoint (3 soal) di unit
     Level 2, serta 1 legendary (3 soal sulit) di unit Level 3.
   - Semua soal baru ditulis khusus; tidak menyalin soal base/review.
@@ -268,7 +268,7 @@ Pairs, Fill in the Blank, dan Picture Identification, tanpa mengirim kunci ke br
 
 #### Renderer modular
 
-- `src/game/minigames/types.ts` — kontrak `MiniGameProps` dan `MiniGameView`
+- `frontend/src/game/minigames/types.ts` — kontrak `MiniGameProps` dan `MiniGameView`
   (`prompt?`, `answer`, `ownsMedia?`, `getAnswer`, `focus`, `setDisabled`, `markResult?`).
 - `shuffle.ts` — seeded shuffle deterministik agar urutan token stabil saat render ulang.
 - `wordBank.ts` — bank kata, strip jawaban, hapus chip, reset.
@@ -281,7 +281,7 @@ Pairs, Fill in the Blank, dan Picture Identification, tanpa mengirim kunci ke br
 - `index.ts` — registry `createMiniGame` dan `isMiniGameSupported`.
 - `lesson-play.page.ts` — tidak lagi berisi renderer per tipe; memakai `view.prompt`,
   `view.answer`, `view.getAnswer()`, `setDisabled`, `markResult`, dan `focus`.
-- `src/styles/pages.css` — style bank, token, strip, chip, pasangan, gambar, input rumpang,
+- `frontend/src/styles/pages.css` — style bank, token, strip, chip, pasangan, gambar, input rumpang,
   hasil benar/salah, serta layout responsif.
 
 #### Database dan konten
@@ -353,11 +353,11 @@ fondasi Tahap 1–3.
 - Migration `20261108109000_question_scenes.sql`: kolom `scene jsonb` pada `questions`
   untuk dialog, narasi, dan transkrip audio. `start_lesson` mengirim `scene` pada payload.
 - Renderer baru: `listening.ts`, `speaking.ts`, `translation.ts`, `conversation.ts`,
-  `story.ts`, dengan helper `src/game/audio/speech.ts` untuk text-to-speech.
+  `story.ts`, dengan helper `frontend/src/game/audio/speech.ts` untuk text-to-speech.
 - Registry kini memetakan seluruh 12 tipe `question_type`.
 - `grade_question` diperluas: jawaban `optionId` berlaku untuk listening, conversation,
   dan story; teks tetap dinormalisasi untuk speaking/translation.
-- Konten baru di `scripts/content/stage4.ts`: 2 listening, 1 speaking, 1 translation,
+- Konten baru di `backend/supabase/seed/content/stage4.ts`: 2 listening, 1 speaking, 1 translation,
   1 conversation, 1 story, dan 2 matching (6 dan 5 pasangan). Seed menjadi 225 soal,
   12 tipe soal, 15 pasangan matching.
 
@@ -378,17 +378,17 @@ fondasi Tahap 1–3.
 
 #### UI
 
-- `src/pages/practice.page.ts` — Practice Hub dengan selector mata pelajaran dan 7 kartu mode.
-- `src/pages/practice-play.page.ts` — layar bermain: progress, timer total/per soal, combo,
+- `frontend/src/pages/practice.page.ts` — Practice Hub dengan selector mata pelajaran dan 7 kartu mode.
+- `frontend/src/pages/practice-play.page.ts` — layar bermain: progress, timer total/per soal, combo,
   feedback, ringkasan, unit chooser untuk Unit Review.
 - Route `/practice` dan `/practice/play`; item navigasi “Latihan”.
-- `src/styles/practice.css` untuk audio, dialog, story, translation, speaking, dan hub.
+- `frontend/src/styles/practice.css` untuk audio, dialog, story, translation, speaking, dan hub.
 
 #### Test dan dokumentasi
 
 - `scripts/test-sql.mjs` diperluas menjadi 106 smoke check: scene, grading tipe baru,
   sesi latihan, combo/kecepatan, XP idempoten, unit review, mistakes, dan RLS practice.
-- `tests/practice.test.ts` untuk helper tampilan timer/combo.
+- `tests/unit/practice.test.ts` untuk helper tampilan timer/combo.
 - README, AUDIT, GAMEPLAY, DATABASE, TESTING, dan SETUP diperbarui.
 
 ### Pengujian yang dijalankan
@@ -706,8 +706,8 @@ mengubah UI yang sudah ada selain menautkan fitur baru.
   review hanya mengembalikan soal jatuh tempo, node hadiah menolak klaim sebelum level
   selesai, klaim memberi Koin/XP tepat sekali, klaim kedua idempoten, dan RLS menyembunyikan
   data pemain lain.
-- Unit test baru: `tests/mastery.test.ts` (3 test parser) dan satu test
-  `parseRewardNodeClaim` di `tests/rewards.test.ts`.
+- Unit test baru: `tests/unit/mastery.test.ts` (3 test parser) dan satu test
+  `parseRewardNodeClaim` di `tests/unit/rewards.test.ts`.
 - Dokumentasi diperbarui agar tidak lagi menyatakan mastery “Not implemented”: README,
   `docs/DATABASE.md`, `docs/GAMEPLAY.md`, `docs/TESTING.md`, dan catatan sesi ini.
 - Migration diterapkan ke Supabase remote `xvrnmxbrxhtzzavmrlvy` (proyek production milik
@@ -772,16 +772,16 @@ menghapus daftar lesson DOM.
 
 ### Hasil
 
-- `src/game/characters/kiko.ts`: factory `createKiko(scene, { reducedMotion, scale })`
+- `frontend/src/game/characters/kiko.ts`: factory `createKiko(scene, { reducedMotion, scale })`
   dengan 13 state animasi (idle, blink, happy, sad, excited, surprised, thinking,
   celebrating, encouraging, disappointed, speaking, jumping, walking), API `root`,
   `setAnimation`, `setFacing`, `getAnimation`, `destroy`, dan satu rig phaser untuk bob,
   kaki, telinga, lengan, serta lentera.
-- `src/game/mascot/createMascotStage.ts` kini memakai `createKiko`; gambar, posisi, dan
+- `frontend/src/game/mascot/createMascotStage.ts` kini memakai `createKiko`; gambar, posisi, dan
   denyut idle maskot landing dipertahankan, hanya sumber kode karakternya yang dipusatkan.
-- `src/game/adventure/`: tipe peta, `computeMapPositions` (serpentine tiga kolom dengan
+- `frontend/src/game/adventure/`: tipe peta, `computeMapPositions` (serpentine tiga kolom dengan
   perapatan baris), dan `createAdventureMap` yang memasang/membersihkan Phaser game.
-- `src/game/scenes/adventureMapScene.ts`: latar 2D deterministik per level, jalan berkelok,
+- `frontend/src/game/scenes/adventureMapScene.ts`: latar 2D deterministik per level, jalan berkelok,
   node status selesai/siap/terkunci/pratinjau/hadiah, Kiko berjalan antarnode sebelum
   navigasi, tooltip DOM-style di kanvas, animasi disappointed untuk node terkunci, dan
   dukungan `prefers-reduced-motion`.
@@ -790,14 +790,14 @@ menghapus daftar lesson DOM.
   sehingga bisa dioperasikan keyboard dan dibacakan pembaca layar; judul level, hitungan
   selesai, dan status pengumuman diperbarui lewat `onLevelChange`. Peta dimuat lazy,
   dihancurkan lewat `ctx.onCleanup`, dan tidak menggantikan tautan DOM yang aksesibel.
-- `src/styles/pages.css`: gaya `.adventure-map*` (header, frame rasio 900×460, legenda).
+- `frontend/src/styles/pages.css`: gaya `.adventure-map*` (header, frame rasio 900×460, legenda).
 
 ### Pengujian
 
 | Perintah | Hasil |
 | --- | --- |
 | `npm run typecheck` | Lulus 0 error. |
-| `npm test` | **65 test lulus** (8 file), termasuk 4 test baru `tests/adventure-map.test.ts`. |
+| `npm test` | **65 test lulus** (8 file), termasuk 4 test baru `tests/unit/adventure-map.test.ts`. |
 | `npm run build` | Lulus; Phaser tetap chunk lazy (`phaser-*.js`). |
 | `npm run test:sql` | Tidak dijalankan ulang: tidak ada perubahan SQL pada sesi ini. |
 | `npm run verify:supabase` | Tidak dijalankan ulang: tidak ada perubahan remote pada sesi ini. |
@@ -831,7 +831,7 @@ responsive UI, pipeline aset) tanpa mengubah sistem Stage 1–5.
 
 ### Hasil
 
-- **Audio sintetis baru** (`src/game/audio/audioEngine.ts`, `patterns.ts`): tujuh SFX
+- **Audio sintetis baru** (`frontend/src/game/audio/audioEngine.ts`, `patterns.ts`): tujuh SFX
   (klik, langkah, benar, salah, selesai, hadiah, terkunci) dan musik latar lembut dari
   osilator Web Audio. Volume mengikuti `music_volume`, `sfx_volume`, dan
   `voice_volume`; mute lokal di topbar (`aria-pressed`) tanpa mengubah database;
@@ -845,7 +845,7 @@ responsive UI, pipeline aset) tanpa mengubah sistem Stage 1–5.
   perpindahan level memakai fade singkat yang dimatikan pada reduced motion.
 - **SFX terhubung ke gameplay**: jawaban benar/salah, hasil lesson, klaim hadiah,
   pemilihan level dan node peta, serta klik umum tombol/tautan.
-- **Pipeline aset**: `src/game/assets/manifest.ts` (key, scene, sumber, lisensi),
+- **Pipeline aset**: `frontend/src/game/assets/manifest.ts` (key, scene, sumber, lisensi),
   `load.ts` (Phaser loader + error logging), `docs/ASSETS.md`, dan unit test yang
   memvalidasi path file nyata.
 - **Playwright ditambahkan** (`@playwright/test`, `playwright.config.ts`,
@@ -957,7 +957,7 @@ lulus.
   menghitung agregat yang sama dari `subjects`, `courses`, `course_levels`, `units`,
   `lessons` terpublikasi plus view aman `lesson_question_stats` — tanpa membaca satu pun
   baris soal. Hasilnya: katalog, Practice Hub, dan rute lain kembali tanpa error halaman.
-- **Migration perbaikan disiapkan:** `supabase/migrations/20261110150000_subject_overview_owner.sql`
+- **Migration perbaikan disiapkan:** `backend/supabase/migrations/20261110150000_subject_overview_owner.sql`
   membuat ulang `subject_overview` dengan hak owner (`security_invoker = false`) tanpa
   mengubah definisi, komentar, atau grant. `scripts/test-sql.mjs` kini menjalankan view itu
   sebagai role `authenticated`; sebelum perbaikan, query tersebut gagal dengan
@@ -1061,8 +1061,8 @@ lulus.
   riwayat, klaim), `/notifications` (tandai satu/semua dibaca), dan
   `/players/:username` (profil publik + aksi sesuai relasi).
 - **Integrasi**: empat route baru, item nav Teman/Liga/Kabar, kartu Komunitas di beranda,
-  dan `src/styles/social.css`.
-- **Tipe dan client**: `src/types/social.ts`, perluasan `src/types/database.ts`,
+  dan `frontend/src/styles/social.css`.
+- **Tipe dan client**: `frontend/src/types/social.ts`, perluasan `frontend/src/types/database.ts`,
   `social.repository.ts`, dan `social.service.ts` dengan parser payload defensif.
 - **Perbaikan keamanan**: `showToast` memakai `textContent`, bukan `innerHTML`; judul quest
   yang memuat HTML tidak dieksekusi (diuji E2E).
@@ -1113,7 +1113,7 @@ lulus.
   `anon`/`authenticated`; penulisan hanya lewat helper yang di-revoke dari API. Grant Koin/XP
   dan broadcast menulis audit, bukan aksi client langsung.
 - **Integrasi**: route staff-only, guard redirect pemain biasa ke `/app`, nav sidebar dan
-  ikon topbar staff-only, `src/styles/developer.css`, dan label transaksi
+  ikon topbar staff-only, `frontend/src/styles/developer.css`, dan label transaksi
   `developer_grant` di wallet.
 - **Pengujian**: SQL check diperluas untuk overview/pencarian/grant/ledger/audit/broadcast/
   RLS; verifikasi API nyata ditambah tujuh check; E2E baru memakai akun staff QA + akun
@@ -1210,8 +1210,8 @@ lulus.
 
 ### Yang dikerjakan
 
-- **Dukungan base path**: `src/app/basePath.ts` (normalisasi, `stripBase`, `withBase`),
-  dipakai router untuk navigasi/popstate/redirect dan `src/config/brand.ts` untuk
+- **Dukungan base path**: `frontend/src/app/basePath.ts` (normalisasi, `stripBase`, `withBase`),
+  dipakai router untuk navigasi/popstate/redirect dan `frontend/src/config/brand.ts` untuk
   `appOrigin`. Favicon memakai `%BASE_URL%`.
 - **Build Pages**: `npm run build:pages` memakai `vite build --base=/lentera/`, lalu
   `scripts/pages-fallback.mjs` menyalin `index.html` ke `404.html` dan menulis `.nojekyll`.

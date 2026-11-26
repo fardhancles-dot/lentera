@@ -188,6 +188,9 @@ function pushMigrations(ref, dbPassword, token) {
   ];
   const result = spawnSync('npx', args, {
     stdio: 'inherit',
+    // Supabase CLI treats its working directory as the project root and reads
+    // backend/supabase/config.toml plus the linked-project cache from there.
+    cwd: 'backend',
     // Node cannot execute npx.cmd directly on Windows without a shell.
     shell: process.platform === 'win32',
     env: { ...process.env, SUPABASE_ACCESS_TOKEN: token },

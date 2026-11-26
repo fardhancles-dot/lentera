@@ -8,10 +8,10 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
-    "build:pages": "tsc --noEmit && vite build --base=/lentera/ && node scripts/pages-fallback.mjs",
-    "preview": "vite preview",
+    "dev": "vite --config frontend/vite.config.ts",
+    "build": "tsc --noEmit && vite build --config frontend/vite.config.ts",
+    "build:pages": "tsc --noEmit && vite build --config frontend/vite.config.ts --base=/lentera/ && node scripts/pages-fallback.mjs",
+    "preview": "vite preview --config frontend/vite.config.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -24,7 +24,7 @@
     "verify:auto-levels": "node --env-file=.env scripts/verify-auto-levels.mjs",
     "setup:supabase": "node scripts/setup-supabase.mjs",
     "db:apply-catalog-fix": "node scripts/apply-catalog-fix.mjs",
-    "seed:build": "tsx scripts/generate-curriculum-sql.ts"
+    "seed:build": "tsx backend/supabase/seed/generate.ts"
   },
   "dependencies": {
     "@fontsource-variable/nunito": "^5.2.8",

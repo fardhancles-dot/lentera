@@ -35,7 +35,7 @@ atau teks milik Duolingo yang dipakai.
 Warna dipakai berlapis: hijau untuk aksi, kuning untuk hadiah, biru untuk informasi, merah
 hanya untuk kesalahan. Latar tidak pernah seluruhnya hijau.
 
-Token didefinisikan di `src/styles/tokens.css`.
+Token didefinisikan di `frontend/src/styles/tokens.css`.
 
 ## Tipografi
 
@@ -69,7 +69,7 @@ encouraging, speaking, disappointed. Animasi tersebut membutuhkan sprite sheet/r
 belum dibuat. Saat ini semua digambar prosedural agar tidak ada klaim aset yang tidak ada.
 
 Aturan: jangan memakai emoji sebagai karakter atau ikon UI. Ikon memakai SVG orisinal di
-`src/components/icons.ts`.
+`frontend/src/components/icons.ts`.
 
 ## Avatar pemain
 
@@ -125,7 +125,7 @@ public/assets/pictures/   # tiga ilustrasi soal SVG orisinal
 
 Karakter, peta, ikon, dan audio dibuat sebagai SVG inline/Phaser Graphics/osilator supaya
 build ringan, tajam di semua resolusi, dan bebas lisensi pihak ketiga. Manifest di
-`src/game/assets/manifest.ts` mencatat scene pemakai serta lisensi setiap aset; rincian di
+`frontend/src/game/assets/manifest.ts` mencatat scene pemakai serta lisensi setiap aset; rincian di
 `docs/ASSETS.md`.
 
 Saat aset raster/audio ditambahkan:

@@ -51,34 +51,34 @@ try {
   `);
   console.log('auth stub ok');
 
-  await run('supabase/migrations/20261108090000_identity.sql');
-  await run('supabase/migrations/20261108100000_curriculum.sql');
-  await run('supabase/migrations/20261108105000_curriculum_overview.sql');
-  await run('supabase/migrations/20261108107000_question_pairs.sql');
-  await run('supabase/migrations/20261108109000_question_scenes.sql');
-  await run('supabase/migrations/20261108110000_curriculum_seed.sql');
-  await run('supabase/migrations/20261108120000_lesson_engine.sql');
-  await run('supabase/migrations/20261109100000_practice_engine.sql');
-  await run('supabase/migrations/20261110100000_friends_quest.sql');
-  await run('supabase/migrations/20261110120000_progression_economy.sql');
-  await run('supabase/migrations/20261110130000_tahap5_rewards.sql');
-  await run('supabase/migrations/20261110140000_mastery_review_rewards.sql');
-  await run('supabase/migrations/20261110150000_subject_overview_owner.sql');
-  await run('supabase/migrations/20261111100000_social_league.sql');
-  await run('supabase/migrations/20261111110000_developer_dashboard.sql');
-  await run('supabase/migrations/20261112100000_one_question_per_level.sql');
-  await run('supabase/migrations/20261112110000_admin_foundation.sql');
-  await run('supabase/migrations/20261112120000_admin_curriculum.sql');
-  await run('supabase/migrations/20261112130000_admin_content.sql');
-  await run('supabase/migrations/20261112140000_admin_gamification.sql');
-  await run('supabase/migrations/20261112150000_maintenance_mode.sql');
-  await run('supabase/migrations/20261113100000_auto_levels.sql');
-  await run('supabase/migrations/20261114100000_daily_goal_study_sessions.sql');
-  await run('supabase/migrations/20261114101000_development_subject_lesson_access.sql');
-  await run('supabase/migrations/20261115100000_learning_sections.sql');
-  await run('supabase/migrations/20261115101000_subject_learn_categories.sql');
-  await run('supabase/migrations/20261115102000_subject_category_in_form.sql');
-  await run('supabase/migrations/20261115110000_subject_icon_url.sql');
+  await run('backend/supabase/migrations/20261108090000_identity.sql');
+  await run('backend/supabase/migrations/20261108100000_curriculum.sql');
+  await run('backend/supabase/migrations/20261108105000_curriculum_overview.sql');
+  await run('backend/supabase/migrations/20261108107000_question_pairs.sql');
+  await run('backend/supabase/migrations/20261108109000_question_scenes.sql');
+  await run('backend/supabase/migrations/20261108110000_curriculum_seed.sql');
+  await run('backend/supabase/migrations/20261108120000_lesson_engine.sql');
+  await run('backend/supabase/migrations/20261109100000_practice_engine.sql');
+  await run('backend/supabase/migrations/20261110100000_friends_quest.sql');
+  await run('backend/supabase/migrations/20261110120000_progression_economy.sql');
+  await run('backend/supabase/migrations/20261110130000_tahap5_rewards.sql');
+  await run('backend/supabase/migrations/20261110140000_mastery_review_rewards.sql');
+  await run('backend/supabase/migrations/20261110150000_subject_overview_owner.sql');
+  await run('backend/supabase/migrations/20261111100000_social_league.sql');
+  await run('backend/supabase/migrations/20261111110000_developer_dashboard.sql');
+  await run('backend/supabase/migrations/20261112100000_one_question_per_level.sql');
+  await run('backend/supabase/migrations/20261112110000_admin_foundation.sql');
+  await run('backend/supabase/migrations/20261112120000_admin_curriculum.sql');
+  await run('backend/supabase/migrations/20261112130000_admin_content.sql');
+  await run('backend/supabase/migrations/20261112140000_admin_gamification.sql');
+  await run('backend/supabase/migrations/20261112150000_maintenance_mode.sql');
+  await run('backend/supabase/migrations/20261113100000_auto_levels.sql');
+  await run('backend/supabase/migrations/20261114100000_daily_goal_study_sessions.sql');
+  await run('backend/supabase/migrations/20261114101000_development_subject_lesson_access.sql');
+  await run('backend/supabase/migrations/20261115100000_learning_sections.sql');
+  await run('backend/supabase/migrations/20261115101000_subject_learn_categories.sql');
+  await run('backend/supabase/migrations/20261115102000_subject_category_in_form.sql');
+  await run('backend/supabase/migrations/20261115110000_subject_icon_url.sql');
 
   // Legacy social data existed before the follow migration. Create it first so
   // the backfill and compatibility cache are tested against real rows.
@@ -101,25 +101,25 @@ try {
     [legacyA, legacyB, legacyC],
   );
 
-  await run('supabase/migrations/20261116100000_social_follows_inbox.sql');
-  await run('supabase/migrations/20261116120000_shop_rarity_product_images.sql');
-  await run('supabase/migrations/20261116130000_subject_kejuruan_category.sql');
-  await run('supabase/migrations/20261116140000_notification_indicators.sql');
-  await run('supabase/migrations/20261116150000_profile_account_number.sql');
-  await run('supabase/migrations/20261118100000_question_type_forms.sql');
-  await run('supabase/migrations/20261120100000_journey_background_settings.sql');
-  await run('supabase/migrations/20261120110000_notification_delete_read.sql');
-  await run('supabase/migrations/20261120120000_inventory_product_metadata.sql');
-  await run('supabase/migrations/20261120130000_background_music.sql');
-  await run('supabase/migrations/20261120140000_heart_regeneration_settings.sql');
-  await run('supabase/migrations/20261121100000_username_format.sql');
-  await run('supabase/migrations/20261121110000_subject_overview_perf.sql');
-  await run('supabase/migrations/20261123100000_matching_pairs_payload.sql');
-  await run('supabase/migrations/20261124100000_diamond_economy.sql');
-  await run('supabase/migrations/20261125100000_combined_question_type.sql');
-  await run('supabase/migrations/20261125101000_combined_questions.sql');
-  await run('supabase/migrations/20261125110000_sentence_builder_single_word.sql');
-  await run('supabase/migrations/20261125120000_admin_delete_questions_media.sql');
+  await run('backend/supabase/migrations/20261116100000_social_follows_inbox.sql');
+  await run('backend/supabase/migrations/20261116120000_shop_rarity_product_images.sql');
+  await run('backend/supabase/migrations/20261116130000_subject_kejuruan_category.sql');
+  await run('backend/supabase/migrations/20261116140000_notification_indicators.sql');
+  await run('backend/supabase/migrations/20261116150000_profile_account_number.sql');
+  await run('backend/supabase/migrations/20261118100000_question_type_forms.sql');
+  await run('backend/supabase/migrations/20261120100000_journey_background_settings.sql');
+  await run('backend/supabase/migrations/20261120110000_notification_delete_read.sql');
+  await run('backend/supabase/migrations/20261120120000_inventory_product_metadata.sql');
+  await run('backend/supabase/migrations/20261120130000_background_music.sql');
+  await run('backend/supabase/migrations/20261120140000_heart_regeneration_settings.sql');
+  await run('backend/supabase/migrations/20261121100000_username_format.sql');
+  await run('backend/supabase/migrations/20261121110000_subject_overview_perf.sql');
+  await run('backend/supabase/migrations/20261123100000_matching_pairs_payload.sql');
+  await run('backend/supabase/migrations/20261124100000_diamond_economy.sql');
+  await run('backend/supabase/migrations/20261125100000_combined_question_type.sql');
+  await run('backend/supabase/migrations/20261125101000_combined_questions.sql');
+  await run('backend/supabase/migrations/20261125110000_sentence_builder_single_word.sql');
+  await run('backend/supabase/migrations/20261125120000_admin_delete_questions_media.sql');
 
   // Diamond economy: the server owns the rate, the balance, and the ledgers.
   const diamondUserRow = await db.query(
@@ -4243,24 +4243,23 @@ try {
     JSON.stringify(builderPayload.options),
   );
 
-  // A single-word answer is stored one letter per option, and the arranged
-  // letters are joined without spaces so they match the saved answer.
+  // A single-word answer is stored as one whole-word option, so the player
+  // gets a single card instead of one card per letter.
   const builderSingleWord = await db.query(
     `select public.admin_save_question($1::jsonb, 'Uji susun kata satu kata') as payload`,
     [JSON.stringify({
       lessonId: lessonRow.id, slug: 'soal-susun-kata-satu-kata', type: 'sentence_builder',
-      prompt: 'Susunlah huruf-huruf berikut menjadi kata yang benar.', points: 10,
-      options: [...'KOMPUTER'].map((label, index) => ({
-        label, isCorrect: false, sortOrder: index,
-      })),
+      prompt: 'Susunlah kata berikut menjadi kata yang benar.', points: 10,
+      options: [{ label: 'KOMPUTER', isCorrect: false, sortOrder: 0 }],
       answers: [{ answer: 'KOMPUTER', isCaseSensitive: false }],
-      pairs: [], media: [], scene: { tokenMode: 'letters' },
+      pairs: [], media: [], scene: {},
     })],
   );
   const builderSinglePayload = builderSingleWord.rows[0].payload;
   check(
-    builderSinglePayload.options.length === 8,
-    'sentence builder saves a one-word answer as letter tokens',
+    builderSinglePayload.options.length === 1 &&
+      builderSinglePayload.options[0].label === 'KOMPUTER',
+    'sentence builder saves a one-word answer as one whole word',
     JSON.stringify(builderSinglePayload.options),
   );
 
@@ -4268,10 +4267,8 @@ try {
     `select public.admin_save_question($1::jsonb, 'Uji kombinasi susun kata satu kata') as payload`,
     [JSON.stringify({
       lessonId: lessonRow.id, slug: 'soal-kombinasi-susun-kata-satu-kata', type: 'combined',
-      prompt: 'Susunlah huruf menjadi nama mata pelajaran.', points: 10,
-      options: [...'MATEMATIKA'].map((label, index) => ({
-        label, isCorrect: false, sortOrder: index,
-      })),
+      prompt: 'Susunlah kata menjadi nama mata pelajaran.', points: 10,
+      options: [{ label: 'MATEMATIKA', isCorrect: false, sortOrder: 0 }],
       answers: [{ answer: 'MATEMATIKA', isCaseSensitive: false }],
       pairs: [], media: [],
       scene: {
@@ -4279,14 +4276,14 @@ try {
         elements: [{ kind: 'text', text: 'Pelajari angka dan hitungan.' }],
         mechanics: ['sentence_builder', 'word_bank'],
         answer: { mode: 'order', grading: 'all', display: 'bank', partLabels: [] },
-        tokenMode: 'letters',
       },
     })],
   );
   const combinedPayload = combinedSingleWord.rows[0].payload;
   check(
-    combinedPayload.options.length === 10,
-    'combined order mode saves a one-word answer as letter tokens',
+    combinedPayload.options.length === 1 &&
+      combinedPayload.options[0].label === 'MATEMATIKA',
+    'combined order mode saves a one-word answer as one whole word',
     JSON.stringify(combinedPayload.options),
   );
 
@@ -4329,15 +4326,15 @@ try {
   );
   check(
     await gradeFor(builderSinglePayload.id, 'KOMPUTER'),
-    'one-word sentence builder grades the assembled letters',
+    'one-word sentence builder grades the whole word',
   );
   check(
     !(await gradeFor(builderSinglePayload.id, 'KOPMUTER')),
-    'one-word sentence builder rejects the wrong letter order',
+    'one-word sentence builder rejects a different word',
   );
   check(
     await gradeFor(combinedPayload.id, 'MATEMATIKA'),
-    'combined order mode grades the assembled letters',
+    'combined order mode grades the whole word',
   );
   check(
     await gradeFor(combinedWordsPayload.id, 'IBU MEMASAK NASI'),

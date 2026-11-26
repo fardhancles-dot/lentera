@@ -1,6 +1,6 @@
 # Database
 
-Database: PostgreSQL di Supabase. Migration ada di `supabase/migrations/`.
+Database: PostgreSQL di Supabase. Migration ada di `backend/supabase/migrations/`.
 
 > **Status:** kelima belas migration sudah diterapkan ke project Supabase nyata
 > (`xvrnmxbrxhtzzavmrlvy`, region Singapura), termasuk perbaikan view katalog
@@ -37,7 +37,7 @@ Database: PostgreSQL di Supabase. Migration ada di `supabase/migrations/`.
 | `20261111110000_developer_dashboard.sql` | `audit_logs` append-only, helper `log_audit`, overview/pencarian staff, Reward Center satu akun, broadcast notifikasi (maks. 500), dan RLS staff-only. |
 | `20261113100000_auto_levels.sql` | `learning_nodes.question_id` + `level_number`, backfill 8 level lama, RPC `admin_create_question_level`, start lesson memakai soal level, statistik katalog berbasis level. |
 
-Seed dihasilkan dari `scripts/content/**/*.ts` dengan `npm run seed:build`. Jangan mengedit
+Seed dihasilkan dari `backend/supabase/seed/content/**/*.ts` dengan `npm run seed:build`. Jangan mengedit
 file seed secara manual; ubah sumber TypeScript lalu regenerasi. UUID bersifat deterministik
 sehingga seed aman dijalankan ulang (`on conflict do update`).
 
@@ -379,7 +379,7 @@ liga, atau notifikasi.
 
 ### Opsi A — SQL Editor (pemula)
 
-Jalankan berurutan sesuai nama file di `supabase/migrations/`:
+Jalankan berurutan sesuai nama file di `backend/supabase/migrations/`:
 
 1. `20261108090000_identity.sql`
 2. `20261108100000_curriculum.sql`
@@ -404,7 +404,11 @@ Pastikan tidak ada error, lalu cek Table Editor: `subjects`, `lessons`, `questio
 
 ### Opsi B — Supabase CLI
 
+Jalankan dari folder `backend/`, tempat Supabase CLI menemukan folder `supabase/` dan
+cache project yang ter-link:
+
 ```bash
+cd backend
 npm install -g supabase
 supabase login
 supabase link --project-ref <project-ref>
@@ -430,7 +434,7 @@ Jangan memberi role lewat form frontend atau menyimpan password developer di kod
 2. Aktifkan RLS dan tulis policy eksplisit.
 3. Revoke grant default; beri grant kolom bila ada kolom yang tidak boleh diubah pemain.
 4. Index foreign key dan kolom filter utama.
-5. Perbarui tipe `Database` di `src/types/database.ts`.
+5. Perbarui tipe `Database` di `frontend/src/types/database.ts`.
 6. Tambahkan smoke check RLS dua pengguna di `scripts/test-sql.mjs`.
 
 ## Rencana skema berikutnya

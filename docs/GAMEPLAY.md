@@ -21,7 +21,7 @@
 - Peta petualangan 2D di `/learn/:subject` dengan chip pemilih level: jalan
   berkelok, node selesai/siap/terkunci, Kiko berjalan ke node sebelum navigasi, dan
   tooltip status. Daftar lesson DOM di bawah peta tetap lengkap dan bisa dipakai keyboard.
-- Karakter Kiko reusable (`src/game/characters/kiko.ts`) dengan 13 state animasi: idle,
+- Karakter Kiko reusable (`frontend/src/game/characters/kiko.ts`) dengan 13 state animasi: idle,
   blink, happy, sad, excited, surprised, thinking, celebrating, encouraging,
   disappointed, speaking, jumping, walking. Kiko tampil di landing/auth (idle, blink,
   celebrate saat diklik) dan di hasil lesson (celebrating bila lulus, sad bila belum).
@@ -80,7 +80,7 @@ untuk pemain yang sudah login.
 
 - **Musik** hanya berjalan untuk pengguna login, berhenti saat tab disembunyikan, dan
   gain-nya mengikuti `music_volume` (0–100).
-- **SFX** mengikuti `sfx_volume`; pola nada ada di `src/game/audio/patterns.ts`.
+- **SFX** mengikuti `sfx_volume`; pola nada ada di `frontend/src/game/audio/patterns.ts`.
 - **Suara karakter/model** memakai `speechSynthesis` dan menghormati `voice_volume`
   bila pemanggil tidak memberi volume eksplisit.
 - **Mute** adalah preferensi perangkat (localStorage), bukan perubahan database;
@@ -148,7 +148,7 @@ Perilaku yang sudah berjalan:
 | 20 | Friends Quest | Target XP gabungan, kontribusi tiap anggota, klaim hadiah sekali. | **Implemented · Tested (SQL + Supabase API)** — co-op kode undangan; UI belum diuji browser |
 | 21 | Soal Kombinasi | Satu nomor soal menggabungkan elemen teks/cerita/percakapan/gambar/audio dengan satu bentuk jawaban (pilih, ketik, susun, cocokkan). | **Implemented · Tested (SQL)** — satu soal = satu penilaian |
 
-Catatan implementasi: lima mini-game baru berada di `src/game/minigames/` dan dipilih
+Catatan implementasi: lima mini-game baru berada di `frontend/src/game/minigames/` dan dipilih
 lewat registry `createMiniGame`. Halaman lesson tidak lagi memilih renderer berdasarkan
 tipe; ia hanya menampilkan `view.prompt`/`view.answer`, mengirim `view.getAnswer()`,
 memanggil `setDisabled`, lalu `markResult`. Tipe yang belum punya renderer memakai layar

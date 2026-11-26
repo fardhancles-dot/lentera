@@ -78,16 +78,16 @@ permission granular di server.
 
 ## Migration
 
-1. `supabase/migrations/20261112110000_admin_foundation.sql`
+1. `backend/supabase/migrations/20261112110000_admin_foundation.sql`
    Permission, konteks admin, overview, pengguna, role, analytics, matriks izin.
-2. `supabase/migrations/20261112120000_admin_curriculum.sql`
+2. `backend/supabase/migrations/20261112120000_admin_curriculum.sql`
    CRUD kurikulum, reorder, bank soal, validasi 12 tipe, status soal.
-3. `supabase/migrations/20261112130000_admin_content.sql`
+3. `backend/supabase/migrations/20261112130000_admin_content.sql`
    Site settings, halaman blok, pengumuman, notifikasi, media, bucket storage,
    trigger registrasi.
-4. `supabase/migrations/20261112140000_admin_gamification.sql`
+4. `backend/supabase/migrations/20261112140000_admin_gamification.sql`
    Katalog gamifikasi, sosial, Friend Quest, kesehatan konten.
-5. `supabase/migrations/20261112150000_maintenance_mode.sql`
+5. `backend/supabase/migrations/20261112150000_maintenance_mode.sql`
    Helper `site_maintenance_active`, trigger `enforce_maintenance_mode`, dan
    guard statement-level pada tabel state pemain (attempt, wallet/ledger,
    mastery, quest, toko, sosial, notifikasi, liga).
@@ -99,6 +99,7 @@ backup otomatis Supabase tetap perlu diperiksa di dashboard sebelum perubahan
 berikutnya.
 
 ```bash
+cd backend
 npx supabase db push --include-all --remote --password "$SUPABASE_DB_PASSWORD" --yes
 ```
 
@@ -221,7 +222,7 @@ masih setengah jadi dan rantai integrasi yang belum tertutup.
    `admin_reorder` yang sudah ada. Tombol naik/turun dipasang pada mapel, kursus,
    level, unit, lesson, node, dan soal. Reorder menuangkan ulang `sort_order`
    sebagai 0..n-1 untuk daftar sibling yang dikirim.
-2. **Media picker** — `pickMedia()` di `src/pages/admin/media.ts` menampilkan
+2. **Media picker** — `pickMedia()` di `frontend/src/pages/admin/media.ts` menampilkan
    library `content-media`; editor soal mengisi jenis, URL, dan alt text, sedangkan
    blok gambar halaman CMS mengisi URL dan alt text.
 3. **Konten website dipakai pemain** — RPC publik yang sebelumnya tidak pernah
@@ -232,40 +233,40 @@ masih setengah jadi dan rantai integrasi yang belum tertutup.
      heading/paragraph/list/image/callout/faq tanpa HTML bebas.
    - `get_active_announcements` → banner pengumuman aktif di layout pemain,
      menghormati audiens all/onboarded/staff.
-4. **Logo CMS** dipakai lewat `src/components/brandMark.ts`; lamp tetap menjadi
+4. **Logo CMS** dipakai lewat `frontend/src/components/brandMark.ts`; lamp tetap menjadi
    fallback ketika logo kosong.
 5. **Pengujian SQL baru** membuktikan draft page tidak publik, page terbit publik,
    pengumuman publik terlihat anonim, dan pengumuman staff-only tidak.
 
 ### File yang ditambahkan
 
-- `src/types/siteContent.ts`
-- `src/repositories/content.repository.ts`
-- `src/services/content.service.ts`
-- `src/pages/info.page.ts`
-- `src/pages/admin/reorder.ts`
-- `src/components/brandMark.ts`
+- `frontend/src/types/siteContent.ts`
+- `frontend/src/repositories/content.repository.ts`
+- `frontend/src/services/content.service.ts`
+- `frontend/src/pages/info.page.ts`
+- `frontend/src/pages/admin/reorder.ts`
+- `frontend/src/components/brandMark.ts`
 
 ### File yang diubah
 
-- `src/app/router.ts` — route `/p/:slug`, judul dokumen memakai nama situs runtime.
-- `src/main.ts` — memuat konten publik sebelum route pertama.
-- `src/layouts/appLayout.ts` — brand runtime dan banner pengumuman.
-- `src/layouts/authLayout.ts` — brand dan copyright runtime.
-- `src/pages/welcome.page.ts` — hero, CTA, brand, footer, tautan halaman.
-- `src/pages/onboarding.page.ts`, `src/pages/not-found.page.ts` — brand dan logo runtime.
-- `src/pages/register.page.ts` — menampilkan penutupan registrasi dari site settings
+- `frontend/src/app/router.ts` — route `/p/:slug`, judul dokumen memakai nama situs runtime.
+- `frontend/src/main.ts` — memuat konten publik sebelum route pertama.
+- `frontend/src/layouts/appLayout.ts` — brand runtime dan banner pengumuman.
+- `frontend/src/layouts/authLayout.ts` — brand dan copyright runtime.
+- `frontend/src/pages/welcome.page.ts` — hero, CTA, brand, footer, tautan halaman.
+- `frontend/src/pages/onboarding.page.ts`, `frontend/src/pages/not-found.page.ts` — brand dan logo runtime.
+- `frontend/src/pages/register.page.ts` — menampilkan penutupan registrasi dari site settings
   (penegakan tetap trigger database).
-- `src/services/content.service.ts` — turunan warna hover/pressed dari warna brand.
-- `src/pages/admin/curriculum.ts` — kontrol reorder.
-- `src/pages/admin/questions.ts` — Bank Soal per mapel, form tambah/edit, media picker.
-- `src/pages/admin/curriculum.ts` — Map Level (pemantauan) dan editor kurikulum lanjutan.
-- `supabase/migrations/20261113100000_auto_levels.sql` — relasi soal-level, level otomatis, statistik level.
+- `frontend/src/services/content.service.ts` — turunan warna hover/pressed dari warna brand.
+- `frontend/src/pages/admin/curriculum.ts` — kontrol reorder.
+- `frontend/src/pages/admin/questions.ts` — Bank Soal per mapel, form tambah/edit, media picker.
+- `frontend/src/pages/admin/curriculum.ts` — Map Level (pemantauan) dan editor kurikulum lanjutan.
+- `backend/supabase/migrations/20261113100000_auto_levels.sql` — relasi soal-level, level otomatis, statistik level.
 - `scripts/verify-auto-levels.mjs` — verifikasi browser alur level otomatis.
-- `src/pages/admin/website.ts` — media picker untuk blok gambar.
-- `src/pages/admin/media.ts` — picker library.
-- `src/repositories/admin.repository.ts`, `src/services/admin.service.ts` — `reorder`.
-- `src/styles/admin.css`, `src/styles/pages.css` — gaya picker, banner, halaman info.
+- `frontend/src/pages/admin/website.ts` — media picker untuk blok gambar.
+- `frontend/src/pages/admin/media.ts` — picker library.
+- `frontend/src/repositories/admin.repository.ts`, `frontend/src/services/admin.service.ts` — `reorder`.
+- `frontend/src/styles/admin.css`, `frontend/src/styles/pages.css` — gaya picker, banner, halaman info.
 - `scripts/test-sql.mjs` — smoke check integrasi publik dan level otomatis.
 
 ### Masih terbuka

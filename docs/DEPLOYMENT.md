@@ -38,7 +38,7 @@ Karena itu:
 
 `npm run build:pages` menjalankan `vite build --base=/lentera/` lalu
 `scripts/pages-fallback.mjs` yang menyalin `index.html` menjadi `404.html` dan menulis
-`.nojekyll`. Router aplikasi memakai helper di `src/app/basePath.ts` untuk membuang prefix
+`.nojekyll`. Router aplikasi memakai helper di `frontend/src/app/basePath.ts` untuk membuang prefix
 saat mencocokkan route dan menambahkannya lagi saat menulis URL, sehingga tautan, refresh,
 dan redirect email tetap benar di sub-path.
 
@@ -137,7 +137,7 @@ Setelah terhubung, satu push ke `main` akan memicu dua pipeline: Vercel dan GitH
 ## Verifikasi yang sudah dilakukan
 
 - `npm run typecheck` lulus.
-- 10 unit test `tests/basePath.test.ts` lulus.
+- 10 unit test `tests/unit/basePath.test.ts` lulus.
 - `npm run build` (Vercel) dan `npm run build:pages` (GitHub Pages) lulus.
 - Simulasi lokal GitHub Pages di `/lentera/`: landing page tampil, 10 aset memakai prefix
   `/lentera/assets/`, klik tautan menghasilkan `/lentera/login`, deep link

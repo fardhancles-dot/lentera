@@ -34,7 +34,7 @@ di Story Mode, Fill in the Blank multi-rumpang, dan lokalisasi audio Speaking.
 | `grade_question` untuk opsi, teks, dan pasangan | Kunci tidak dikirim ke browser; diuji SQL + Supabase. |
 | `start_lesson`, `submit_attempt_answer`, `complete_lesson_attempt` | Attempt unik, penilaian server, XP/Koin idempoten. |
 | Bank soal 7 mapel inti + struktur Bahasa Sambas | 225 soal; Sambas sengaja kosong. |
-| 12 layar tipe soal | Registry `src/game/minigames/index.ts`. |
+| 12 layar tipe soal | Registry `frontend/src/game/minigames/index.ts`. |
 | Multiple Choice, Word Bank, Sentence Builder, Matching Pairs, Picture ID, Fill Blank, Typing | Renderer + grading + test. |
 | Listening, Speaking, Translation, Conversation, Story | Renderer + scene + grading + test. |
 | Match Madness, Ramp Up, Timed, Mistakes, Personalized, Unit Review, Legendary | Sesi practice server, timer, combo, XP idempoten. |
@@ -45,12 +45,12 @@ di Story Mode, Fill in the Blank multi-rumpang, dan lokalisasi audio Speaking.
 
 | Pekerjaan | Kondisi nyata | File |
 | --- | --- | --- |
-| Conversation Challenge | NPC, bubble, audio, dan pilihan sudah ada, tetapi semua pilihan hanya dinilai benar/salah tanpa respons NPC yang berbeda. Belum ada cabang dialog. | `src/game/minigames/conversation.ts`, `scripts/content/helpers.ts` |
-| Story Mode | Layar berurutan dan pertanyaan pemahaman ada, tetapi belum ada pilihan respons di tengah cerita. | `src/game/minigames/story.ts` |
-| Fill in the Blank | Hanya mendukung tepat satu rumpang (`parts.length === 2`). Spesifikasi meminta satu atau beberapa bagian kosong. | `src/game/minigames/fillBlank.ts` |
-| Speaking Challenge | `recognition.lang` dipaku `en-US`, sehingga materi Bahasa Indonesia berisiko salah dikenali. | `src/game/minigames/speaking.ts` |
-| Audio Listening | Slider volume hanya memengaruhi elemen `<audio>`, tidak memengaruhi text-to-speech. | `src/game/minigames/listening.ts`, `src/game/audio/speech.ts` |
-| Pemetaan tipe soal per mapel | Belum ada aturan yang menjaga agar tipe mini-game dipakai sesuai karakter mapel. | `scripts/content/index.ts` |
+| Conversation Challenge | NPC, bubble, audio, dan pilihan sudah ada, tetapi semua pilihan hanya dinilai benar/salah tanpa respons NPC yang berbeda. Belum ada cabang dialog. | `frontend/src/game/minigames/conversation.ts`, `backend/supabase/seed/content/helpers.ts` |
+| Story Mode | Layar berurutan dan pertanyaan pemahaman ada, tetapi belum ada pilihan respons di tengah cerita. | `frontend/src/game/minigames/story.ts` |
+| Fill in the Blank | Hanya mendukung tepat satu rumpang (`parts.length === 2`). Spesifikasi meminta satu atau beberapa bagian kosong. | `frontend/src/game/minigames/fillBlank.ts` |
+| Speaking Challenge | `recognition.lang` dipaku `en-US`, sehingga materi Bahasa Indonesia berisiko salah dikenali. | `frontend/src/game/minigames/speaking.ts` |
+| Audio Listening | Slider volume hanya memengaruhi elemen `<audio>`, tidak memengaruhi text-to-speech. | `frontend/src/game/minigames/listening.ts`, `frontend/src/game/audio/speech.ts` |
+| Pemetaan tipe soal per mapel | Belum ada aturan yang menjaga agar tipe mini-game dipakai sesuai karakter mapel. | `backend/supabase/seed/content/index.ts` |
 
 ## C. NOT STARTED — belum dibuat
 

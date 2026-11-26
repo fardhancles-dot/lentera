@@ -207,17 +207,17 @@ lolos hanya karena shell halaman berhasil dimuat.
 
 ## Unit test Vitest
 
-- `tests/validation.test.ts` — email, password, kekuatan password, konfirmasi, username,
+- `tests/unit/validation.test.ts` — email, password, kekuatan password, konfirmasi, username,
   nama tampilan, bio, target harian, zona waktu, volume, saran username.
-- `tests/authErrors.test.ts` — pemetaan error Supabase ke pesan Indonesia dan pencegahan
+- `tests/unit/authErrors.test.ts` — pemetaan error Supabase ke pesan Indonesia dan pencegahan
   kebocoran pesan backend mentah.
-- `tests/practice.test.ts` — format countdown latihan, batas bawah nol, dan multiplier
+- `tests/unit/practice.test.ts` — format countdown latihan, batas bawah nol, dan multiplier
   combo untuk tampilan. Skor sebenarnya tetap dihitung server.
-- `tests/minigames.test.ts` — parsing prompt Fill in the Blank tanpa rumpang, satu, dua,
+- `tests/unit/minigames.test.ts` — parsing prompt Fill in the Blank tanpa rumpang, satu, dua,
   dan tiga rumpang; penggabungan jawaban berurutan; penolakan jawaban kosong.
-- `tests/player.test.ts` — parsing state/wallet dari RPC, clamp Hearts/persentase, fallback
+- `tests/unit/player.test.ts` — parsing state/wallet dari RPC, clamp Hearts/persentase, fallback
   payload kosong, filter transaksi rusak, dan format countdown refill.
-- `tests/rewards.test.ts` — parsing quest, achievement, katalog toko, inventory, klaim,
+- `tests/unit/rewards.test.ts` — parsing quest, achievement, katalog toko, inventory, klaim,
   pembelian, dan efek item; clamp progres/quantity serta fallback payload rusak.
 
 ## Yang belum dapat diuji

@@ -17,7 +17,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createClient } from '@supabase/supabase-js';
 
-const MIGRATION = 'supabase/migrations/20261110150000_subject_overview_owner.sql';
+const MIGRATION = 'backend/supabase/migrations/20261110150000_subject_overview_owner.sql';
 const API = 'https://api.supabase.com/v1';
 const dryRun = process.argv.includes('--dry-run');
 

@@ -11,7 +11,7 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea
-supabase/.temp
+backend/supabase/.temp
 test-results
 playwright-report
 

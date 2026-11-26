@@ -38,7 +38,7 @@ atau opsi sudah diisi; *Pending credential*; *Placeholder*; *Not implemented*.
 - `parseBlankPrompt` memecah prompt pada setiap penanda `__`/`___`.
 - `joinBlankAnswers` menggabungkan jawaban berurutan dan menolak rumpang kosong.
 - Renderer menampilkan input inline sebanyak rumpang; server menilai teks gabungan.
-- 8 unit test baru di `tests/minigames.test.ts`.
+- 8 unit test baru di `tests/unit/minigames.test.ts`.
 
 ### 3. Conversation dan Story
 
@@ -152,17 +152,17 @@ disembunyikan.
 
 ## Berkas utama yang berubah
 
-- `scripts/content/types.ts`, `helpers.ts`, `stage4.ts`, `mapping.ts`, `index.ts`
-- `scripts/generate-curriculum-sql.ts`, `scripts/test-sql.mjs`, `scripts/verify-supabase.mjs`
-- `supabase/migrations/20261108110000_curriculum_seed.sql`
-- `supabase/migrations/20261110100000_friends_quest.sql`
-- `src/services/lesson.service.ts`, `src/game/audio/speech.ts`
-- `src/game/minigames/fillBlank.ts`, `blankPrompt.ts`, `listening.ts`, `speaking.ts`,
+- `backend/supabase/seed/content/types.ts`, `helpers.ts`, `stage4.ts`, `mapping.ts`, `index.ts`
+- `backend/supabase/seed/generate.ts`, `scripts/test-sql.mjs`, `scripts/verify-supabase.mjs`
+- `backend/supabase/migrations/20261108110000_curriculum_seed.sql`
+- `backend/supabase/migrations/20261110100000_friends_quest.sql`
+- `frontend/src/services/lesson.service.ts`, `frontend/src/game/audio/speech.ts`
+- `frontend/src/game/minigames/fillBlank.ts`, `blankPrompt.ts`, `listening.ts`, `speaking.ts`,
   `conversation.ts`, `story.ts`
-- `src/repositories/friendsQuest.repository.ts`, `src/services/friendsQuest.service.ts`,
-  `src/pages/friends-quest.page.ts`, `src/app/router.ts`, `src/pages/practice.page.ts`
-- `src/types/database.ts`, `src/styles/practice.css`
-- `tests/minigames.test.ts`
+- `frontend/src/repositories/friendsQuest.repository.ts`, `frontend/src/services/friendsQuest.service.ts`,
+  `frontend/src/pages/friends-quest.page.ts`, `frontend/src/app/router.ts`, `frontend/src/pages/practice.page.ts`
+- `frontend/src/types/database.ts`, `frontend/src/styles/practice.css`
+- `tests/unit/minigames.test.ts`
 - `README.md`, `docs/GAMEPLAY.md`, `docs/DATABASE.md`, `docs/TESTING.md`, `docs/SETUP.md`,
   `docs/ARCHITECTURE.md`, `docs/PROJECT_HISTORY.md`
 

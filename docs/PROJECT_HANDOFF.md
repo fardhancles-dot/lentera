@@ -30,18 +30,18 @@ API Supabase**, serta **14 test browser lulus** tanpa skip. Migration
 - **Otorisasi server**: semua RPC memanggil `public.is_staff()`; UI staff-only adalah
   lapisan kedua. Router mengalihkan pemain biasa dari `/developer` ke `/app`.
 - **Integrasi**: route `/developer`, nav sidebar staff-only, ikon topbar staff-only, dan
-  `src/styles/developer.css`. Bottom nav tetap enam item.
+  `frontend/src/styles/developer.css`. Bottom nav tetap enam item.
 - **Cakupan yang sengaja belum dibangun**: CRUD konten (mapel/lesson/soal) dan editor
   Bahasa Sambas. Iterasi ini fokus dashboard, audit, dan reward.
 
 ## File utama
 
-- `supabase/migrations/20261111110000_developer_dashboard.sql`
-- `src/types/developer.ts`, `src/types/database.ts`
-- `src/repositories/developer.repository.ts`, `src/services/developer.service.ts`
-- `src/pages/developer.page.ts`, `src/styles/developer.css`
-- `src/app/router.ts`, `src/layouts/appLayout.ts`, `src/main.ts`
-- `src/pages/wallet.page.ts` (label transaksi `developer_grant`)
+- `backend/supabase/migrations/20261111110000_developer_dashboard.sql`
+- `frontend/src/types/developer.ts`, `frontend/src/types/database.ts`
+- `frontend/src/repositories/developer.repository.ts`, `frontend/src/services/developer.service.ts`
+- `frontend/src/pages/developer.page.ts`, `frontend/src/styles/developer.css`
+- `frontend/src/app/router.ts`, `frontend/src/layouts/appLayout.ts`, `frontend/src/main.ts`
+- `frontend/src/pages/wallet.page.ts` (label transaksi `developer_grant`)
 - `tests/e2e/developer.spec.ts`
 - `scripts/test-sql.mjs`, `scripts/verify-supabase.mjs`
 

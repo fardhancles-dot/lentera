@@ -30,17 +30,17 @@ Browser
 
 | Lapisan | Lokasi | Tanggung jawab |
 | --- | --- | --- |
-| Entry | `src/main.ts` | Style, boot splash, router, sinkron reduced-motion. |
-| Routing | `src/app/router.ts` | Match path, guard, lazy page, cleanup, intercept link internal. |
-| Halaman | `src/pages/*` | Merakit DOM, memanggil service, menampilkan loading/error. |
-| Layout | `src/layouts/*` | Shell navigasi desktop/mobile dan split layout auth. |
-| Komponen | `src/components/*` | Field, tombol, toast, ikon SVG, avatar, ilustrasi. |
-| State | `src/stores/session.store.ts` | Sumber kebenaran sesi + profil + pengaturan + role. |
-| Service | `src/services/*` | Validasi, aturan bisnis, pemetaan error, parsing payload RPC. |
-| Repository | `src/repositories/*` | Query Supabase bertipe; satu-satunya akses tabel/RPC. |
-| Tipe | `src/types/*` | Tipe `Database` dan tipe sesi. |
-| Game | `src/game/*` | Scene Phaser dan renderer mini-game DOM; tidak mengenal Supabase. |
-| Config | `src/config/*` | Brand, env, katalog avatar. |
+| Entry | `frontend/src/main.ts` | Style, boot splash, router, sinkron reduced-motion. |
+| Routing | `frontend/src/app/router.ts` | Match path, guard, lazy page, cleanup, intercept link internal. |
+| Halaman | `frontend/src/pages/*` | Merakit DOM, memanggil service, menampilkan loading/error. |
+| Layout | `frontend/src/layouts/*` | Shell navigasi desktop/mobile dan split layout auth. |
+| Komponen | `frontend/src/components/*` | Field, tombol, toast, ikon SVG, avatar, ilustrasi. |
+| State | `frontend/src/stores/session.store.ts` | Sumber kebenaran sesi + profil + pengaturan + role. |
+| Service | `frontend/src/services/*` | Validasi, aturan bisnis, pemetaan error, parsing payload RPC. |
+| Repository | `frontend/src/repositories/*` | Query Supabase bertipe; satu-satunya akses tabel/RPC. |
+| Tipe | `frontend/src/types/*` | Tipe `Database` dan tipe sesi. |
+| Game | `frontend/src/game/*` | Scene Phaser dan renderer mini-game DOM; tidak mengenal Supabase. |
+| Config | `frontend/src/config/*` | Brand, env, katalog avatar. |
 | Scripts | `scripts/*` | Validasi konten, generator seed, smoke test SQL. |
 
 Aturan dependensi: **page → service → repository → Supabase**. Komponen dan util tidak
@@ -166,7 +166,7 @@ Batas kepercayaan:
 
 ## Mini-game renderer
 
-`src/game/minigames/` memisahkan mekanik dari halaman lesson:
+`frontend/src/game/minigames/` memisahkan mekanik dari halaman lesson:
 
 | Modul | Tipe | Interaksi |
 | --- | --- | --- |
@@ -194,7 +194,7 @@ mengubah `lesson-play.page.ts`.
 - Stage maskot dimuat dengan `await import(...)`, sehingga `phaser` menjadi chunk terpisah.
 - Scene digambar dari vector (`Graphics`), bukan emoji atau aset berhak cipta.
 - `createMascotStage()` mengembalikan handle `destroy()` yang didaftarkan ke cleanup router.
-- Adventure map memakai scene Phaser (`src/game/scenes/adventureMapScene.ts`) dengan dua
+- Adventure map memakai scene Phaser (`frontend/src/game/scenes/adventureMapScene.ts`) dengan dua
   kanvas logis: `wide` 900×460 untuk desktop dan `compact` 420×620 untuk ponsel. Kedua
   viewport memakai koordinat, kolom, dan ukuran label sendiri supaya node tidak terpotong.
   Pemilih area/level, legenda, dan daftar lesson tetap DOM agar dapat difokuskan dan
@@ -218,8 +218,8 @@ mengubah `lesson-play.page.ts`.
 
 ## Konfigurasi
 
-- `src/config/env.ts` — validasi kredensial Supabase; hanya anon/publishable key.
-- `src/config/brand.ts` — nama, tagline, versi, maskot, copyright, URL bantuan; dapat
+- `frontend/src/config/env.ts` — validasi kredensial Supabase; hanya anon/publishable key.
+- `frontend/src/config/brand.ts` — nama, tagline, versi, maskot, copyright, URL bantuan; dapat
   ditimpa environment variable.
 - `appOrigin` dipakai untuk redirect email Supabase.
 

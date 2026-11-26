@@ -215,9 +215,11 @@ select count(*) from public.friend_quests; -- 0 (tabel siap)
 select count(*) from public.user_roles where role = 'developer'; -- 1 setelah setup otomatis
 ```
 
-Alternatif CLI (mendorong seluruh 10 migration tanpa membuka SQL Editor):
+Alternatif CLI (mendorong seluruh 10 migration tanpa membuka SQL Editor). Jalankan dari
+folder `backend/` karena Supabase CLI membaca `backend/supabase/` sebagai project lokal:
 
 ```bash
+cd backend
 npx supabase login
 npx supabase link --project-ref <project-ref>
 npx supabase db push --include-all --yes
@@ -226,11 +228,14 @@ npx supabase db push --include-all --yes
 Untuk mesin CI tanpa login interaktif, isi `SUPABASE_ACCESS_TOKEN` lalu:
 
 ```bash
+cd backend
 npx supabase db push --remote <project-ref> --password <db-password> --include-all --yes
 ```
 
 Jangan menaruh token atau password database di frontend; `VITE_*` hanya untuk URL dan
 anon key publik. Periksa dulu dengan `npx supabase db push --dry-run --include-all`.
+`npm run setup:supabase` melakukan langkah ini otomatis dengan working directory
+`backend/`.
 
 ## 8. Uji registrasi
 

@@ -28,6 +28,20 @@ Maskot: **Kiko**, roh daun penjaga Lentera. Identitas, warna, dan teks brand ter
 
 ---
 
+## Deployment
+
+| Target | Status | Pantau |
+| --- | --- | --- |
+| GitHub Pages | ![Deploy GitHub Pages](https://github.com/fardhancles-dot/lentera/actions/workflows/deploy-pages.yml/badge.svg?branch=main) | [Workflow runs](https://github.com/fardhancles-dot/lentera/actions/workflows/deploy-pages.yml) · [Situs](https://fardhancles-dot.github.io/lentera/) |
+| Vercel | Production otomatis dari push ke `main`; branch lain menjadi Preview | [Deployments](https://vercel.com/dhancles/lentera/deployments) · [Check commit](https://github.com/fardhancles-dot/lentera/commits/main) · [Situs](https://lentera-phi.vercel.app) |
+
+Badge GitHub Pages menampilkan hasil workflow terakhir untuk `main`. Vercel tidak
+menyediakan badge status publik tanpa autentikasi; status build-nya tampil sebagai check
+**Vercel** pada commit di GitHub dan di halaman Deployments project. Detail alur deploy ada
+di **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**.
+
+---
+
 ## Status implementasi
 
 | Area | Status | Keterangan |

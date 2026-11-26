@@ -123,16 +123,22 @@ role key tidak boleh pernah masuk ke frontend.
 - Project Vercel `dhancles/lentera` dibuat, environment variables diisi untuk
   Production/Preview/Development, dan production live di
   `https://lentera-phi.vercel.app`. Domain ini juga sudah masuk redirect URL Supabase.
+- Repository GitHub `fardhancles-dot/lentera` sudah terhubung ke project Vercel. Push ke
+  `main` otomatis membuat deployment Production, sedangkan push branch membuat deployment
+  Preview. Integrasi ini diverifikasi pada 26 November 2026 lewat commit `725e995`.
 
-## Langkah manual yang masih diperlukan
+## Integrasi Git Vercel
 
-**Hubungkan repository GitHub ke project Vercel** agar push ke `main` otomatis
-men-deploy Vercel (saat ini deployment Vercel dibuat lewat CLI). Buka dashboard Vercel →
-project `lentera` → **Settings → Git → Connect Git Repository**, lalu izinkan akses ke
-`fardhancles-dot/lentera`. CLI mencoba `vercel git connect` tetapi ditolak karena integrasi
-GitHub belum diberi akses ke repository tersebut.
+Satu push ke `main` memicu dua pipeline: Vercel Production dan GitHub Pages. Push ke branch
+lain membuat Vercel Preview tanpa mengubah domain produksi. Koneksi dapat diperiksa dengan:
 
-Setelah terhubung, satu push ke `main` akan memicu dua pipeline: Vercel dan GitHub Pages.
+```bash
+npx vercel git connect https://github.com/fardhancles-dot/lentera.git
+# fardhancles-dot/lentera is already connected to your project.
+```
+
+Deployment manual `npx vercel --prod` tetap bisa dipakai untuk hotfix, tetapi bukan jalur
+utama; alias produksi akan kembali diperbarui oleh push berikutnya ke `main`.
 
 ## Verifikasi yang sudah dilakukan
 
